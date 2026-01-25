@@ -1,0 +1,332 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
+import '../../core/constants/image_urls.dart';
+import '../../core/widgets/app_bar_widget.dart';
+import '../../core/widgets/rounded_card.dart';
+import '../../core/widgets/rating_widget.dart';
+import '../../core/widgets/price_tag.dart';
+
+class HotelsListPage extends ConsumerStatefulWidget {
+  const HotelsListPage({super.key});
+
+  @override
+  ConsumerState<HotelsListPage> createState() => _HotelsListPageState();
+}
+
+class _HotelsListPageState extends ConsumerState<HotelsListPage> {
+  String _selectedCity = 'All';
+  String _sortBy = 'Popular';
+
+  final List<Map<String, dynamic>> _hotels = [
+    {
+      'id': '1',
+      'name': 'Pyramids View Hotel',
+      'city': 'Cairo',
+      'location': 'Giza, Cairo',
+      'image': Img.hotelLuxury,
+      'rating': 4.8,
+      'reviewCount': 520,
+      'price': 120.0,
+      'amenities': ['WiFi', 'Pool', 'Restaurant', 'Spa'],
+      'stars': 5,
+    },
+    {
+      'id': '2',
+      'name': 'Nile Ritz Carlton',
+      'city': 'Cairo',
+      'location': 'Downtown Cairo',
+      'image': Img.hotelPool,
+      'rating': 4.9,
+      'reviewCount': 890,
+      'price': 250.0,
+      'amenities': ['WiFi', 'Pool', 'Gym', 'Restaurant'],
+      'stars': 5,
+    },
+    {
+      'id': '3',
+      'name': 'Steigenberger Resort',
+      'city': 'Hurghada',
+      'location': 'Hurghada',
+      'image': Img.hotelResort,
+      'rating': 4.7,
+      'reviewCount': 430,
+      'price': 180.0,
+      'amenities': ['WiFi', 'Beach', 'Pool', 'Spa'],
+      'stars': 5,
+    },
+    {
+      'id': '4',
+      'name': 'Hilton Luxor Resort',
+      'city': 'Luxor',
+      'location': 'Luxor City',
+      'image': Img.hotelRoom,
+      'rating': 4.6,
+      'reviewCount': 350,
+      'price': 140.0,
+      'amenities': ['WiFi', 'Pool', 'Restaurant'],
+      'stars': 4,
+    },
+    {
+      'id': '5',
+      'name': 'Four Seasons Alexandria',
+      'city': 'Alexandria',
+      'location': 'Alexandria Corniche',
+      'image': Img.hotelLobby,
+      'rating': 4.9,
+      'reviewCount': 670,
+      'price': 300.0,
+      'amenities': ['WiFi', 'Beach', 'Spa', 'Pool'],
+      'stars': 5,
+    },
+  ];
+
+  List<Map<String, dynamic>> get _filteredHotels {
+    var hotels = _hotels;
+    
+    // Filter by city
+    if (_selectedCity != 'All') {
+      hotels = hotels.where((h) => h['city'] == _selectedCity).toList();
+    }
+
+    // Sort
+    if (_sortBy == 'Price: Low to High') {
+      hotels.sort((a, b) => a['price'].compareTo(b['price']));
+    } else if (_sortBy == 'Price: High to Low') {
+      hotels.sort((a, b) => b['price'].compareTo(a['price']));
+    } else if (_sortBy == 'Rating') {
+      hotels.sort((a, b) => b['rating'].compareTo(a['rating']));
+    }
+
+    return hotels;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: CustomAppBar(
+        title: 'Hotels in Egypt',
+        showBackButton: true,
+      ),
+      body: Column(
+        children: [
+          // Filters
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // City Filter
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: ['All', 'Cairo', 'Luxor', 'Hurghada', 'Alexandria']
+                        .map((city) => Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: FilterChip(
+                                label: Text(city),
+                                selected: _selectedCity == city,
+                                onSelected: (selected) {
+                                  setState(() => _selectedCity = city);
+                                },
+                                selectedColor: const Color(0xFFC89B3C).withValues(alpha: 0.2),
+                                checkmarkColor: const Color(0xFFC89B3C),
+                              ),
+                            ))
+                        .toList(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Sort Dropdown
+                Row(
+                  children: [
+                    const Icon(Icons.sort_rounded, size: 20),
+                    const SizedBox(width: 8),
+                    const Text('Sort by:', style: TextStyle(fontWeight: FontWeight.w600)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DropdownButton<String>(
+                        value: _sortBy,
+                        isExpanded: true,
+                        underline: const SizedBox(),
+                        items: ['Popular', 'Rating', 'Price: Low to High', 'Price: High to Low']
+                            .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                            .toList(),
+                        onChanged: (value) {
+                          if (value != null) setState(() => _sortBy = value);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Hotels List
+          Expanded(
+            child: _filteredHotels.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.hotel_outlined, size: 64, color: Colors.grey[400]),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No hotels found',
+                          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _filteredHotels.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      final hotel = _filteredHotels[index];
+                      return _HotelListItem(hotel: hotel)
+                          .animate(delay: Duration(milliseconds: 100 * index))
+                          .fadeIn(duration: 400.ms)
+                          .slideX(begin: 0.2, end: 0);
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HotelListItem extends StatelessWidget {
+  final Map<String, dynamic> hotel;
+
+  const _HotelListItem({required this.hotel});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/hotel/${hotel['id']}'),
+      child: RoundedCard(
+        padding: EdgeInsets.zero,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                  child: SizedBox(
+                    height: 180,
+                    width: double.infinity,
+                    child: CachedNetworkImage(
+                      imageUrl: hotel['image'],
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.favorite_border_rounded,
+                      color: Color(0xFFC89B3C),
+                      size: 20,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFC89B3C),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: List.generate(
+                        hotel['stars'],
+                        (i) => const Icon(Icons.star, color: Colors.white, size: 12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            // Details
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    hotel['name'],
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_outlined, size: 16, color: Colors.grey[600]),
+                      const SizedBox(width: 4),
+                      Text(
+                        hotel['location'],
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: (hotel['amenities'] as List<String>)
+                        .map((a) => Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                a,
+                                style: TextStyle(fontSize: 11, color: Colors.grey[700]),
+                              ),
+                            ))
+                        .toList(),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      RatingWidget(
+                        rating: hotel['rating'],
+                        reviewCount: hotel['reviewCount'],
+                        size: 16,
+                      ),
+                      PriceTag(price: hotel['price'], unit: 'night', large: true),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "52754735379",
+    "project_id": "discover-egypt-95efd",
+    "storage_bucket": "discover-egypt-95efd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:52754735379:android:65cae8f766b5b7bb53fae6",
+        "android_client_info": {
+          "package_name": "com.discoveregypt.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "52754735379-ulpmssba0kk93fmsh589gf1qkeib7erb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-reiQfpkY8a38JdRSMzA-qIwmy3bzMWE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "52754735379-ulpmssba0kk93fmsh589gf1qkeib7erb.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "52754735379-svt2qanp1urd4op3obutq6h8f8dn37s6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.discoveregypt.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

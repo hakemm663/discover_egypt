@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="256" fill="#C89B3C"/>
+  
+  <!-- Inner Circle -->
+  <circle cx="256" cy="256" r="220" fill="#E5C87B" opacity="0.3"/>
+  
+  <!-- Pyramid Shape -->
+  <path d="M256 120 L180 280 L332 280 Z" fill="#8B4513" stroke="#654321" stroke-width="3"/>
+  <path d="M256 120 L332 280 L380 260 L256 100 Z" fill="#A0522D"/>
+  
+  <!-- Sun -->
+  <circle cx="380" cy="140" r="35" fill="#FFD700"/>
+  <path d="M380 95 L380 85 M420 140 L430 140 M405 115 L412 108 M405 165 L412 172 M355 115 L348 108 M355 165 L348 172 M340 140 L330 140 M380 185 L380 195" stroke="#FFD700" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Palm Tree -->
+  <rect x="140" y="260" width="8" height="60" fill="#8B4513"/>
+  <ellipse cx="144" cy="250" rx="25" ry="15" fill="#228B22"/>
+  <ellipse cx="144" cy="245" rx="20" ry="12" fill="#32CD32"/>
+  
+  <!-- Sand Dunes -->
+  <path d="M80 320 Q150 300 220 320 Q290 340 380 320 Q430 310 480 320 L480 400 L80 400 Z" fill="#F4A460"/>
+  
+  <!-- App Name Text -->
+  <text x="256" y="450" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="white">DISCOVER</text>
+  <text x="256" y="480" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="white">EGYPT</text>
+</svg>
