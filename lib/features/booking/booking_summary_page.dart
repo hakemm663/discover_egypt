@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/widgets/app_bar_widget.dart';
 import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/primary_button.dart';
+import 'checkout_booking_state.dart';
 
 class BookingSummaryPage extends ConsumerStatefulWidget {
   const BookingSummaryPage({super.key});
@@ -23,6 +24,29 @@ class _BookingSummaryPageState extends ConsumerState<BookingSummaryPage> {
   double get _serviceFee => 36.0;
   double get _taxes => 14.4;
   double get _total => _subtotal + _serviceFee + _taxes;
+
+  void _proceedToPayment() {
+    final bookingId = 'draft-${DateTime.now().millisecondsSinceEpoch}';
+    final booking = CheckoutBookingModel(
+      id: bookingId,
+      currency: 'USD',
+      lineItems: [
+        CheckoutLineItem(
+          label: 'Stay subtotal',
+          amount: _subtotal,
+        ),
+      ],
+      serviceFee: _serviceFee,
+      taxes: _taxes,
+    );
+
+    ref.read(checkoutBookingDraftsProvider.notifier).update((state) {
+      return {...state, bookingId: booking};
+    });
+    ref.read(currentCheckoutBookingProvider.notifier).state = booking;
+
+    context.push('/confirm-pay?bookingId=$bookingId');
+  }
 
   Future<void> _selectCheckIn() async {
     final date = await showDatePicker(
@@ -289,7 +313,7 @@ class _BookingSummaryPageState extends ConsumerState<BookingSummaryPage> {
                     PrimaryButton(
                       label: 'Proceed to Payment',
                       icon: Icons.payment_rounded,
-                      onPressed: () => context.push('/confirm-pay'),
+                      onPressed: _proceedToPayment,
                     ),
                   ],
                 ),
