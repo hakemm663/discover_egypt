@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../core/widgets/app_bar_widget.dart';
-import '../../core/widgets/rounded_card.dart';
-import '../../core/widgets/primary_button.dart';
-import '../../core/utils/helpers.dart';
 import '../../app/providers.dart';
+import '../../core/utils/helpers.dart';
+import '../../core/widgets/app_bar_widget.dart';
+import '../../core/widgets/primary_button.dart';
+import '../../core/widgets/rounded_card.dart';
 
 class ConfirmPayPage extends ConsumerStatefulWidget {
   const ConfirmPayPage({super.key});
@@ -16,45 +16,64 @@ class ConfirmPayPage extends ConsumerStatefulWidget {
 }
 
 class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
+  static const double _bookingAmount = 410.40;
+
   String _paymentMethod = 'card';
-  bool _saveCard = false;
   bool _isProcessing = false;
 
-  final _cardNumberController = TextEditingController();
-  final _expiryController = TextEditingController();
-  final _cvvController = TextEditingController();
-  final _nameController = TextEditingController();
-
-  @override
-  void dispose() {
-    _cardNumberController.dispose();
-    _expiryController.dispose();
-    _cvvController.dispose();
-    _nameController.dispose();
-    super.dispose();
-  }
-
   Future<void> _processPayment() async {
-    if (_paymentMethod == 'card') {
-      // Validate card details
-      if (_cardNumberController.text.isEmpty ||
-          _expiryController.text.isEmpty ||
-          _cvvController.text.isEmpty ||
-          _nameController.text.isEmpty) {
-        Helpers.showSnackBar(context, 'Please fill all card details',
-            isError: true);
-        return;
-      }
-    }
-
     setState(() => _isProcessing = true);
 
-    // Simulate payment processing
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      if (_paymentMethod == 'card') {
+        final paymentService = ref.read(paymentServiceProvider);
+        final user = ref.read(currentUserProvider);
 
-    if (mounted) {
-      setState(() => _isProcessing = false);
-      context.go('/payment-success');
+        final success = await paymentService.processPayment(
+          amount: _bookingAmount,
+          currency: 'USD',
+          customerId: user?.id.isNotEmpty == true ? user!.id : 'guest',
+          merchantName: 'Discover Egypt',
+          description: 'Travel booking payment',
+        );
+
+        if (!success) {
+          if (mounted) {
+            Helpers.showSnackBar(context, 'Payment canceled', isError: true);
+          }
+          return;
+        }
+      } else if (_paymentMethod == 'wallet') {
+        final user = ref.read(currentUserProvider);
+        final balance = user?.walletBalance ?? 0;
+
+        if (balance < _bookingAmount) {
+          if (mounted) {
+            Helpers.showSnackBar(
+              context,
+              'Insufficient wallet balance',
+              isError: true,
+            );
+          }
+          return;
+        }
+
+        await Future.delayed(const Duration(milliseconds: 700));
+      } else {
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+
+      if (mounted) {
+        context.go('/payment-success');
+      }
+    } catch (e) {
+      if (mounted) {
+        Helpers.showSnackBar(context, 'Payment failed: $e', isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
     }
   }
 
@@ -63,7 +82,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
     final user = ref.watch(currentUserProvider);
 
     return Scaffold(
-      appBar: CustomAppBar(
+      appBar: const CustomAppBar(
         title: 'Payment',
         showBackButton: true,
       ),
@@ -72,7 +91,6 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Payment Methods
             Text(
               'Payment Method',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -80,18 +98,16 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
                   ),
             ),
             const SizedBox(height: 16),
-
             RoundedCard(
               child: Column(
                 children: [
                   _PaymentMethodTile(
                     icon: Icons.credit_card_rounded,
                     title: 'Credit / Debit Card',
-                    subtitle: 'Visa, Mastercard, Amex',
+                    subtitle: 'Processed securely with Stripe PaymentSheet',
                     value: 'card',
                     groupValue: _paymentMethod,
-                    onChanged: (value) =>
-                        setState(() => _paymentMethod = value!),
+                    onChanged: (value) => setState(() => _paymentMethod = value!),
                   ),
                   const Divider(height: 24),
                   _PaymentMethodTile(
@@ -101,8 +117,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
                         'Balance: \$${user?.walletBalance.toStringAsFixed(2) ?? '0.00'}',
                     value: 'wallet',
                     groupValue: _paymentMethod,
-                    onChanged: (value) =>
-                        setState(() => _paymentMethod = value!),
+                    onChanged: (value) => setState(() => _paymentMethod = value!),
                   ),
                   const Divider(height: 24),
                   _PaymentMethodTile(
@@ -111,145 +126,43 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
                     subtitle: 'Pay at property',
                     value: 'cash',
                     groupValue: _paymentMethod,
-                    onChanged: (value) =>
-                        setState(() => _paymentMethod = value!),
+                    onChanged: (value) => setState(() => _paymentMethod = value!),
                   ),
                 ],
               ),
             ),
-
             const SizedBox(height: 24),
-
-            // Card Details (if card payment selected)
-            if (_paymentMethod == 'card') ...[
-              Text(
-                'Card Details',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-              ),
-              const SizedBox(height: 16),
-              RoundedCard(
-                child: Column(
+            if (_paymentMethod == 'card')
+              const RoundedCard(
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Card Number',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _cardNumberController,
-                      keyboardType: TextInputType.number,
-                      maxLength: 16,
-                      decoration: const InputDecoration(
-                        hintText: '1234 5678 9012 3456',
-                        counterText: '',
-                        prefixIcon: Icon(Icons.credit_card_rounded),
+                    Icon(Icons.verified_user_rounded, color: Color(0xFFC89B3C)),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Card details are collected in Stripe\'s secure payment sheet. '
+                        'No card numbers are stored in the app.',
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Expiry Date',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                              ),
-                              const SizedBox(height: 8),
-                              TextField(
-                                controller: _expiryController,
-                                keyboardType: TextInputType.datetime,
-                                decoration: const InputDecoration(
-                                  hintText: 'MM/YY',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'CVV',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                              ),
-                              const SizedBox(height: 8),
-                              TextField(
-                                controller: _cvvController,
-                                keyboardType: TextInputType.number,
-                                maxLength: 3,
-                                obscureText: true,
-                                decoration: const InputDecoration(
-                                  hintText: '123',
-                                  counterText: '',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Cardholder Name',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _nameController,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        hintText: 'John Doe',
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    CheckboxListTile(
-                      value: _saveCard,
-                      onChanged: (value) =>
-                          setState(() => _saveCard = value ?? false),
-                      title: const Text('Save card for future payments'),
-                      contentPadding: EdgeInsets.zero,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      activeColor: const Color(0xFFC89B3C),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
-            ],
-
-            // Security Notice
+            if (_paymentMethod == 'card') const SizedBox(height: 16),
             RoundedCard(
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: 0.1),
+                      color: Colors.green.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(Icons.lock_rounded,
-                        color: Colors.green[600], size: 24),
+                    child: Icon(
+                      Icons.lock_rounded,
+                      color: Colors.green[600],
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -277,20 +190,14 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
                 ],
               ),
             ),
-
             const SizedBox(height: 24),
-
-            // Pay Button
             PrimaryButton(
-              label: 'Pay \$410.40',
+              label: 'Pay \$${_bookingAmount.toStringAsFixed(2)}',
               icon: Icons.lock_rounded,
               isLoading: _isProcessing,
               onPressed: _processPayment,
             ),
-
             const SizedBox(height: 16),
-
-            // Terms
             Text(
               'By completing this booking, you agree to our Terms of Service and Privacy Policy.',
               style: TextStyle(
@@ -299,7 +206,6 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
               ),
               textAlign: TextAlign.center,
             ),
-
             const SizedBox(height: 32),
           ],
         ),
@@ -345,8 +251,8 @@ class _PaymentMethodTileState extends State<_PaymentMethodTile> {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFFC89B3C).withValues(alpha: 0.15)
-                    : Colors.grey.withValues(alpha: 0.1),
+                    ? const Color(0xFFC89B3C).withOpacity(0.15)
+                    : Colors.grey.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -362,12 +268,9 @@ class _PaymentMethodTileState extends State<_PaymentMethodTile> {
                 children: [
                   Text(
                     widget.title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color:
-                          isSelected ? const Color(0xFFC89B3C) : Colors.black87,
-                    ),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -379,6 +282,12 @@ class _PaymentMethodTileState extends State<_PaymentMethodTile> {
                   ),
                 ],
               ),
+            ),
+            Radio<String>(
+              value: widget.value,
+              groupValue: widget.groupValue,
+              onChanged: widget.onChanged,
+              activeColor: const Color(0xFFC89B3C),
             ),
           ],
         ),
