@@ -6,6 +6,7 @@ import '../../core/widgets/app_bar_widget.dart';
 import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/utils/helpers.dart';
+import '../../core/services/payment_service.dart';
 import '../../app/providers.dart';
 
 class ConfirmPayPage extends ConsumerStatefulWidget {
@@ -79,9 +80,17 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
       if (mounted) {
         context.go('/payment-success');
       }
-    } catch (e) {
+    } on PaymentFailure catch (failure) {
       if (mounted) {
-        Helpers.showSnackBar(context, 'Payment failed: $e', isError: true);
+        Helpers.showSnackBar(context, failure.message, isError: true);
+      }
+    } catch (_) {
+      if (mounted) {
+        Helpers.showSnackBar(
+          context,
+          'Payment failed. Please try again.',
+          isError: true,
+        );
       }
     } finally {
       if (mounted) {
