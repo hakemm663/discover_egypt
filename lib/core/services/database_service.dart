@@ -234,6 +234,28 @@ class DatabaseService {
     });
   }
 
+  Future<void> persistPaymentReconciliation({
+    required String bookingId,
+    required String paymentId,
+    required String paymentMethod,
+    required String paymentStatus,
+    required bool isPaid,
+  }) async {
+    await _firestore
+        .collection(AppConstants.bookingsCollection)
+        .doc(bookingId)
+        .set({
+      'id': bookingId,
+      'paymentId': paymentId,
+      'paymentMethod': paymentMethod,
+      'paymentStatus': paymentStatus,
+      'isPaid': isPaid,
+      'paidAt': isPaid ? Timestamp.now() : null,
+      'status': isPaid ? BookingStatus.confirmed.name : BookingStatus.pending.name,
+      'updatedAt': Timestamp.now(),
+    }, SetOptions(merge: true));
+  }
+
   Future<List<BookingModel>> getUserBookings(String userId) async {
     final snapshot = await _firestore
         .collection(AppConstants.bookingsCollection)

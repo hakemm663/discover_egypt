@@ -53,14 +53,20 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
     setState(() => _isProcessing = true);
 
     try {
-      if (_paymentMethod == 'card') {
-        final paymentService = ref.read(paymentServiceProvider);
-        final user = ref.read(currentUserProvider);
+      final paymentService = ref.read(paymentServiceProvider);
+      final databaseService = ref.read(databaseServiceProvider);
+      final user = ref.read(currentUserProvider);
+      final bookingId =
+          GoRouterState.of(context).uri.queryParameters['bookingId'] ??
+              'booking_${DateTime.now().millisecondsSinceEpoch}';
+      final amount = 410.40;
+      final customerId = user?.id.isNotEmpty == true ? user!.id : 'guest';
 
+      if (_paymentMethod == 'card') {
         final success = await paymentService.processPayment(
-          amount: 410.40,
+          amount: amount,
           currency: 'USD',
-          customerId: user?.id.isNotEmpty == true ? user!.id : 'guest',
+          customerId: customerId,
           merchantName: 'Discover Egypt',
           description: 'Travel booking payment',
         );
@@ -71,9 +77,52 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
           }
           return;
         }
-      } else {
-        // Wallet and cash flows remain local placeholders until backend wiring.
-        await Future.delayed(const Duration(seconds: 1));
+      } else if (_paymentMethod == 'wallet') {
+        final response = await paymentService.processWalletPayment(
+          bookingId: bookingId,
+          amount: amount,
+          customerId: customerId,
+        );
+
+        final status = (response['status'] ?? '').toString().toLowerCase();
+        final paymentId = (response['paymentId'] ?? response['id'] ?? '')
+            .toString();
+
+        if (status != 'succeeded') {
+          throw Exception('Wallet payment not completed. Current status: $status');
+        }
+
+        await databaseService.persistPaymentReconciliation(
+          bookingId: bookingId,
+          paymentId: paymentId.isNotEmpty ? paymentId : 'wallet_$bookingId',
+          paymentMethod: 'wallet',
+          paymentStatus: status,
+          isPaid: true,
+        );
+      } else if (_paymentMethod == 'cash') {
+        final response = await paymentService.markCashOnArrival(
+          bookingId: bookingId,
+          amount: amount,
+        );
+
+        final status = (response['status'] ?? '').toString().toLowerCase();
+        final paymentId =
+            (response['paymentId'] ?? response['id'] ?? 'cash_$bookingId')
+                .toString();
+
+        if (status != 'pending_cash_collection') {
+          throw Exception(
+            'Cash payment intent was not acknowledged. Current status: $status',
+          );
+        }
+
+        await databaseService.persistPaymentReconciliation(
+          bookingId: bookingId,
+          paymentId: paymentId,
+          paymentMethod: 'cash',
+          paymentStatus: status,
+          isPaid: false,
+        );
       }
 
       if (mounted) {
