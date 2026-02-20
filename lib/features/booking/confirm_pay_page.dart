@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,6 +8,7 @@ import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/utils/helpers.dart';
 import '../../app/providers.dart';
+import 'checkout_payment_controller.dart';
 
 class ConfirmPayPage extends ConsumerStatefulWidget {
   const ConfirmPayPage({super.key});
@@ -19,8 +21,8 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
   static const double _paymentAmount = 410.40;
 
   String _paymentMethod = 'card';
-  bool _saveCard = false;
   bool _isProcessing = false;
+  final _checkoutController = CheckoutPaymentController();
 
   final _cardNumberController = TextEditingController();
   final _expiryController = TextEditingController();
@@ -38,14 +40,20 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
 
   Future<void> _processPayment() async {
     if (_paymentMethod == 'card') {
-      // Keep basic validation for current card form inputs.
-      if (_cardNumberController.text.isEmpty ||
-          _expiryController.text.isEmpty ||
-          _cvvController.text.isEmpty ||
-          _nameController.text.isEmpty) {
+      final validation = _checkoutController.validateCardInput(
+        CheckoutCardInput(
+          cardNumber: _cardNumberController.text,
+          expiry: _expiryController.text,
+          cvv: _cvvController.text,
+          cardholderName: _nameController.text,
+          saveCardRequested: false,
+        ),
+      );
+
+      if (!validation.isValid) {
         Helpers.showSnackBar(
           context,
-          'Please fill all card details',
+          validation.failure!.message,
           isError: true,
         );
         return;
@@ -232,6 +240,9 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
                       controller: _cardNumberController,
                       keyboardType: TextInputType.number,
                       maxLength: 16,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9 ]')),
+                      ],
                       decoration: const InputDecoration(
                         hintText: '1234 5678 9012 3456',
                         counterText: '',
@@ -258,6 +269,11 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
                               TextField(
                                 controller: _expiryController,
                                 keyboardType: TextInputType.datetime,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(
+                                    RegExp(r'[0-9/]'),
+                                  ),
+                                ],
                                 decoration: const InputDecoration(
                                   hintText: 'MM/YY',
                                 ),
@@ -283,7 +299,10 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
                               TextField(
                                 controller: _cvvController,
                                 keyboardType: TextInputType.number,
-                                maxLength: 3,
+                                maxLength: 4,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
                                 obscureText: true,
                                 decoration: const InputDecoration(
                                   hintText: '123',
@@ -312,10 +331,12 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
                     ),
                     const SizedBox(height: 16),
                     CheckboxListTile(
-                      value: _saveCard,
-                      onChanged: (value) =>
-                          setState(() => _saveCard = value ?? false),
+                      value: false,
+                      onChanged: null,
                       title: const Text('Save card for future payments'),
+                      subtitle: const Text(
+                        'Unavailable until backend tokenization support is added.',
+                      ),
                       contentPadding: EdgeInsets.zero,
                       controlAffinity: ListTileControlAffinity.leading,
                       activeColor: const Color(0xFFC89B3C),
