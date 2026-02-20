@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
 import '../constants/api_endpoints.dart';
+import '../utils/money.dart';
 
 class PaymentService {
   final Dio _dio = Dio(
@@ -23,7 +24,7 @@ class PaymentService {
       final response = await _dio.post(
         ApiEndpoints.createPaymentIntent,
         data: {
-          'amount': (amount * 100).toInt(), // Convert to minor currency unit
+          'amount': toMinorUnits(amount, currency),
           'currency': currency.toLowerCase(),
           'description': description ?? 'Discover Egypt Booking',
           'customerId': customerId,

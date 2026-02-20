@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/widgets/app_bar_widget.dart';
 import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/primary_button.dart';
+import '../../core/utils/formatters.dart';
 
 class BookingSummaryPage extends ConsumerStatefulWidget {
   const BookingSummaryPage({super.key});
@@ -18,6 +19,8 @@ class _BookingSummaryPageState extends ConsumerState<BookingSummaryPage> {
   DateTime _checkIn = DateTime.now().add(const Duration(days: 7));
   DateTime _checkOut = DateTime.now().add(const Duration(days: 10));
   int _guests = 2;
+
+  static const String _currency = 'USD';
 
   double get _subtotal => 360.0;
   double get _serviceFee => 36.0;
@@ -183,15 +186,16 @@ class _BookingSummaryPageState extends ConsumerState<BookingSummaryPage> {
                 RoundedCard(
                   child: Column(
                     children: [
-                      _PriceRow(label: 'Subtotal', amount: _subtotal),
+                      _PriceRow(label: 'Subtotal', amount: _subtotal, currency: _currency),
                       const SizedBox(height: 12),
-                      _PriceRow(label: 'Service fee', amount: _serviceFee),
+                      _PriceRow(label: 'Service fee', amount: _serviceFee, currency: _currency),
                       const SizedBox(height: 12),
-                      _PriceRow(label: 'Taxes', amount: _taxes),
+                      _PriceRow(label: 'Taxes', amount: _taxes, currency: _currency),
                       const Divider(height: 24),
                       _PriceRow(
                         label: 'Total',
                         amount: _total,
+                        currency: _currency,
                         isTotal: true,
                       ),
                     ],
@@ -276,7 +280,7 @@ class _BookingSummaryPageState extends ConsumerState<BookingSummaryPage> {
                           ),
                         ),
                         Text(
-                          '\$${_total.toStringAsFixed(2)}',
+                          formatMoney(_total, currency: _currency),
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.w900,
@@ -361,10 +365,12 @@ class _PriceRow extends StatelessWidget {
   final String label;
   final double amount;
   final bool isTotal;
+  final String currency;
 
   const _PriceRow({
     required this.label,
     required this.amount,
+    required this.currency,
     this.isTotal = false,
   });
 
@@ -382,7 +388,7 @@ class _PriceRow extends StatelessWidget {
           ),
         ),
         Text(
-          '\$${amount.toStringAsFixed(2)}',
+          formatMoney(amount, currency: currency),
           style: TextStyle(
             fontSize: isTotal ? 18 : 15,
             fontWeight: FontWeight.w800,
