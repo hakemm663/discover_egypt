@@ -8,8 +8,7 @@ Pass non-secret runtime values with `--dart-define`:
 
 ```bash
 flutter run \
-  --dart-define=STRIPE_PUBLISHABLE_KEY=pk_test_xxx \
-  --dart-define=GOOGLE_MAPS_API_KEY=AIza...
+ 
 ```
 
 > Do not commit secret keys. Stripe secret keys and payment intent creation/confirmation must run only on backend services.
