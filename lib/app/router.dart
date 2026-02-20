@@ -177,10 +177,13 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/confirm-pay',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const ConfirmPayPage(),
-      ),
+      pageBuilder: (context, state) {
+        final amount = state.extra is num ? (state.extra as num).toDouble() : 0.0;
+        return _buildPage(
+          state,
+          ConfirmPayPage(amount: amount),
+        );
+      },
     ),
     GoRoute(
       path: '/payment-success',

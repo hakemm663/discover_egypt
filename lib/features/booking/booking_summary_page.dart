@@ -289,7 +289,7 @@ class _BookingSummaryPageState extends ConsumerState<BookingSummaryPage> {
                     PrimaryButton(
                       label: 'Proceed to Payment',
                       icon: Icons.payment_rounded,
-                      onPressed: () => context.push('/confirm-pay'),
+                      onPressed: () => context.push('/confirm-pay', extra: _total),
                     ),
                   ],
                 ),

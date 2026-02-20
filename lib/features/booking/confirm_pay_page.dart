@@ -9,15 +9,18 @@ import '../../core/widgets/primary_button.dart';
 import '../../core/widgets/rounded_card.dart';
 
 class ConfirmPayPage extends ConsumerStatefulWidget {
-  const ConfirmPayPage({super.key});
+  final double amount;
+
+  const ConfirmPayPage({
+    super.key,
+    this.amount = 0,
+  });
 
   @override
   ConsumerState<ConfirmPayPage> createState() => _ConfirmPayPageState();
 }
 
 class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
-  static const double _bookingAmount = 410.40;
-
   String _paymentMethod = 'card';
   bool _isProcessing = false;
 
@@ -30,7 +33,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
         final user = ref.read(currentUserProvider);
 
         final success = await paymentService.processPayment(
-          amount: _bookingAmount,
+          amount: widget.amount,
           currency: 'USD',
           customerId: user?.id.isNotEmpty == true ? user!.id : 'guest',
           merchantName: 'Discover Egypt',
@@ -47,7 +50,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
         final user = ref.read(currentUserProvider);
         final balance = user?.walletBalance ?? 0;
 
-        if (balance < _bookingAmount) {
+        if (balance < widget.amount) {
           if (mounted) {
             Helpers.showSnackBar(
               context,
@@ -192,7 +195,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
             ),
             const SizedBox(height: 24),
             PrimaryButton(
-              label: 'Pay \$${_bookingAmount.toStringAsFixed(2)}',
+              label: 'Pay \$${widget.amount.toStringAsFixed(2)}',
               icon: Icons.lock_rounded,
               isLoading: _isProcessing,
               onPressed: _processPayment,
