@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/onboarding/cover_page.dart';
 import '../features/onboarding/language_page.dart';
@@ -29,6 +30,7 @@ import '../features/restaurants/restaurant_details_page.dart';
 import '../features/booking/booking_summary_page.dart';
 import '../features/booking/confirm_pay_page.dart';
 import '../features/booking/payment_success_page.dart';
+import '../features/booking/checkout_booking_state.dart';
 
 import '../features/profile/profile_wallet_page.dart';
 import '../features/profile/edit_profile_page.dart';
@@ -177,10 +179,11 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/confirm-pay',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const ConfirmPayPage(),
-      ),
+      pageBuilder: _buildConfirmPayPage,
+    ),
+    GoRoute(
+      path: '/confirm-pay/:bookingId',
+      pageBuilder: _buildConfirmPayPage,
     ),
     GoRoute(
       path: '/payment-success',
@@ -229,6 +232,25 @@ final appRouter = GoRouter(
     ),
   ],
 );
+
+
+CustomTransitionPage _buildConfirmPayPage(BuildContext context, GoRouterState state) {
+  final bookingId = state.pathParameters['bookingId'] ??
+      state.uri.queryParameters['bookingId'];
+
+  if (bookingId != null && bookingId.isNotEmpty) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!context.mounted) return;
+      ProviderScope.containerOf(context, listen: false)
+          .read(checkoutBookingByIdProvider(bookingId).future);
+    });
+  }
+
+  return _buildPage(
+    state,
+    ConfirmPayPage(bookingId: bookingId),
+  );
+}
 
 CustomTransitionPage _buildPage(GoRouterState state, Widget child) {
   return CustomTransitionPage(

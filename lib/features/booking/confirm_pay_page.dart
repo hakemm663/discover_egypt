@@ -7,9 +7,12 @@ import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/utils/helpers.dart';
 import '../../app/providers.dart';
+import 'checkout_booking_state.dart';
 
 class ConfirmPayPage extends ConsumerStatefulWidget {
-  const ConfirmPayPage({super.key});
+  final String? bookingId;
+
+  const ConfirmPayPage({super.key, this.bookingId});
 
   @override
   ConsumerState<ConfirmPayPage> createState() => _ConfirmPayPageState();
@@ -34,7 +37,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
     super.dispose();
   }
 
-  Future<void> _processPayment() async {
+  Future<void> _processPayment(CheckoutBookingModel booking) async {
     if (_paymentMethod == 'card') {
       // Keep basic validation for current card form inputs.
       if (_cardNumberController.text.isEmpty ||
@@ -58,8 +61,8 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
         final user = ref.read(currentUserProvider);
 
         final success = await paymentService.processPayment(
-          amount: 410.40,
-          currency: 'USD',
+          amount: booking.total,
+          currency: booking.currency,
           customerId: user?.id.isNotEmpty == true ? user!.id : 'guest',
           merchantName: 'Discover Egypt',
           description: 'Travel booking payment',
@@ -93,8 +96,39 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
+    final bookingId = widget.bookingId;
 
-    return Scaffold(
+    if (bookingId == null || bookingId.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Helpers.showSnackBar(
+          context,
+          'Booking details are missing. Please review your summary.',
+          isError: true,
+        );
+      });
+      return _MissingBookingState(onGoBack: () => context.go('/booking-summary'));
+    }
+
+    final checkoutBookingAsync = ref.watch(checkoutBookingByIdProvider(bookingId));
+
+    return checkoutBookingAsync.when(
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, _) => _MissingBookingState(
+        message: 'Could not load booking details. Please try again from summary.',
+        onGoBack: () => context.go('/booking-summary'),
+      ),
+      data: (booking) {
+        if (booking == null) {
+          return _MissingBookingState(
+            message: 'This booking session is no longer available.',
+            onGoBack: () => context.go('/booking-summary'),
+          );
+        }
+
+        return Scaffold(
       appBar: CustomAppBar(
         title: 'Payment',
         showBackButton: true,
@@ -314,10 +348,10 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
 
             // Pay Button
             PrimaryButton(
-              label: 'Pay \$410.40',
+              label: 'Pay ${booking.currency} ${booking.total.toStringAsFixed(2)}',
               icon: Icons.lock_rounded,
               isLoading: _isProcessing,
-              onPressed: _processPayment,
+              onPressed: () => _processPayment(booking),
             ),
 
             const SizedBox(height: 16),
@@ -334,6 +368,50 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
 
             const SizedBox(height: 32),
           ],
+        ),
+      ),
+    );
+      },
+    );
+  }
+}
+
+class _MissingBookingState extends StatelessWidget {
+  final String message;
+  final VoidCallback onGoBack;
+
+  const _MissingBookingState({
+    this.message = 'Booking details are unavailable right now.',
+    required this.onGoBack,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: CustomAppBar(
+        title: 'Payment',
+        showBackButton: true,
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline_rounded, size: 48, color: Colors.redAccent),
+              const SizedBox(height: 12),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              PrimaryButton(
+                label: 'Back to Booking Summary',
+                icon: Icons.arrow_back_rounded,
+                onPressed: onGoBack,
+              ),
+            ],
+          ),
         ),
       ),
     );
