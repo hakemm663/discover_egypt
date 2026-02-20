@@ -1,9 +1,10 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import 'app/app.dart';
 import 'core/config/app_config.dart';
@@ -12,6 +13,8 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  _validateRuntimeConfig();
 
   // Initialize Firebase
   try {
@@ -56,4 +59,29 @@ void main() async {
   );
 
   runApp(const ProviderScope(child: DiscoverEgyptApp()));
+}
+
+void _validateRuntimeConfig() {
+  final configErrors = AppConfig.getValidationErrors();
+
+  if (configErrors.isEmpty) {
+    debugPrint(
+      '✅ Runtime config loaded (environment: ${AppConfig.environment}, apiBaseUrl: ${AppConfig.apiBaseUrl})',
+    );
+    return;
+  }
+
+  debugPrint('❌ Runtime configuration validation failed:');
+  for (final error in configErrors) {
+    debugPrint('   • $error');
+  }
+  debugPrint(
+    'ℹ️ Pass required values via --dart-define (e.g. --dart-define=ENVIRONMENT=dev --dart-define=API_BASE_URL=https://api-dev.discoveregypt.com/v1).',
+  );
+
+  if (kReleaseMode) {
+    throw StateError(
+      'Missing required runtime configuration for release build. Check startup logs for details.',
+    );
+  }
 }
