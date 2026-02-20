@@ -4,11 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../../core/constants/image_urls.dart';
 import '../../core/widgets/app_bar_widget.dart';
 import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/rating_widget.dart';
 import '../../core/widgets/price_tag.dart';
+import '../../core/widgets/error_widget.dart';
+import '../../core/widgets/loading_widget.dart';
+import 'cars_provider.dart';
 
 class CarsListPage extends ConsumerStatefulWidget {
   const CarsListPage({super.key});
@@ -21,67 +23,8 @@ class _CarsListPageState extends ConsumerState<CarsListPage> {
   String _selectedType = 'All';
   bool _withDriverOnly = false;
 
-  final List<Map<String, dynamic>> _cars = [
-    {
-      'id': '1',
-      'name': 'Mercedes S-Class',
-      'type': 'Luxury',
-      'brand': 'Mercedes',
-      'image': Img.carLuxury,
-      'rating': 4.9,
-      'reviewCount': 230,
-      'price': 150.0,
-      'seats': 4,
-      'transmission': 'Automatic',
-      'withDriver': true,
-      'driverPrice': 50.0,
-    },
-    {
-      'id': '2',
-      'name': 'Toyota Land Cruiser',
-      'type': 'SUV',
-      'brand': 'Toyota',
-      'image': Img.carSuv,
-      'rating': 4.8,
-      'reviewCount': 180,
-      'price': 120.0,
-      'seats': 7,
-      'transmission': 'Automatic',
-      'withDriver': true,
-      'driverPrice': 40.0,
-    },
-    {
-      'id': '3',
-      'name': 'Toyota Camry',
-      'type': 'Sedan',
-      'brand': 'Toyota',
-      'image': Img.carSedan,
-      'rating': 4.7,
-      'reviewCount': 340,
-      'price': 80.0,
-      'seats': 5,
-      'transmission': 'Automatic',
-      'withDriver': true,
-      'driverPrice': 30.0,
-    },
-    {
-      'id': '4',
-      'name': 'Mercedes Sprinter',
-      'type': 'Van',
-      'brand': 'Mercedes',
-      'image': Img.carVan,
-      'rating': 4.6,
-      'reviewCount': 120,
-      'price': 180.0,
-      'seats': 12,
-      'transmission': 'Automatic',
-      'withDriver': true,
-      'driverPrice': 60.0,
-    },
-  ];
-
-  List<Map<String, dynamic>> get _filteredCars {
-    var cars = _cars;
+  List<Map<String, dynamic>> _filteredCars(List<Map<String, dynamic>> sourceCars) {
+    var cars = [...sourceCars];
 
     if (_selectedType != 'All') {
       cars = cars.where((c) => c['type'] == _selectedType).toList();
@@ -96,6 +39,8 @@ class _CarsListPageState extends ConsumerState<CarsListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final carsAsync = ref.watch(carsProvider);
+
     return Scaffold(
       appBar: CustomAppBar(
         title: 'Car Rental',
@@ -146,16 +91,30 @@ class _CarsListPageState extends ConsumerState<CarsListPage> {
 
           // Cars List
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: _filteredCars.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 16),
-              itemBuilder: (context, index) {
-                final car = _filteredCars[index];
-                return _CarListItem(car: car)
-                    .animate(delay: Duration(milliseconds: 100 * index))
-                    .fadeIn(duration: 400.ms)
-                    .slideX(begin: 0.2, end: 0);
+            child: carsAsync.when(
+              loading: () => const LoadingWidget(message: 'Loading cars...'),
+              error: (error, stackTrace) => CustomErrorWidget(
+                title: 'Could not load cars',
+                message: error.toString(),
+                onRetry: () => ref.invalidate(carsProvider),
+              ),
+              data: (cars) {
+                final filteredCars = _filteredCars(cars);
+                if (filteredCars.isEmpty) {
+                  return const EmptyStateWidget(title: 'No cars found');
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: filteredCars.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    final car = filteredCars[index];
+                    return _CarListItem(car: car)
+                        .animate(delay: Duration(milliseconds: 100 * index))
+                        .fadeIn(duration: 400.ms)
+                        .slideX(begin: 0.2, end: 0);
+                  },
+                );
               },
             ),
           ),

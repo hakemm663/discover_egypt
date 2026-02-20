@@ -4,11 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../../core/constants/image_urls.dart';
 import '../../core/widgets/app_bar_widget.dart';
 import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/rating_widget.dart';
 import '../../core/widgets/price_tag.dart';
+import '../../core/widgets/error_widget.dart';
+import '../../core/widgets/loading_widget.dart';
+import 'hotels_provider.dart';
 
 class HotelsListPage extends ConsumerStatefulWidget {
   const HotelsListPage({super.key});
@@ -21,78 +23,13 @@ class _HotelsListPageState extends ConsumerState<HotelsListPage> {
   String _selectedCity = 'All';
   String _sortBy = 'Popular';
 
-  final List<Map<String, dynamic>> _hotels = [
-    {
-      'id': '1',
-      'name': 'Pyramids View Hotel',
-      'city': 'Cairo',
-      'location': 'Giza, Cairo',
-      'image': Img.hotelLuxury,
-      'rating': 4.8,
-      'reviewCount': 520,
-      'price': 120.0,
-      'amenities': ['WiFi', 'Pool', 'Restaurant', 'Spa'],
-      'stars': 5,
-    },
-    {
-      'id': '2',
-      'name': 'Nile Ritz Carlton',
-      'city': 'Cairo',
-      'location': 'Downtown Cairo',
-      'image': Img.hotelPool,
-      'rating': 4.9,
-      'reviewCount': 890,
-      'price': 250.0,
-      'amenities': ['WiFi', 'Pool', 'Gym', 'Restaurant'],
-      'stars': 5,
-    },
-    {
-      'id': '3',
-      'name': 'Steigenberger Resort',
-      'city': 'Hurghada',
-      'location': 'Hurghada',
-      'image': Img.hotelResort,
-      'rating': 4.7,
-      'reviewCount': 430,
-      'price': 180.0,
-      'amenities': ['WiFi', 'Beach', 'Pool', 'Spa'],
-      'stars': 5,
-    },
-    {
-      'id': '4',
-      'name': 'Hilton Luxor Resort',
-      'city': 'Luxor',
-      'location': 'Luxor City',
-      'image': Img.hotelRoom,
-      'rating': 4.6,
-      'reviewCount': 350,
-      'price': 140.0,
-      'amenities': ['WiFi', 'Pool', 'Restaurant'],
-      'stars': 4,
-    },
-    {
-      'id': '5',
-      'name': 'Four Seasons Alexandria',
-      'city': 'Alexandria',
-      'location': 'Alexandria Corniche',
-      'image': Img.hotelLobby,
-      'rating': 4.9,
-      'reviewCount': 670,
-      'price': 300.0,
-      'amenities': ['WiFi', 'Beach', 'Spa', 'Pool'],
-      'stars': 5,
-    },
-  ];
+  List<Map<String, dynamic>> _filteredHotels(List<Map<String, dynamic>> sourceHotels) {
+    var hotels = [...sourceHotels];
 
-  List<Map<String, dynamic>> get _filteredHotels {
-    var hotels = _hotels;
-    
-    // Filter by city
     if (_selectedCity != 'All') {
       hotels = hotels.where((h) => h['city'] == _selectedCity).toList();
     }
 
-    // Sort
     if (_sortBy == 'Price: Low to High') {
       hotels.sort((a, b) => a['price'].compareTo(b['price']));
     } else if (_sortBy == 'Price: High to Low') {
@@ -106,6 +43,8 @@ class _HotelsListPageState extends ConsumerState<HotelsListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final hotelsAsync = ref.watch(hotelsProvider);
+
     return Scaffold(
       appBar: CustomAppBar(
         title: 'Hotels in Egypt',
@@ -167,32 +106,33 @@ class _HotelsListPageState extends ConsumerState<HotelsListPage> {
 
           // Hotels List
           Expanded(
-            child: _filteredHotels.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.hotel_outlined, size: 64, color: Colors.grey[400]),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No hotels found',
-                          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _filteredHotels.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 16),
-                    itemBuilder: (context, index) {
-                      final hotel = _filteredHotels[index];
-                      return _HotelListItem(hotel: hotel)
-                          .animate(delay: Duration(milliseconds: 100 * index))
-                          .fadeIn(duration: 400.ms)
-                          .slideX(begin: 0.2, end: 0);
-                    },
-                  ),
+            child: hotelsAsync.when(
+              loading: () => const LoadingWidget(message: 'Loading hotels...'),
+              error: (error, stackTrace) => CustomErrorWidget(
+                title: 'Could not load hotels',
+                message: error.toString(),
+                onRetry: () => ref.invalidate(hotelsProvider),
+              ),
+              data: (hotels) {
+                final filteredHotels = _filteredHotels(hotels);
+                if (filteredHotels.isEmpty) {
+                  return const EmptyStateWidget(title: 'No hotels found');
+                }
+
+                return ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: filteredHotels.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    final hotel = filteredHotels[index];
+                    return _HotelListItem(hotel: hotel)
+                        .animate(delay: Duration(milliseconds: 100 * index))
+                        .fadeIn(duration: 400.ms)
+                        .slideX(begin: 0.2, end: 0);
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),

@@ -5,17 +5,22 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/constants/image_urls.dart';
+import '../../core/widgets/error_widget.dart';
+import '../../core/widgets/loading_widget.dart';
 import '../../core/widgets/app_bar_widget.dart';
 import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/section_title.dart';
 import '../../core/widgets/rating_widget.dart';
 import '../../core/widgets/price_tag.dart';
+import 'home_provider.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final homeDataAsync = ref.watch(homeDataProvider);
+
     return Scaffold(
       appBar: CustomAppBar(
         title: 'Discover Egypt',
@@ -25,11 +30,18 @@ class HomePage extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          // Refresh data
-          await Future.delayed(const Duration(seconds: 1));
+          ref.invalidate(homeDataProvider);
+          await ref.read(homeDataProvider.future);
         },
         color: const Color(0xFFC89B3C),
-        child: SingleChildScrollView(
+        child: homeDataAsync.when(
+          loading: () => const LoadingWidget(message: 'Loading home data...'),
+          error: (error, stackTrace) => CustomErrorWidget(
+            title: 'Failed to load home data',
+            message: error.toString(),
+            onRetry: () => ref.invalidate(homeDataProvider),
+          ),
+          data: (homeData) => SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -61,7 +73,7 @@ class HomePage extends ConsumerWidget {
               // Featured Destinations
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: _FeaturedDestinations(),
+                child: _FeaturedDestinations(destinations: homeData.destinations),
               ),
 
               const SizedBox(height: 24),
@@ -82,37 +94,22 @@ class HomePage extends ConsumerWidget {
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  children: [
-                    _HotelCard(
-                      id: '1',
-                      name: 'Pyramids View Hotel',
-                      location: 'Giza, Cairo',
-                      image: Img.hotelLuxury,
-                      rating: 4.8,
-                      reviewCount: 520,
-                      price: 120,
-                    ),
-                    const SizedBox(width: 16),
-                    _HotelCard(
-                      id: '2',
-                      name: 'Nile Ritz Carlton',
-                      location: 'Downtown Cairo',
-                      image: Img.hotelPool,
-                      rating: 4.9,
-                      reviewCount: 890,
-                      price: 250,
-                    ),
-                    const SizedBox(width: 16),
-                    _HotelCard(
-                      id: '3',
-                      name: 'Steigenberger Resort',
-                      location: 'Hurghada',
-                      image: Img.hotelResort,
-                      rating: 4.7,
-                      reviewCount: 430,
-                      price: 180,
-                    ),
-                  ],
+                  children: homeData.hotels
+                      .map(
+                        (hotel) => Padding(
+                          padding: const EdgeInsets.only(right: 16),
+                          child: _HotelCard(
+                            id: hotel['id'],
+                            name: hotel['name'],
+                            location: hotel['location'],
+                            image: hotel['image'],
+                            rating: hotel['rating'],
+                            reviewCount: hotel['reviewCount'],
+                            price: hotel['price'],
+                          ),
+                        ),
+                      )
+                      .toList(),
                 ),
               ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
 
@@ -132,27 +129,22 @@ class HomePage extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
-                  children: [
-                    _TourCard(
-                      id: '1',
-                      name: 'Pyramids & Sphinx Day Tour',
-                      duration: 'Full Day • 8 hours',
-                      image: Img.pyramidsMain,
-                      rating: 4.9,
-                      reviewCount: 1250,
-                      price: 65,
-                    ),
-                    const SizedBox(height: 16),
-                    _TourCard(
-                      id: '2',
-                      name: 'Nile River Cruise',
-                      duration: 'Evening • 3 hours',
-                      image: Img.nileCruise,
-                      rating: 4.8,
-                      reviewCount: 800,
-                      price: 45,
-                    ),
-                  ],
+                  children: homeData.tours
+                      .map(
+                        (tour) => Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _TourCard(
+                            id: tour['id'],
+                            name: tour['name'],
+                            duration: tour['duration'],
+                            image: tour['image'],
+                            rating: tour['rating'],
+                            reviewCount: tour['reviewCount'],
+                            price: tour['price'],
+                          ),
+                        ),
+                      )
+                      .toList(),
                 ),
               ).animate().fadeIn(delay: 500.ms, duration: 500.ms),
 
@@ -161,7 +153,7 @@ class HomePage extends ConsumerWidget {
               // Recommended for You
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: _RecommendedForYou(),
+                child: _RecommendedForYou(tours: homeData.recommendedTours),
               ),
 
               const SizedBox(height: 32),
@@ -189,7 +181,7 @@ class HomePage extends ConsumerWidget {
               const SizedBox(height: 32),
             ],
           ),
-        ),
+        )),
       ),
     );
   }
@@ -674,6 +666,10 @@ class _TourCard extends StatelessWidget {
 // ==================== FEATURED DESTINATIONS ====================
 
 class _FeaturedDestinations extends StatelessWidget {
+  final List<Map<String, dynamic>> destinations;
+
+  const _FeaturedDestinations({required this.destinations});
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -694,16 +690,17 @@ class _FeaturedDestinations extends StatelessWidget {
           child: ListView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            children: [
-              _DestinationCard(
-                name: 'Pyramids of Giza',
-                image: Img.pyramidsMain,
-              ),
-              const SizedBox(width: 16),
-              _DestinationCard(name: 'Luxor Temple', image: Img.luxorTemple),
-              const SizedBox(width: 16),
-              _DestinationCard(name: 'Nile River', image: Img.nileRiver),
-            ],
+            children: destinations
+                .map(
+                  (destination) => Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: _DestinationCard(
+                      name: destination['name'],
+                      image: destination['image'],
+                    ),
+                  ),
+                )
+                .toList(),
           ),
         ),
       ],
@@ -782,6 +779,10 @@ class _DestinationCard extends StatelessWidget {
 // ==================== RECOMMENDED FOR YOU ====================
 
 class _RecommendedForYou extends StatelessWidget {
+  final List<Map<String, dynamic>> tours;
+
+  const _RecommendedForYou({required this.tours});
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -800,27 +801,22 @@ class _RecommendedForYou extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
-            children: [
-              _TourCard(
-                id: '4',
-                name: 'Desert Safari Adventure',
-                duration: 'Half Day • 4 hours',
-                image: Img.desertSafari,
-                rating: 4.8,
-                reviewCount: 300,
-                price: 50,
-              ),
-              const SizedBox(height: 16),
-              _TourCard(
-                id: '5',
-                name: 'Alexandria City Tour',
-                duration: 'Full Day • 10 hours',
-                image: Img.alexandria,
-                rating: 4.7,
-                reviewCount: 200,
-                price: 75,
-              ),
-            ],
+            children: tours
+                .map(
+                  (tour) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _TourCard(
+                      id: tour['id'],
+                      name: tour['name'],
+                      duration: tour['duration'],
+                      image: tour['image'],
+                      rating: tour['rating'],
+                      reviewCount: tour['reviewCount'],
+                      price: tour['price'],
+                    ),
+                  ),
+                )
+                .toList(),
           ),
         ),
       ],
