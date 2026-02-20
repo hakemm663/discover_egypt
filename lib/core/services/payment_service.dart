@@ -87,6 +87,47 @@ class PaymentService {
     }
   }
 
+  Future<Map<String, dynamic>> processWalletPayment({
+    required String bookingId,
+    required double amount,
+    required String customerId,
+  }) async {
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.walletCharge,
+        data: {
+          'bookingId': bookingId,
+          'amount': (amount * 100).toInt(),
+          'customerId': customerId,
+        },
+      );
+
+      return Map<String, dynamic>.from(response.data as Map);
+    } catch (e) {
+      throw Exception('Failed to process wallet payment: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> markCashOnArrival({
+    required String bookingId,
+    required double amount,
+  }) async {
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.cashOnArrivalIntent,
+        data: {
+          'bookingId': bookingId,
+          'amount': (amount * 100).toInt(),
+          'status': 'pending_cash_collection',
+        },
+      );
+
+      return Map<String, dynamic>.from(response.data as Map);
+    } catch (e) {
+      throw Exception('Failed to register cash-on-arrival intent: $e');
+    }
+  }
+
   // Process full payment flow
   Future<bool> processPayment({
     required double amount,

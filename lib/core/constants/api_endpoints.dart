@@ -49,6 +49,8 @@ class ApiEndpoints {
   static const String createPaymentIntent = '/payments/create-intent';
   static const String confirmPayment = '/payments/confirm';
   static const String refundPayment = '/payments/refund';
+  static const String walletCharge = '/payments/wallet/charge';
+  static const String cashOnArrivalIntent = '/payments/cash/intent';
 
   // Reviews
   static const String reviews = '/reviews';
