@@ -7,6 +7,7 @@ import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/utils/helpers.dart';
 import '../../app/providers.dart';
+import 'checkout_controller.dart';
 
 class ConfirmPayPage extends ConsumerStatefulWidget {
   const ConfirmPayPage({super.key});
@@ -18,7 +19,6 @@ class ConfirmPayPage extends ConsumerStatefulWidget {
 class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
   String _paymentMethod = 'card';
   bool _saveCard = false;
-  bool _isProcessing = false;
 
   final _cardNumberController = TextEditingController();
   final _expiryController = TextEditingController();
@@ -34,65 +34,26 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
     super.dispose();
   }
 
-  Future<void> _processPayment() async {
-    if (_paymentMethod == 'card') {
-      // Keep basic validation for current card form inputs.
-      if (_cardNumberController.text.isEmpty ||
-          _expiryController.text.isEmpty ||
-          _cvvController.text.isEmpty ||
-          _nameController.text.isEmpty) {
-        Helpers.showSnackBar(
-          context,
-          'Please fill all card details',
-          isError: true,
-        );
-        return;
-      }
-    }
-
-    setState(() => _isProcessing = true);
-
-    try {
-      if (_paymentMethod == 'card') {
-        final paymentService = ref.read(paymentServiceProvider);
-        final user = ref.read(currentUserProvider);
-
-        final success = await paymentService.processPayment(
-          amount: 410.40,
-          currency: 'USD',
-          customerId: user?.id.isNotEmpty == true ? user!.id : 'guest',
-          merchantName: 'Discover Egypt',
-          description: 'Travel booking payment',
-        );
-
-        if (!success) {
-          if (mounted) {
-            Helpers.showSnackBar(context, 'Payment canceled', isError: true);
-          }
-          return;
-        }
-      } else {
-        // Wallet and cash flows remain local placeholders until backend wiring.
-        await Future.delayed(const Duration(seconds: 1));
-      }
-
-      if (mounted) {
-        context.go('/payment-success');
-      }
-    } catch (e) {
-      if (mounted) {
-        Helpers.showSnackBar(context, 'Payment failed: $e', isError: true);
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
+    final checkoutState = ref.watch(checkoutControllerProvider);
+
+    ref.listen<CheckoutState>(checkoutControllerProvider, (previous, next) {
+      if (!mounted) return;
+
+      if (next.status == CheckoutStatus.success &&
+          previous?.status != CheckoutStatus.success) {
+        context.go('/payment-success');
+        ref.read(checkoutControllerProvider.notifier).clearState();
+      }
+
+      if (next.status == CheckoutStatus.error &&
+          next.errorMessage != null &&
+          previous?.errorMessage != next.errorMessage) {
+        Helpers.showSnackBar(context, next.errorMessage!, isError: true);
+      }
+    });
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -316,8 +277,16 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
             PrimaryButton(
               label: 'Pay \$410.40',
               icon: Icons.lock_rounded,
-              isLoading: _isProcessing,
-              onPressed: _processPayment,
+              isLoading: checkoutState.status == CheckoutStatus.loading,
+              onPressed: () => ref.read(checkoutControllerProvider.notifier).processPayment(
+                    paymentMethod: _paymentMethod,
+                    cardDetails: CheckoutCardDetails(
+                      cardNumber: _cardNumberController.text.trim(),
+                      expiryDate: _expiryController.text.trim(),
+                      cvv: _cvvController.text.trim(),
+                      cardholderName: _nameController.text.trim(),
+                    ),
+                  ),
             ),
 
             const SizedBox(height: 16),
