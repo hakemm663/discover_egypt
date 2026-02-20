@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
+// Canonical app shell widget lives in lib/app/app.dart.
 import 'app/app.dart';
 import 'core/config/app_config.dart';
 import 'core/constants/app_constants.dart';
