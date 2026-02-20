@@ -3,25 +3,26 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/models/booking_model.dart';
 import '../../core/widgets/app_bar_widget.dart';
 import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/utils/helpers.dart';
 import '../../app/providers.dart';
+import 'booking_checkout_data.dart';
 import 'checkout_payment_controller.dart';
 
 class ConfirmPayPage extends ConsumerStatefulWidget {
-  const ConfirmPayPage({super.key});
+  const ConfirmPayPage({super.key, required this.checkoutData});
+
+  final BookingCheckoutData checkoutData;
 
   @override
   ConsumerState<ConfirmPayPage> createState() => _ConfirmPayPageState();
 }
 
 class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
-  static const double _paymentAmount = 410.40;
-
   String _paymentMethod = 'card';
-  bool _saveCard = false;
   bool _isProcessing = false;
   final _checkoutController = CheckoutPaymentController();
 
@@ -29,6 +30,8 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
   final _expiryController = TextEditingController();
   final _cvvController = TextEditingController();
   final _nameController = TextEditingController();
+
+  double get _paymentAmount => widget.checkoutData.total;
 
   @override
   void dispose() {
@@ -47,7 +50,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
           expiry: _expiryController.text,
           cvv: _cvvController.text,
           cardholderName: _nameController.text,
-          saveCardRequested: _saveCard,
+          saveCardRequested: false,
         ),
       );
 
@@ -68,81 +71,92 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
       final databaseService = ref.read(databaseServiceProvider);
       final user = ref.read(currentUserProvider);
       final customerId = user?.id.isNotEmpty == true ? user!.id : 'guest';
-      final bookingId =
-          'booking_${customerId}_${DateTime.now().millisecondsSinceEpoch}';
+
+      final bookingId = await databaseService.createPendingBooking(
+        BookingModel(
+          id: '',
+          userId: customerId,
+          itemId: widget.checkoutData.itemId,
+          type: widget.checkoutData.type,
+          itemName: widget.checkoutData.itemName,
+          itemImage: widget.checkoutData.itemImage,
+          startDate: widget.checkoutData.startDate,
+          endDate: widget.checkoutData.endDate,
+          guestCount: widget.checkoutData.guestCount,
+          subtotal: widget.checkoutData.subtotal,
+          serviceFee: widget.checkoutData.serviceFee,
+          taxes: widget.checkoutData.taxes,
+          discount: widget.checkoutData.discount,
+          total: widget.checkoutData.total,
+          currency: widget.checkoutData.currency,
+          createdAt: DateTime.now(),
+        ),
+      );
+
+      String paymentStatus = 'failed';
+      String paymentId = '';
 
       if (_paymentMethod == 'card') {
-        final success = await paymentService.processPayment(
+        final result = await paymentService.processPayment(
           amount: _paymentAmount,
-          currency: 'USD',
+          currency: widget.checkoutData.currency,
           customerId: customerId,
           merchantName: 'Discover Egypt',
           description: 'Travel booking payment',
         );
-
-        if (!success) {
-          if (mounted) {
-            Helpers.showSnackBar(context, 'Payment canceled', isError: true);
-          }
-          return;
-        }
+        paymentStatus = result.status;
+        paymentId = result.paymentId;
       } else if (_paymentMethod == 'wallet') {
         final walletResult = await paymentService.processWalletPayment(
           bookingId: bookingId,
           amount: _paymentAmount,
           customerId: customerId,
         );
-
-        if (walletResult.status != 'succeeded') {
-          if (mounted) {
-            Helpers.showSnackBar(
-              context,
-              'Wallet payment is ${walletResult.status}.',
-              isError: true,
-            );
-          }
-          return;
-        }
-
-        await databaseService.upsertPaymentReconciliation(
-          bookingId: walletResult.bookingId,
-          paymentId: walletResult.paymentId,
-          paymentMethod: 'wallet',
-          paymentStatus: walletResult.status,
-          amount: _paymentAmount,
-          isPaid: true,
-          userId: user?.id,
-        );
+        paymentStatus = walletResult.status;
+        paymentId = walletResult.paymentId;
       } else if (_paymentMethod == 'cash') {
         final cashResult = await paymentService.markCashOnArrival(
           bookingId: bookingId,
           amount: _paymentAmount,
         );
-
-        if (cashResult.status != 'pending_cash_collection') {
-          if (mounted) {
-            Helpers.showSnackBar(
-              context,
-              'Cash payment setup failed (${cashResult.status}).',
-              isError: true,
-            );
-          }
-          return;
-        }
-
-        await databaseService.upsertPaymentReconciliation(
-          bookingId: cashResult.bookingId,
-          paymentId: cashResult.paymentId,
-          paymentMethod: 'cash',
-          paymentStatus: cashResult.status,
-          amount: _paymentAmount,
-          isPaid: false,
-          userId: user?.id,
-        );
+        paymentStatus = cashResult.status;
+        paymentId = cashResult.paymentId;
       }
 
-      if (mounted) {
+      final normalizedStatus = paymentStatus.toLowerCase();
+      await databaseService.upsertPaymentReconciliation(
+        bookingId: bookingId,
+        paymentId: paymentId.isNotEmpty
+            ? paymentId
+            : 'payment_${DateTime.now().millisecondsSinceEpoch}',
+        paymentMethod: _paymentMethod,
+        paymentStatus: normalizedStatus,
+        amount: _paymentAmount,
+        isPaid: normalizedStatus == 'succeeded',
+        userId: user?.id,
+      );
+
+      await databaseService.applyBackendPaymentStatus(
+        bookingId: bookingId,
+        paymentStatus: normalizedStatus,
+      );
+
+      if (!mounted) return;
+
+      if (normalizedStatus == 'succeeded') {
         context.go('/payment-success');
+      } else if (normalizedStatus == 'requires_action') {
+        Helpers.showSnackBar(
+          context,
+          'Payment requires additional action. Please complete verification.',
+          isError: true,
+        );
+      } else {
+        Helpers.showSnackBar(
+          context,
+          'Payment failed ($normalizedStatus).',
+          isError: true,
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -169,7 +183,6 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Payment Methods
             Text(
               'Payment Method',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -177,7 +190,6 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
                   ),
             ),
             const SizedBox(height: 16),
-
             RoundedCard(
               child: Column(
                 children: [
@@ -214,10 +226,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
                 ],
               ),
             ),
-
             const SizedBox(height: 24),
-
-            // Card Details (if card payment selected)
             if (_paymentMethod == 'card') ...[
               Text(
                 'Card Details',
@@ -301,7 +310,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
                                 controller: _cvvController,
                                 keyboardType: TextInputType.number,
                                 maxLength: 4,
-                                inputFormatters: [
+                                inputFormatters: const [
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
                                 obscureText: true,
@@ -331,27 +340,20 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    CheckboxListTile(
-                      value: _saveCard,
-                      onChanged: (value) {
-                        if (value == null) return;
-                        setState(() => _saveCard = value);
-                      },
+                    ListTile(
+                      enabled: false,
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.save_outlined),
                       title: const Text('Save card for future payments'),
                       subtitle: const Text(
                         'Unavailable until backend tokenization support is added.',
                       ),
-                      contentPadding: EdgeInsets.zero,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      activeColor: const Color(0xFFC89B3C),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
             ],
-
-            // Security Notice
             RoundedCard(
               child: Row(
                 children: [
@@ -390,20 +392,14 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
                 ],
               ),
             ),
-
             const SizedBox(height: 24),
-
-            // Pay Button
             PrimaryButton(
-              label: 'Pay \$410.40',
+              label: 'Pay \$${_paymentAmount.toStringAsFixed(2)}',
               icon: Icons.lock_rounded,
               isLoading: _isProcessing,
               onPressed: _processPayment,
             ),
-
             const SizedBox(height: 16),
-
-            // Terms
             Text(
               'By completing this booking, you agree to our Terms of Service and Privacy Policy.',
               style: TextStyle(
@@ -412,7 +408,6 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
               ),
               textAlign: TextAlign.center,
             ),
-
             const SizedBox(height: 32),
           ],
         ),

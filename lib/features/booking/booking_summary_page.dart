@@ -6,6 +6,9 @@ import 'package:intl/intl.dart';
 import '../../core/widgets/app_bar_widget.dart';
 import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/primary_button.dart';
+import '../../core/models/booking_model.dart';
+
+import 'booking_checkout_data.dart';
 
 class BookingSummaryPage extends ConsumerStatefulWidget {
   const BookingSummaryPage({super.key});
@@ -289,7 +292,23 @@ class _BookingSummaryPageState extends ConsumerState<BookingSummaryPage> {
                     PrimaryButton(
                       label: 'Proceed to Payment',
                       icon: Icons.payment_rounded,
-                      onPressed: () => context.push('/confirm-pay'),
+                      onPressed: () {
+                        final checkoutData = BookingCheckoutData(
+                          itemId: 'hotel_luxor_palace',
+                          type: BookingType.hotel,
+                          itemName: 'Luxor Palace Hotel',
+                          itemImage: 'https://images.unsplash.com/photo-1566073771259-6a8506099945',
+                          startDate: _checkIn,
+                          endDate: _checkOut,
+                          guestCount: _guests,
+                          subtotal: _subtotal,
+                          serviceFee: _serviceFee,
+                          taxes: _taxes,
+                          discount: 0,
+                          total: _total,
+                        );
+                        context.push('/confirm-pay', extra: checkoutData);
+                      },
                     ),
                   ],
                 ),

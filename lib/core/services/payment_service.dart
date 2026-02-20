@@ -17,6 +17,16 @@ class PaymentOperationResult {
   });
 }
 
+class PaymentFlowResult {
+  const PaymentFlowResult({
+    required this.paymentId,
+    required this.status,
+  });
+
+  final String paymentId;
+  final String status;
+}
+
 class PaymentService {
   final Dio _dio = Dio(
     BaseOptions(
@@ -89,12 +99,13 @@ class PaymentService {
   }
 
   // Confirm payment via backend (if server-side confirmation is required).
-  Future<void> confirmPayment(String paymentIntentId) async {
+  Future<Map<String, dynamic>> confirmPayment(String paymentIntentId) async {
     try {
-      await _dio.post(
+      final response = await _dio.post(
         ApiEndpoints.confirmPayment,
         data: {'paymentIntentId': paymentIntentId},
       );
+      return Map<String, dynamic>.from(response.data as Map);
     } catch (e) {
       throw Exception('Failed to confirm payment from backend: $e');
     }
@@ -157,7 +168,7 @@ class PaymentService {
   }
 
   // Process full payment flow
-  Future<bool> processPayment({
+  Future<PaymentFlowResult> processPayment({
     required double amount,
     required String currency,
     required String customerId,
@@ -165,7 +176,6 @@ class PaymentService {
     String? description,
   }) async {
     try {
-      // 1. Create payment intent from backend.
       final paymentIntent = await createPaymentIntent(
         amount: amount,
         currency: currency,
@@ -174,7 +184,7 @@ class PaymentService {
       );
 
       final clientSecret = paymentIntent['client_secret'] as String?;
-      final paymentIntentId = paymentIntent['id'] as String?;
+      final paymentIntentId = paymentIntent['id']?.toString() ?? '';
       final requiresServerConfirmation =
           paymentIntent['requires_server_confirmation'] == true;
 
@@ -182,24 +192,39 @@ class PaymentService {
         throw Exception('Backend did not return payment intent client secret.');
       }
 
-      // 2. Initialize payment sheet.
       await initPaymentSheet(
         paymentIntentClientSecret: clientSecret,
         merchantDisplayName: merchantName,
       );
 
-      // 3. Present payment sheet.
       final success = await presentPaymentSheet();
-
-      // 4. Optional server-side confirmation/audit.
-      if (success &&
-          requiresServerConfirmation &&
-          paymentIntentId != null &&
-          paymentIntentId.isNotEmpty) {
-        await confirmPayment(paymentIntentId);
+      if (!success) {
+        return PaymentFlowResult(
+          paymentId: paymentIntentId,
+          status: 'failed',
+        );
       }
 
-      return success;
+      Map<String, dynamic>? confirmation;
+      if (paymentIntentId.isNotEmpty) {
+        confirmation = await confirmPayment(paymentIntentId);
+      }
+
+      final resolvedStatus = (confirmation?['status'] ?? paymentIntent['status'] ?? '')
+          .toString()
+          .toLowerCase();
+
+      if (resolvedStatus.isNotEmpty) {
+        return PaymentFlowResult(
+          paymentId: paymentIntentId,
+          status: resolvedStatus,
+        );
+      }
+
+      return PaymentFlowResult(
+        paymentId: paymentIntentId,
+        status: requiresServerConfirmation ? 'requires_action' : 'succeeded',
+      );
     } catch (e) {
       rethrow;
     }
