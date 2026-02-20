@@ -106,6 +106,8 @@ class PaymentService {
 
       final clientSecret = paymentIntent['client_secret'] as String?;
       final paymentIntentId = paymentIntent['id'] as String?;
+      final requiresServerConfirmation =
+          paymentIntent['requires_server_confirmation'] == true;
 
       if (clientSecret == null || clientSecret.isEmpty) {
         throw Exception('Backend did not return payment intent client secret.');
@@ -121,7 +123,10 @@ class PaymentService {
       final success = await presentPaymentSheet();
 
       // 4. Optional server-side confirmation/audit.
-      if (success && paymentIntentId != null && paymentIntentId.isNotEmpty) {
+      if (success &&
+          requiresServerConfirmation &&
+          paymentIntentId != null &&
+          paymentIntentId.isNotEmpty) {
         await confirmPayment(paymentIntentId);
       }
 

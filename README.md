@@ -26,3 +26,5 @@ Before opening a PR:
 ```bash
 ./scripts/check_no_secret_constants.sh
 ```
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contributor checklist.
+
