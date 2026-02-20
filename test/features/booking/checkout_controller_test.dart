@@ -1,8 +1,28 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:discover_egypt/core/models/user_model.dart';
 import 'package:discover_egypt/core/services/payment_service.dart';
 import 'package:discover_egypt/features/booking/checkout_controller.dart';
+
+
+class _PendingPaymentService extends PaymentService {
+  final Completer<bool> _completer = Completer<bool>();
+
+  void complete(bool value) => _completer.complete(value);
+
+  @override
+  Future<bool> processPayment({
+    required double amount,
+    required String currency,
+    required String customerId,
+    required String merchantName,
+    String? description,
+  }) {
+    return _completer.future;
+  }
+}
 
 class _FakePaymentService extends PaymentService {
   _FakePaymentService({
@@ -159,6 +179,31 @@ void main() {
 
       expect(controller.state.status, CheckoutStatus.error);
       expect(controller.state.errorMessage, contains('Payment failed:'));
+    });
+
+
+    test('does not update state after disposal during card payment', () async {
+      final paymentService = _PendingPaymentService();
+      final controller = CheckoutController(
+        paymentService: paymentService,
+        currentUserGetter: () => null,
+      );
+
+      final paymentFuture = controller.processCardPayment(
+        const CheckoutCardDetails(
+          cardNumber: '4111111111111111',
+          expiryDate: '12/30',
+          cvv: '123',
+          cardholderName: 'User One',
+        ),
+      );
+
+      controller.dispose();
+      paymentService.complete(true);
+
+      await paymentFuture;
+
+      expect(controller.mounted, isFalse);
     });
 
     test('processes wallet payment with loading and success', () async {

@@ -117,6 +117,10 @@ class CheckoutController extends StateNotifier<CheckoutState> {
         description: 'Travel booking payment',
       );
 
+      if (!mounted) {
+        return;
+      }
+
       if (!success) {
         state = const CheckoutState(
           status: CheckoutStatus.error,
@@ -127,6 +131,10 @@ class CheckoutController extends StateNotifier<CheckoutState> {
 
       state = const CheckoutState(status: CheckoutStatus.success);
     } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
       state = CheckoutState(
         status: CheckoutStatus.error,
         errorMessage: 'Payment failed: $e',
@@ -137,12 +145,22 @@ class CheckoutController extends StateNotifier<CheckoutState> {
   Future<void> _processWalletPayment() async {
     state = const CheckoutState(status: CheckoutStatus.loading);
     await Future.delayed(_placeholderDelay);
+
+    if (!mounted) {
+      return;
+    }
+
     state = const CheckoutState(status: CheckoutStatus.success);
   }
 
   Future<void> _processCashPayment() async {
     state = const CheckoutState(status: CheckoutStatus.loading);
     await Future.delayed(_placeholderDelay);
+
+    if (!mounted) {
+      return;
+    }
+
     state = const CheckoutState(status: CheckoutStatus.success);
   }
 
