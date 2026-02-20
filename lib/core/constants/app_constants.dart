@@ -12,11 +12,6 @@ class AppConstants {
   static const String onboardingKey = 'onboarding_completed';
   static const String userTokenKey = 'user_token';
 
-  // API Keys (Use environment variables in production)
-  static const String stripePublishableKey = 'pk_test_demo_key_replace_with_real';
-  static const String stripeSecretKey = 'sk_test_demo_key_replace_with_real';
-  static const String googleMapsApiKey = 'AIzaSyDemo_key_replace_with_real';
-
   // Firebase Collections
   static const String usersCollection = 'users';
   static const String hotelsCollection = 'hotels';

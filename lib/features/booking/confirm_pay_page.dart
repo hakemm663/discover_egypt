@@ -36,25 +36,57 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
 
   Future<void> _processPayment() async {
     if (_paymentMethod == 'card') {
-      // Validate card details
+      // Keep basic validation for current card form inputs.
       if (_cardNumberController.text.isEmpty ||
           _expiryController.text.isEmpty ||
           _cvvController.text.isEmpty ||
           _nameController.text.isEmpty) {
-        Helpers.showSnackBar(context, 'Please fill all card details',
-            isError: true);
+        Helpers.showSnackBar(
+          context,
+          'Please fill all card details',
+          isError: true,
+        );
         return;
       }
     }
 
     setState(() => _isProcessing = true);
 
-    // Simulate payment processing
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      if (_paymentMethod == 'card') {
+        final paymentService = ref.read(paymentServiceProvider);
+        final user = ref.read(currentUserProvider);
 
-    if (mounted) {
-      setState(() => _isProcessing = false);
-      context.go('/payment-success');
+        final success = await paymentService.processPayment(
+          amount: 410.40,
+          currency: 'USD',
+          customerId: user?.id.isNotEmpty == true ? user!.id : 'guest',
+          merchantName: 'Discover Egypt',
+          description: 'Travel booking payment',
+        );
+
+        if (!success) {
+          if (mounted) {
+            Helpers.showSnackBar(context, 'Payment canceled', isError: true);
+          }
+          return;
+        }
+      } else {
+        // Wallet and cash flows remain local placeholders until backend wiring.
+        await Future.delayed(const Duration(seconds: 1));
+      }
+
+      if (mounted) {
+        context.go('/payment-success');
+      }
+    } catch (e) {
+      if (mounted) {
+        Helpers.showSnackBar(context, 'Payment failed: $e', isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
     }
   }
 
