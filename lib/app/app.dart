@@ -12,6 +12,7 @@ class DiscoverEgyptApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
+    final locale = ref.watch(languageProvider);
 
     return MaterialApp.router(
       title: 'Discover Egypt',
@@ -19,6 +20,7 @@ class DiscoverEgyptApp extends ConsumerWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
+      locale: locale,
       routerConfig: appRouter,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
@@ -26,10 +28,10 @@ class DiscoverEgyptApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('en', 'US'),
-        Locale('ar', 'EG'),
-        Locale('fr', 'FR'),
-        Locale('de', 'DE'),
+        Locale('en'),
+        Locale('ar'),
+        Locale('fr'),
+        Locale('de'),
       ],
     );
   }
