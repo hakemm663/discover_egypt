@@ -7,7 +7,7 @@ import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/utils/helpers.dart';
 import '../../app/providers.dart';
-import 'confirm_pay_controller.dart';
+import 'checkout_payment_controller.dart';
 
 class ConfirmPayPage extends ConsumerStatefulWidget {
   const ConfirmPayPage({super.key});
@@ -50,24 +50,24 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
       }
     }
 
-    await ref.read(confirmPayControllerProvider.notifier).processPayment(_paymentMethod);
+    await ref.read(checkoutPaymentControllerProvider.notifier).processPayment(_paymentMethod);
   }
 
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
-    final paymentState = ref.watch(confirmPayControllerProvider);
+    final paymentState = ref.watch(checkoutPaymentControllerProvider);
 
-    ref.listen<ConfirmPayState>(confirmPayControllerProvider, (previous, next) {
+    ref.listen<CheckoutPaymentState>(checkoutPaymentControllerProvider, (previous, next) {
       if (!mounted) return;
 
-      if (next.status == ConfirmPayStatus.error && next.errorMessage != null) {
+      if (next.status == CheckoutPaymentStatus.error && next.errorMessage != null) {
         Helpers.showSnackBar(context, next.errorMessage!, isError: true);
-        ref.read(confirmPayControllerProvider.notifier).clearStatus();
+        ref.read(checkoutPaymentControllerProvider.notifier).clearStatus();
       }
 
-      if (next.status == ConfirmPayStatus.success) {
-        ref.read(confirmPayControllerProvider.notifier).clearStatus();
+      if (next.status == CheckoutPaymentStatus.success) {
+        ref.read(checkoutPaymentControllerProvider.notifier).clearStatus();
         context.go('/payment-success');
       }
     });

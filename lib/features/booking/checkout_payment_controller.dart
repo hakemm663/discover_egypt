@@ -3,43 +3,43 @@ import 'package:flutter/foundation.dart';
 
 import '../../app/providers.dart';
 
-enum ConfirmPayStatus { idle, loading, success, error }
+enum CheckoutPaymentStatus { idle, loading, success, error }
 
-class ConfirmPayState {
-  final ConfirmPayStatus status;
+class CheckoutPaymentState {
+  final CheckoutPaymentStatus status;
   final String? errorMessage;
 
-  const ConfirmPayState({
-    this.status = ConfirmPayStatus.idle,
+  const CheckoutPaymentState({
+    this.status = CheckoutPaymentStatus.idle,
     this.errorMessage,
   });
 
-  bool get isLoading => status == ConfirmPayStatus.loading;
+  bool get isLoading => status == CheckoutPaymentStatus.loading;
 
-  ConfirmPayState copyWith({
-    ConfirmPayStatus? status,
+  CheckoutPaymentState copyWith({
+    CheckoutPaymentStatus? status,
     String? errorMessage,
     bool clearError = false,
   }) {
-    return ConfirmPayState(
+    return CheckoutPaymentState(
       status: status ?? this.status,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }
 }
 
-final confirmPayControllerProvider =
-    StateNotifierProvider.autoDispose<ConfirmPayController, ConfirmPayState>(
-  (ref) => ConfirmPayController(ref),
+final checkoutPaymentControllerProvider =
+    StateNotifierProvider.autoDispose<CheckoutPaymentController, CheckoutPaymentState>(
+  (ref) => CheckoutPaymentController(ref),
 );
 
-class ConfirmPayController extends StateNotifier<ConfirmPayState> {
+class CheckoutPaymentController extends StateNotifier<CheckoutPaymentState> {
   final Ref _ref;
 
-  ConfirmPayController(this._ref) : super(const ConfirmPayState());
+  CheckoutPaymentController(this._ref) : super(const CheckoutPaymentState());
 
   Future<void> processPayment(String paymentMethod) async {
-    state = state.copyWith(status: ConfirmPayStatus.loading, clearError: true);
+    state = state.copyWith(status: CheckoutPaymentStatus.loading, clearError: true);
 
     try {
       if (paymentMethod == 'card') {
@@ -56,7 +56,7 @@ class ConfirmPayController extends StateNotifier<ConfirmPayState> {
 
         if (!success) {
           state = state.copyWith(
-            status: ConfirmPayStatus.error,
+            status: CheckoutPaymentStatus.error,
             errorMessage: 'Payment canceled',
           );
           return;
@@ -65,21 +65,21 @@ class ConfirmPayController extends StateNotifier<ConfirmPayState> {
         await Future.delayed(const Duration(seconds: 1));
       }
 
-      state = state.copyWith(status: ConfirmPayStatus.success, clearError: true);
+      state = state.copyWith(status: CheckoutPaymentStatus.success, clearError: true);
     } catch (e) {
       state = state.copyWith(
-        status: ConfirmPayStatus.error,
+        status: CheckoutPaymentStatus.error,
         errorMessage: 'Payment failed: $e',
       );
     }
   }
 
   void clearStatus() {
-    state = const ConfirmPayState();
+    state = const CheckoutPaymentState();
   }
 
   @visibleForTesting
-  void setStateForTest(ConfirmPayState value) {
+  void setStateForTest(CheckoutPaymentState value) {
     state = value;
   }
 }

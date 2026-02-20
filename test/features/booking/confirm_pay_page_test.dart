@@ -1,4 +1,4 @@
-import 'package:discover_egypt/features/booking/confirm_pay_controller.dart';
+import 'package:discover_egypt/features/booking/checkout_payment_controller.dart';
 import 'package:discover_egypt/features/booking/confirm_pay_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -56,11 +56,11 @@ void main() {
     await tester.pump();
   }
 
-  ConfirmPayController readController(WidgetTester tester) {
+  CheckoutPaymentController readController(WidgetTester tester) {
     final container = ProviderScope.containerOf(
       tester.element(find.byType(ConfirmPayPage)),
     );
-    return container.read(confirmPayControllerProvider.notifier);
+    return container.read(checkoutPaymentControllerProvider.notifier);
   }
 
   testWidgets('shows and hides loading indicator based on controller state',
@@ -70,14 +70,14 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsNothing);
 
     readController(tester).setStateForTest(
-      const ConfirmPayState(status: ConfirmPayStatus.loading),
+      const CheckoutPaymentState(status: CheckoutPaymentStatus.loading),
     );
     await tester.pump();
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
     readController(tester).setStateForTest(
-      const ConfirmPayState(status: ConfirmPayStatus.idle),
+      const CheckoutPaymentState(status: CheckoutPaymentStatus.idle),
     );
     await tester.pump();
 
@@ -88,8 +88,8 @@ void main() {
     await pumpPage(tester);
 
     readController(tester).setStateForTest(
-      const ConfirmPayState(
-        status: ConfirmPayStatus.error,
+      const CheckoutPaymentState(
+        status: CheckoutPaymentStatus.error,
         errorMessage: 'Payment failed: boom',
       ),
     );
@@ -104,7 +104,7 @@ void main() {
     await pumpPage(tester);
 
     readController(tester).setStateForTest(
-      const ConfirmPayState(status: ConfirmPayStatus.success),
+      const CheckoutPaymentState(status: CheckoutPaymentStatus.success),
     );
     await tester.pumpAndSettle();
 
