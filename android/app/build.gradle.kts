@@ -15,6 +15,8 @@ if (localPropertiesFile.exists()) {
 
 val flutterVersionCode = localProperties.getProperty("flutter.versionCode") ?: "1"
 val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
+val mapsApiKeyFromLocalProperties = localProperties.getProperty("MAPS_API_KEY")
+val mapsApiKeyFromCi = System.getenv("MAPS_API_KEY")
 
 // Keystore properties
 val keystoreProperties = Properties()
@@ -49,6 +51,7 @@ android {
         versionCode = flutterVersionCode.toInt()
         versionName = flutterVersionName
         multiDexEnabled = true
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKeyFromLocalProperties ?: ""
     }
 
     signingConfigs {
@@ -77,6 +80,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            // Prefer CI-provided secrets for release builds and fall back to local.properties.
+            manifestPlaceholders["MAPS_API_KEY"] = mapsApiKeyFromCi
+                ?: mapsApiKeyFromLocalProperties
+                ?: ""
         }
         
         getByName("debug") {
