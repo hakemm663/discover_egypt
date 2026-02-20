@@ -7,7 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/constants/image_urls.dart';
 import '../../core/widgets/error_widget.dart';
 import '../../core/widgets/loading_widget.dart';
-import '../../core/widgets/app_bar_widget.dart';
+import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/section_title.dart';
 import '../../core/widgets/rating_widget.dart';
