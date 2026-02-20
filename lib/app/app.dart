@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-import 'router.dart';
-import 'theme.dart';
+import '../core/routes/router.dart';
+import '../core/themes/theme.dart';
 import 'providers.dart';
 
 class DiscoverEgyptApp extends ConsumerWidget {
