@@ -18,6 +18,9 @@ class ProfileWalletPage extends StatelessWidget {
       appBar: CustomAppBar(
         title: 'My Profile & Wallet',
         showBackButton: false,
+        showProfileButton: false,
+        variant: CustomAppBarVariant.dark,
+        backgroundImageUrl: Img.pyramidsMain,
         onSettingsTap: () {
           // Navigate to settings or show settings dialog
         },
