@@ -4,6 +4,19 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 
 import '../constants/api_endpoints.dart';
 
+
+class PaymentOperationResult {
+  final String bookingId;
+  final String paymentId;
+  final String status;
+
+  const PaymentOperationResult({
+    required this.bookingId,
+    required this.paymentId,
+    required this.status,
+  });
+}
+
 class PaymentService {
   final Dio _dio = Dio(
     BaseOptions(
@@ -84,6 +97,62 @@ class PaymentService {
       );
     } catch (e) {
       throw Exception('Failed to confirm payment from backend: $e');
+    }
+  }
+
+
+  Future<PaymentOperationResult> processWalletPayment({
+    required String bookingId,
+    required double amount,
+    required String customerId,
+  }) async {
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.walletCharge,
+        data: {
+          'bookingId': bookingId,
+          'amount': (amount * 100).toInt(),
+          'currency': 'usd',
+          'customerId': customerId,
+          'paymentMethod': 'wallet',
+        },
+      );
+
+      final data = Map<String, dynamic>.from(response.data as Map);
+      return PaymentOperationResult(
+        bookingId: (data['bookingId'] ?? bookingId).toString(),
+        paymentId: (data['paymentId'] ?? data['id'] ?? '').toString(),
+        status: (data['status'] ?? '').toString(),
+      );
+    } catch (e) {
+      throw Exception('Failed to process wallet payment from backend: $e');
+    }
+  }
+
+  Future<PaymentOperationResult> markCashOnArrival({
+    required String bookingId,
+    required double amount,
+  }) async {
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.cashOnArrivalIntent,
+        data: {
+          'bookingId': bookingId,
+          'amount': (amount * 100).toInt(),
+          'currency': 'usd',
+          'status': 'pending_cash_collection',
+          'paymentMethod': 'cash',
+        },
+      );
+
+      final data = Map<String, dynamic>.from(response.data as Map);
+      return PaymentOperationResult(
+        bookingId: (data['bookingId'] ?? bookingId).toString(),
+        paymentId: (data['paymentId'] ?? data['id'] ?? '').toString(),
+        status: (data['status'] ?? '').toString(),
+      );
+    } catch (e) {
+      throw Exception('Failed to create cash-on-arrival intent from backend: $e');
     }
   }
 
