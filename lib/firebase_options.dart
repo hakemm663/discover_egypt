@@ -5,7 +5,10 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      return web;
+      throw UnsupportedError(
+        'DefaultFirebaseOptions have not been configured for web - '
+        'you can reconfigure this by running the FlutterFire CLI again.',
+      );
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -13,9 +16,15 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        return macos;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for macos - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.windows:
-        return windows;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for windows - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -28,47 +37,20 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDemoKey123456789',
-    appId: '1:123456789:web:abcdef123456',
-    messagingSenderId: '123456789',
-    projectId: 'discover-egypt-demo',
-    authDomain: 'discover-egypt-demo.firebaseapp.com',
-    storageBucket: 'discover-egypt-demo.appspot.com',
-  );
-
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDemoKey123456789',
-    appId: '1:123456789:android:abcdef123456',
-    messagingSenderId: '123456789',
-    projectId: 'discover-egypt-demo',
-    storageBucket: 'discover-egypt-demo.appspot.com',
+    apiKey: 'AIzaSyB-reiQfpkY8a38JdRSMzA-qIwmy3bzMWE',
+    appId: '1:52754735379:android:65cae8f766b5b7bb53fae6',
+    messagingSenderId: '52754735379',
+    projectId: 'discover-egypt-95efd',
+    storageBucket: 'discover-egypt-95efd.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDemoKey123456789',
-    appId: '1:123456789:ios:abcdef123456',
-    messagingSenderId: '123456789',
-    projectId: 'discover-egypt-demo',
-    storageBucket: 'discover-egypt-demo.appspot.com',
+    apiKey: 'AIzaSyAeSXuDrVMMVe3RkD5W5Vedp0kjUQ0ekco',
+    appId: '1:52754735379:ios:af9972872d624fb953fae6',
+    messagingSenderId: '52754735379',
+    projectId: 'discover-egypt-95efd',
+    storageBucket: 'discover-egypt-95efd.firebasestorage.app',
     iosBundleId: 'com.discoveregypt.app',
-  );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDemoKey123456789',
-    appId: '1:123456789:macos:abcdef123456',
-    messagingSenderId: '123456789',
-    projectId: 'discover-egypt-demo',
-    storageBucket: 'discover-egypt-demo.appspot.com',
-    iosBundleId: 'com.discoveregypt.app',
-  );
-
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDemoKey123456789',
-    appId: '1:123456789:web:abcdef123456',
-    messagingSenderId: '123456789',
-    projectId: 'discover-egypt-demo',
-    authDomain: 'discover-egypt-demo.firebaseapp.com',
-    storageBucket: 'discover-egypt-demo.appspot.com',
   );
 }
