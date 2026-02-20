@@ -25,6 +25,15 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
   bool _isProcessing = false;
 
   Future<void> _processPayment() async {
+    if (widget.amount <= 0) {
+      Helpers.showSnackBar(
+        context,
+        'Invalid booking amount. Please return and try again.',
+        isError: true,
+      );
+      return;
+    }
+
     setState(() => _isProcessing = true);
 
     try {
@@ -32,10 +41,12 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
         final paymentService = ref.read(paymentServiceProvider);
         final user = ref.read(currentUserProvider);
 
+        final userId = user?.id ?? '';
+
         final success = await paymentService.processPayment(
           amount: widget.amount,
           currency: 'USD',
-          customerId: user?.id.isNotEmpty == true ? user!.id : 'guest',
+          customerId: userId.isNotEmpty ? userId : 'guest',
           merchantName: 'Discover Egypt',
           description: 'Travel booking payment',
         );
@@ -198,7 +209,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
               label: 'Pay \$${widget.amount.toStringAsFixed(2)}',
               icon: Icons.lock_rounded,
               isLoading: _isProcessing,
-              onPressed: _processPayment,
+              onPressed: widget.amount > 0 ? _processPayment : null,
             ),
             const SizedBox(height: 16),
             Text(

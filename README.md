@@ -27,6 +27,7 @@ Before opening a PR:
 ./scripts/check_no_secret_constants.sh
 ```
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contributor checklist.
+
 ## Release readiness
 
 See [`docs/launch/RELEASE_READINESS.md`](docs/launch/RELEASE_READINESS.md) for Google Play and App Store launch checks.
