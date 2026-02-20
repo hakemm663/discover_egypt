@@ -7,6 +7,7 @@ import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/utils/helpers.dart';
 import '../../app/providers.dart';
+import 'confirm_pay_controller.dart';
 
 class ConfirmPayPage extends ConsumerStatefulWidget {
   const ConfirmPayPage({super.key});
@@ -18,7 +19,6 @@ class ConfirmPayPage extends ConsumerStatefulWidget {
 class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
   String _paymentMethod = 'card';
   bool _saveCard = false;
-  bool _isProcessing = false;
 
   final _cardNumberController = TextEditingController();
   final _expiryController = TextEditingController();
@@ -50,49 +50,27 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
       }
     }
 
-    setState(() => _isProcessing = true);
-
-    try {
-      if (_paymentMethod == 'card') {
-        final paymentService = ref.read(paymentServiceProvider);
-        final user = ref.read(currentUserProvider);
-
-        final success = await paymentService.processPayment(
-          amount: 410.40,
-          currency: 'USD',
-          customerId: user?.id.isNotEmpty == true ? user!.id : 'guest',
-          merchantName: 'Discover Egypt',
-          description: 'Travel booking payment',
-        );
-
-        if (!success) {
-          if (mounted) {
-            Helpers.showSnackBar(context, 'Payment canceled', isError: true);
-          }
-          return;
-        }
-      } else {
-        // Wallet and cash flows remain local placeholders until backend wiring.
-        await Future.delayed(const Duration(seconds: 1));
-      }
-
-      if (mounted) {
-        context.go('/payment-success');
-      }
-    } catch (e) {
-      if (mounted) {
-        Helpers.showSnackBar(context, 'Payment failed: $e', isError: true);
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-      }
-    }
+    await ref.read(confirmPayControllerProvider.notifier).processPayment(_paymentMethod);
   }
 
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
+    final paymentState = ref.watch(confirmPayControllerProvider);
+
+    ref.listen<ConfirmPayState>(confirmPayControllerProvider, (previous, next) {
+      if (!mounted) return;
+
+      if (next.status == ConfirmPayStatus.error && next.errorMessage != null) {
+        Helpers.showSnackBar(context, next.errorMessage!, isError: true);
+        ref.read(confirmPayControllerProvider.notifier).clearStatus();
+      }
+
+      if (next.status == ConfirmPayStatus.success) {
+        ref.read(confirmPayControllerProvider.notifier).clearStatus();
+        context.go('/payment-success');
+      }
+    });
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -316,7 +294,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
             PrimaryButton(
               label: 'Pay \$410.40',
               icon: Icons.lock_rounded,
-              isLoading: _isProcessing,
+              isLoading: paymentState.isLoading,
               onPressed: _processPayment,
             ),
 
