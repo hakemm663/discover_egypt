@@ -1,12 +1,18 @@
-import 'package:flutter_stripe/flutter_stripe.dart';
-import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import '../constants/app_constants.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+
+import '../constants/api_endpoints.dart';
 
 class PaymentService {
-  final Dio _dio = Dio();
+  final Dio _dio = Dio(
+    BaseOptions(
+      baseUrl: ApiEndpoints.baseUrl,
+      headers: {'Content-Type': 'application/json'},
+    ),
+  );
 
-  // Create payment intent on your backend
+  // Create payment intent through secure backend endpoint.
   Future<Map<String, dynamic>> createPaymentIntent({
     required double amount,
     required String currency,
@@ -14,27 +20,19 @@ class PaymentService {
     String? description,
   }) async {
     try {
-      // In production, call your backend API
-      // For demo, we'll create it directly (NOT recommended for production)
       final response = await _dio.post(
-        'https://api.stripe.com/v1/payment_intents',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer ${AppConstants.stripeSecretKey}',
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-        ),
+        ApiEndpoints.createPaymentIntent,
         data: {
-          'amount': (amount * 100).toInt(), // Convert to cents
+          'amount': (amount * 100).toInt(), // Convert to minor currency unit
           'currency': currency.toLowerCase(),
           'description': description ?? 'Discover Egypt Booking',
-          'metadata[customer_id]': customerId,
+          'customerId': customerId,
         },
       );
 
-      return response.data;
+      return Map<String, dynamic>.from(response.data as Map);
     } catch (e) {
-      throw Exception('Failed to create payment intent: $e');
+      throw Exception('Failed to create payment intent from backend: $e');
     }
   }
 
@@ -77,11 +75,16 @@ class PaymentService {
     }
   }
 
-  // Confirm payment
-  Future<PaymentIntent> confirmPayment(String clientSecret) async {
-    return await Stripe.instance.confirmPayment(
-      paymentIntentClientSecret: clientSecret,
-    );
+  // Confirm payment via backend (if server-side confirmation is required).
+  Future<void> confirmPayment(String paymentIntentId) async {
+    try {
+      await _dio.post(
+        ApiEndpoints.confirmPayment,
+        data: {'paymentIntentId': paymentIntentId},
+      );
+    } catch (e) {
+      throw Exception('Failed to confirm payment from backend: $e');
+    }
   }
 
   // Process full payment flow
@@ -93,7 +96,7 @@ class PaymentService {
     String? description,
   }) async {
     try {
-      // 1. Create payment intent
+      // 1. Create payment intent from backend.
       final paymentIntent = await createPaymentIntent(
         amount: amount,
         currency: currency,
@@ -101,14 +104,26 @@ class PaymentService {
         description: description,
       );
 
-      // 2. Initialize payment sheet
+      final clientSecret = paymentIntent['client_secret'] as String?;
+      final paymentIntentId = paymentIntent['id'] as String?;
+
+      if (clientSecret == null || clientSecret.isEmpty) {
+        throw Exception('Backend did not return payment intent client secret.');
+      }
+
+      // 2. Initialize payment sheet.
       await initPaymentSheet(
-        paymentIntentClientSecret: paymentIntent['client_secret'],
+        paymentIntentClientSecret: clientSecret,
         merchantDisplayName: merchantName,
       );
 
-      // 3. Present payment sheet
+      // 3. Present payment sheet.
       final success = await presentPaymentSheet();
+
+      // 4. Optional server-side confirmation/audit.
+      if (success && paymentIntentId != null && paymentIntentId.isNotEmpty) {
+        await confirmPayment(paymentIntentId);
+      }
 
       return success;
     } catch (e) {
