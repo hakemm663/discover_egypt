@@ -59,31 +59,16 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
               if (showBackButton) const SizedBox(width: 12),
 
-              // Title with background image
+              // Simple title
               Expanded(
-                child: Container(
-                  height: 46,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(23),
-                    image: DecorationImage(
-                      image: CachedNetworkImageProvider(Img.pyramidsMain),
-                      fit: BoxFit.cover,
-                      colorFilter: ColorFilter.mode(
-                        Colors.black.withValues(alpha: 0.4),
-                        BlendMode.darken,
-                      ),
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
+                child: Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),
@@ -240,7 +225,7 @@ class _MenuBottomSheet extends StatelessWidget {
             title: 'About',
             onTap: () {
               Navigator.pop(context);
-               // context.push('/about');
+              // context.push('/about');
             },
           ),
           _MenuItem(

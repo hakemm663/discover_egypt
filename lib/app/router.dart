@@ -39,7 +39,7 @@ import '../features/settings/settings_page.dart';
 import '../features/shared/trip_planner.dart';
 
 final appRouter = GoRouter(
-  initialLocation: '/cover',
+  initialLocation: '/home',
   routes: [
     // Onboarding
     GoRoute(
