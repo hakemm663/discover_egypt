@@ -27,6 +27,7 @@ import '../../features/restaurants/restaurant_details_page.dart';
 import '../../features/booking/booking_summary_page.dart';
 import '../../features/booking/confirm_pay_page.dart';
 import '../../features/booking/payment_success_page.dart';
+import '../../features/booking/booking_checkout_data.dart';
 
 import '../../features/profile/profile_wallet_page.dart';
 import '../../features/profile/edit_profile_page.dart';
@@ -210,7 +211,7 @@ final appRouter = GoRouter(
       path: '/confirm-pay',
       pageBuilder: (context, state) => _buildPage(
         state,
-        const ConfirmPayPage(),
+        ConfirmPayPage(checkoutData: _checkoutDataFromState(state)),
       ),
     ),
     GoRoute(
@@ -265,4 +266,13 @@ CustomTransitionPage _buildPage(GoRouterState state, Widget child) {
       );
     },
   );
+}
+
+BookingCheckoutData _checkoutDataFromState(GoRouterState state) {
+  final extra = state.extra;
+  if (extra is BookingCheckoutData) {
+    return extra;
+  }
+
+  throw StateError('Missing checkout data for /confirm-pay route.');
 }

@@ -202,10 +202,41 @@ class DatabaseService {
       taxes: booking.taxes,
       discount: booking.discount,
       total: booking.total,
+      currency: booking.currency,
       createdAt: DateTime.now(),
     );
 
     await docRef.set(bookingWithId.toJson());
+    return docRef.id;
+  }
+
+  Future<String> createPendingBooking(BookingModel booking) async {
+    final docRef = _firestore.collection(AppConstants.bookingsCollection).doc();
+    await _firestore.runTransaction((transaction) async {
+      final bookingDoc = BookingModel(
+        id: docRef.id,
+        userId: booking.userId,
+        itemId: booking.itemId,
+        type: booking.type,
+        status: BookingStatus.pending,
+        itemName: booking.itemName,
+        itemImage: booking.itemImage,
+        startDate: booking.startDate,
+        endDate: booking.endDate,
+        guestCount: booking.guestCount,
+        subtotal: booking.subtotal,
+        serviceFee: booking.serviceFee,
+        taxes: booking.taxes,
+        discount: booking.discount,
+        total: booking.total,
+        currency: booking.currency,
+        isPaid: false,
+        createdAt: DateTime.now(),
+      );
+
+      transaction.set(docRef, bookingDoc.toJson());
+    });
+
     return docRef.id;
   }
 
@@ -244,20 +275,60 @@ class DatabaseService {
     required bool isPaid,
     String? userId,
   }) async {
+    final bookingRef =
+        _firestore.collection(AppConstants.bookingsCollection).doc(bookingId);
+    final paymentRef = bookingRef.collection('payments').doc(paymentId);
+
+    await _firestore.runTransaction((transaction) async {
+      transaction.set(paymentRef, {
+        'id': paymentId,
+        'bookingId': bookingId,
+        if (userId != null) 'userId': userId,
+        'paymentMethod': paymentMethod,
+        'paymentStatus': paymentStatus,
+        'amount': amount,
+        'isPaid': isPaid,
+        'updatedAt': Timestamp.now(),
+      }, SetOptions(merge: true));
+
+      transaction.set(bookingRef, {
+        'id': bookingId,
+        if (userId != null) 'userId': userId,
+        'paymentId': paymentId,
+        'paymentMethod': paymentMethod,
+        'paymentStatus': paymentStatus,
+        'paymentAmount': amount,
+        'isPaid': isPaid,
+        'paidAt': isPaid ? Timestamp.now() : null,
+        'updatedAt': Timestamp.now(),
+      }, SetOptions(merge: true));
+    });
+  }
+
+  Future<void> applyBackendPaymentStatus({
+    required String bookingId,
+    required String paymentStatus,
+  }) async {
+    final normalized = paymentStatus.toLowerCase();
+    BookingStatus bookingStatus = BookingStatus.pending;
+    var isPaid = false;
+
+    if (normalized == 'succeeded') {
+      bookingStatus = BookingStatus.confirmed;
+      isPaid = true;
+    } else if (normalized == 'failed') {
+      bookingStatus = BookingStatus.cancelled;
+    }
+
     await _firestore
         .collection(AppConstants.bookingsCollection)
         .doc(bookingId)
         .set({
-      'id': bookingId,
-      if (userId != null) 'userId': userId,
-      'paymentId': paymentId,
-      'paymentMethod': paymentMethod,
-      'paymentStatus': paymentStatus,
-      'paymentAmount': amount,
+      'paymentStatus': normalized,
+      'status': bookingStatus.name,
       'isPaid': isPaid,
       'paidAt': isPaid ? Timestamp.now() : null,
       'updatedAt': Timestamp.now(),
-      'status': isPaid ? BookingStatus.confirmed.name : BookingStatus.pending.name,
     }, SetOptions(merge: true));
   }
 
