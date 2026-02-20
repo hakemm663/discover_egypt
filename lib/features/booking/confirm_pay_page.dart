@@ -16,6 +16,8 @@ class ConfirmPayPage extends ConsumerStatefulWidget {
 }
 
 class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
+  static const double _paymentAmount = 410.40;
+
   String _paymentMethod = 'card';
   bool _saveCard = false;
   bool _isProcessing = false;
@@ -53,14 +55,18 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
     setState(() => _isProcessing = true);
 
     try {
-      if (_paymentMethod == 'card') {
-        final paymentService = ref.read(paymentServiceProvider);
-        final user = ref.read(currentUserProvider);
+      final paymentService = ref.read(paymentServiceProvider);
+      final databaseService = ref.read(databaseServiceProvider);
+      final user = ref.read(currentUserProvider);
+      final customerId = user?.id.isNotEmpty == true ? user!.id : 'guest';
+      final bookingId =
+          'booking_${customerId}_${DateTime.now().millisecondsSinceEpoch}';
 
+      if (_paymentMethod == 'card') {
         final success = await paymentService.processPayment(
-          amount: 410.40,
+          amount: _paymentAmount,
           currency: 'USD',
-          customerId: user?.id.isNotEmpty == true ? user!.id : 'guest',
+          customerId: customerId,
           merchantName: 'Discover Egypt',
           description: 'Travel booking payment',
         );
@@ -71,9 +77,59 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
           }
           return;
         }
-      } else {
-        // Wallet and cash flows remain local placeholders until backend wiring.
-        await Future.delayed(const Duration(seconds: 1));
+      } else if (_paymentMethod == 'wallet') {
+        final walletResult = await paymentService.processWalletPayment(
+          bookingId: bookingId,
+          amount: _paymentAmount,
+          customerId: customerId,
+        );
+
+        if (walletResult.status != 'succeeded') {
+          if (mounted) {
+            Helpers.showSnackBar(
+              context,
+              'Wallet payment is ${walletResult.status}.',
+              isError: true,
+            );
+          }
+          return;
+        }
+
+        await databaseService.upsertPaymentReconciliation(
+          bookingId: walletResult.bookingId,
+          paymentId: walletResult.paymentId,
+          paymentMethod: 'wallet',
+          paymentStatus: walletResult.status,
+          amount: _paymentAmount,
+          isPaid: true,
+          userId: user?.id,
+        );
+      } else if (_paymentMethod == 'cash') {
+        final cashResult = await paymentService.markCashOnArrival(
+          bookingId: bookingId,
+          amount: _paymentAmount,
+        );
+
+        if (cashResult.status != 'pending_cash_collection') {
+          if (mounted) {
+            Helpers.showSnackBar(
+              context,
+              'Cash payment setup failed (${cashResult.status}).',
+              isError: true,
+            );
+          }
+          return;
+        }
+
+        await databaseService.upsertPaymentReconciliation(
+          bookingId: cashResult.bookingId,
+          paymentId: cashResult.paymentId,
+          paymentMethod: 'cash',
+          paymentStatus: cashResult.status,
+          amount: _paymentAmount,
+          isPaid: false,
+          userId: user?.id,
+        );
       }
 
       if (mounted) {
