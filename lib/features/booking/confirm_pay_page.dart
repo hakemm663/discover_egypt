@@ -21,6 +21,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
   static const double _paymentAmount = 410.40;
 
   String _paymentMethod = 'card';
+  bool _saveCard = false;
   bool _isProcessing = false;
   final _checkoutController = CheckoutPaymentController();
 
@@ -46,7 +47,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
           expiry: _expiryController.text,
           cvv: _cvvController.text,
           cardholderName: _nameController.text,
-          saveCardRequested: false,
+          saveCardRequested: _saveCard,
         ),
       );
 
@@ -331,8 +332,11 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
                     ),
                     const SizedBox(height: 16),
                     CheckboxListTile(
-                      value: false,
-                      onChanged: null,
+                      value: _saveCard,
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setState(() => _saveCard = value);
+                      },
                       title: const Text('Save card for future payments'),
                       subtitle: const Text(
                         'Unavailable until backend tokenization support is added.',
