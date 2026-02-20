@@ -178,7 +178,7 @@ final appRouter = GoRouter(
       path: '/confirm-pay',
       pageBuilder: (context, state) => _buildPage(
         state,
-        ConfirmPayPage(checkoutData: state.extra as BookingCheckoutData),
+        ConfirmPayPage(checkoutData: _checkoutDataFromState(state)),
       ),
     ),
     GoRoute(
@@ -240,4 +240,13 @@ CustomTransitionPage _buildPage(GoRouterState state, Widget child) {
       );
     },
   );
+}
+
+BookingCheckoutData _checkoutDataFromState(GoRouterState state) {
+  final extra = state.extra;
+  if (extra is BookingCheckoutData) {
+    return extra;
+  }
+
+  throw StateError('Missing checkout data for /confirm-pay route.');
 }
