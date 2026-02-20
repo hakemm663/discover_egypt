@@ -24,17 +24,6 @@ class _LanguagePageState extends ConsumerState<LanguagePage> {
     {'code': 'ar', 'name': 'Arabic', 'flag': '🇪🇬', 'native': 'العربية'},
     {'code': 'fr', 'name': 'French', 'flag': '🇫🇷', 'native': 'Français'},
     {'code': 'de', 'name': 'German', 'flag': '🇩🇪', 'native': 'Deutsch'},
-    {'code': 'it', 'name': 'Italian', 'flag': '🇮🇹', 'native': 'Italiano'},
-    {'code': 'es', 'name': 'Spanish', 'flag': '🇪🇸', 'native': 'Español'},
-    {'code': 'ru', 'name': 'Russian', 'flag': '🇷🇺', 'native': 'Русский'},
-    {'code': 'zh', 'name': 'Chinese', 'flag': '🇨🇳', 'native': '中文'},
-    {'code': 'ja', 'name': 'Japanese', 'flag': '🇯🇵', 'native': '日本語'},
-    {'code': 'ko', 'name': 'Korean', 'flag': '🇰🇷', 'native': '한국어'},
-    {'code': 'pt', 'name': 'Portuguese', 'flag': '🇵🇹', 'native': 'Português'},
-    {'code': 'nl', 'name': 'Dutch', 'flag': '🇳🇱', 'native': 'Nederlands'},
-    {'code': 'tr', 'name': 'Turkish', 'flag': '🇹🇷', 'native': 'Türkçe'},
-    {'code': 'pl', 'name': 'Polish', 'flag': '🇵🇱', 'native': 'Polski'},
-    {'code': 'hi', 'name': 'Hindi', 'flag': '🇮🇳', 'native': 'हिन्दी'},
   ];
 
   List<Map<String, String>> get _filteredLanguages {

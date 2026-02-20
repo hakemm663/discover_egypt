@@ -82,20 +82,42 @@ final languageProvider = StateNotifierProvider<LanguageNotifier, Locale>((ref) {
 });
 
 class LanguageNotifier extends StateNotifier<Locale> {
-  LanguageNotifier() : super(const Locale('en', 'US')) {
+  static const Set<String> _supportedLanguageCodes = {'en', 'ar', 'fr', 'de'};
+
+  LanguageNotifier() : super(const Locale('en')) {
     _loadLanguage();
+  }
+
+  String _normalizeLanguageCode(String languageCode) {
+    final normalized = languageCode
+        .replaceAll('-', '_')
+        .split('_')
+        .first
+        .toLowerCase();
+
+    if (_supportedLanguageCodes.contains(normalized)) {
+      return normalized;
+    }
+
+    return 'en';
   }
 
   void _loadLanguage() {
     final box = Hive.box(AppConstants.settingsBox);
     final languageCode = box.get(AppConstants.languageKey, defaultValue: 'en');
-    state = Locale(languageCode);
+    final normalizedLanguageCode = _normalizeLanguageCode(languageCode);
+    state = Locale(normalizedLanguageCode);
+
+    if (normalizedLanguageCode != languageCode) {
+      box.put(AppConstants.languageKey, normalizedLanguageCode);
+    }
   }
 
   void setLanguage(String languageCode) {
-    state = Locale(languageCode);
+    final normalizedLanguageCode = _normalizeLanguageCode(languageCode);
+    state = Locale(normalizedLanguageCode);
     final box = Hive.box(AppConstants.settingsBox);
-    box.put(AppConstants.languageKey, languageCode);
+    box.put(AppConstants.languageKey, normalizedLanguageCode);
   }
 }
 
