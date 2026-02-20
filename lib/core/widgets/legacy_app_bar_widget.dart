@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
+class LegacyAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final bool showBackButton;
   final bool showMenuButton;
@@ -11,7 +11,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool transparent;
   final Color? backgroundColor;
 
-  const CustomAppBar({
+  const LegacyAppBarWidget({
     super.key,
     required this.title,
     this.showBackButton = true,

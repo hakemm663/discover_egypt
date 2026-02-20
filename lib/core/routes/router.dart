@@ -36,6 +36,7 @@ import '../../features/profile/my_bookings_page.dart';
 import '../../features/settings/settings_page.dart';
 
 import '../../features/shared/trip_planner.dart';
+import '../widgets/app_bottom_nav.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/home',
@@ -93,23 +94,69 @@ final appRouter = GoRouter(
       ),
     ),
 
-    // Home
-    GoRoute(
-      path: '/home',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const HomePage(),
-      ),
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) =>
+          AppBottomNavShell(navigationShell: navigationShell),
+      branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/home',
+              pageBuilder: (context, state) => _buildPage(
+                state,
+                const HomePage(),
+              ),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/hotels',
+              pageBuilder: (context, state) => _buildPage(
+                state,
+                const HotelsListPage(),
+              ),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/tours',
+              pageBuilder: (context, state) => _buildPage(
+                state,
+                const ToursListPage(),
+              ),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/cars',
+              pageBuilder: (context, state) => _buildPage(
+                state,
+                const CarsListPage(),
+              ),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/profile',
+              pageBuilder: (context, state) => _buildPage(
+                state,
+                const ProfileWalletPage(),
+              ),
+            ),
+          ],
+        ),
+      ],
     ),
 
     // Hotels
-    GoRoute(
-      path: '/hotels',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const HotelsListPage(),
-      ),
-    ),
     GoRoute(
       path: '/hotel/:id',
       pageBuilder: (context, state) => _buildPage(
@@ -120,13 +167,6 @@ final appRouter = GoRouter(
 
     // Tours
     GoRoute(
-      path: '/tours',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const ToursListPage(),
-      ),
-    ),
-    GoRoute(
       path: '/tour/:id',
       pageBuilder: (context, state) => _buildPage(
         state,
@@ -135,13 +175,6 @@ final appRouter = GoRouter(
     ),
 
     // Cars
-    GoRoute(
-      path: '/cars',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const CarsListPage(),
-      ),
-    ),
     GoRoute(
       path: '/car/:id',
       pageBuilder: (context, state) => _buildPage(
@@ -190,13 +223,6 @@ final appRouter = GoRouter(
     ),
 
     // Profile
-    GoRoute(
-      path: '/profile',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const ProfileWalletPage(),
-      ),
-    ),
     GoRoute(
       path: '/edit-profile',
       pageBuilder: (context, state) => _buildPage(
