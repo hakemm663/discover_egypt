@@ -6,6 +6,7 @@ import '../../core/widgets/app_bar_widget.dart';
 import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/utils/helpers.dart';
+import '../../core/utils/formatters.dart';
 import '../../app/providers.dart';
 
 class ConfirmPayPage extends ConsumerStatefulWidget {
@@ -19,6 +20,9 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
   String _paymentMethod = 'card';
   bool _saveCard = false;
   bool _isProcessing = false;
+
+  static const double _bookingTotal = 410.40;
+  static const String _currency = 'USD';
 
   final _cardNumberController = TextEditingController();
   final _expiryController = TextEditingController();
@@ -58,8 +62,8 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
         final user = ref.read(currentUserProvider);
 
         final success = await paymentService.processPayment(
-          amount: 410.40,
-          currency: 'USD',
+          amount: _bookingTotal,
+          currency: _currency,
           customerId: user?.id.isNotEmpty == true ? user!.id : 'guest',
           merchantName: 'Discover Egypt',
           description: 'Travel booking payment',
@@ -130,7 +134,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
                     icon: Icons.account_balance_wallet_rounded,
                     title: 'Wallet',
                     subtitle:
-                        'Balance: \$${user?.walletBalance.toStringAsFixed(2) ?? '0.00'}',
+                        'Balance: ${formatMoney(user?.walletBalance ?? 0, currency: _currency)}',
                     value: 'wallet',
                     groupValue: _paymentMethod,
                     onChanged: (value) =>
@@ -314,7 +318,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
 
             // Pay Button
             PrimaryButton(
-              label: 'Pay \$410.40',
+              label: 'Pay ${formatMoney(_bookingTotal, currency: _currency)}',
               icon: Icons.lock_rounded,
               isLoading: _isProcessing,
               onPressed: _processPayment,
