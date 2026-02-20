@@ -206,6 +206,49 @@ void main() {
       expect(controller.mounted, isFalse);
     });
 
+
+    test('clearState is a no-op after disposal', () {
+      final controller = CheckoutController(
+        paymentService: _FakePaymentService(),
+        currentUserGetter: () => null,
+      );
+
+      controller.dispose();
+      controller.clearState();
+
+      expect(controller.mounted, isFalse);
+    });
+
+    test('does not update state after disposal during wallet delay', () async {
+      final controller = CheckoutController(
+        paymentService: _FakePaymentService(),
+        currentUserGetter: () => null,
+        placeholderDelay: const Duration(milliseconds: 1),
+      );
+
+      final paymentFuture = controller.processPayment(paymentMethod: 'wallet');
+
+      controller.dispose();
+      await paymentFuture;
+
+      expect(controller.mounted, isFalse);
+    });
+
+    test('does not update state after disposal during cash delay', () async {
+      final controller = CheckoutController(
+        paymentService: _FakePaymentService(),
+        currentUserGetter: () => null,
+        placeholderDelay: const Duration(milliseconds: 1),
+      );
+
+      final paymentFuture = controller.processPayment(paymentMethod: 'cash');
+
+      controller.dispose();
+      await paymentFuture;
+
+      expect(controller.mounted, isFalse);
+    });
+
     test('processes wallet payment with loading and success', () async {
       final paymentService = _FakePaymentService();
       final controller = CheckoutController(

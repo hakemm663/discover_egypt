@@ -165,6 +165,10 @@ class CheckoutController extends StateNotifier<CheckoutState> {
   }
 
   void clearState() {
+    if (!mounted) {
+      return;
+    }
+
     state = const CheckoutState.idle();
   }
 }
