@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../../core/constants/image_urls.dart';
 import '../../core/widgets/app_bar_widget.dart';
 import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/rating_widget.dart';
+import '../../core/widgets/error_widget.dart';
+import '../../core/widgets/loading_widget.dart';
+import 'restaurants_provider.dart';
 
 class RestaurantsListPage extends ConsumerStatefulWidget {
   const RestaurantsListPage({super.key});
@@ -19,64 +21,19 @@ class RestaurantsListPage extends ConsumerStatefulWidget {
 class _RestaurantsListPageState extends ConsumerState<RestaurantsListPage> {
   String _selectedCuisine = 'All';
 
-  final List<Map<String, dynamic>> _restaurants = [
-    {
-      'id': '1',
-      'name': 'Naguib Mahfouz Cafe',
-      'cuisine': 'Egyptian',
-      'location': 'Khan El Khalili, Cairo',
-      'image': Img.restaurant,
-      'rating': 4.7,
-      'reviewCount': 890,
-      'priceRange': '\$\$',
-      'delivery': true,
-      'deliveryTime': 30,
-    },
-    {
-      'id': '2',
-      'name': 'Abou El Sid',
-      'cuisine': 'Egyptian',
-      'location': 'Zamalek, Cairo',
-      'image': Img.egyptianFood,
-      'rating': 4.8,
-      'reviewCount': 1240,
-      'priceRange': '\$\$',
-      'delivery': true,
-      'deliveryTime': 35,
-    },
-    {
-      'id': '3',
-      'name': 'Sequoia',
-      'cuisine': 'Mediterranean',
-      'location': 'Zamalek, Cairo',
-      'image': Img.restaurantInterior,
-      'rating': 4.6,
-      'reviewCount': 670,
-      'priceRange': '\$\$\$',
-      'delivery': false,
-      'deliveryTime': 0,
-    },
-    {
-      'id': '4',
-      'name': 'Koshari Abou Tarek',
-      'cuisine': 'Egyptian',
-      'location': 'Downtown Cairo',
-      'image': Img.koshari,
-      'rating': 4.9,
-      'reviewCount': 2100,
-      'priceRange': '\$',
-      'delivery': true,
-      'deliveryTime': 20,
-    },
-  ];
-
-  List<Map<String, dynamic>> get _filteredRestaurants {
-    if (_selectedCuisine == 'All') return _restaurants;
-    return _restaurants.where((r) => r['cuisine'] == _selectedCuisine).toList();
+  List<Map<String, dynamic>> _filteredRestaurants(
+    List<Map<String, dynamic>> sourceRestaurants,
+  ) {
+    if (_selectedCuisine == 'All') return sourceRestaurants;
+    return sourceRestaurants
+        .where((r) => r['cuisine'] == _selectedCuisine)
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    final restaurantsAsync = ref.watch(restaurantsProvider);
+
     return Scaffold(
       appBar: CustomAppBar(
         title: 'Restaurants & Cafes',
@@ -110,16 +67,30 @@ class _RestaurantsListPageState extends ConsumerState<RestaurantsListPage> {
 
           // Restaurants List
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: _filteredRestaurants.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 16),
-              itemBuilder: (context, index) {
-                final restaurant = _filteredRestaurants[index];
-                return _RestaurantListItem(restaurant: restaurant)
-                    .animate(delay: Duration(milliseconds: 100 * index))
-                    .fadeIn(duration: 400.ms)
-                    .slideX(begin: 0.2, end: 0);
+            child: restaurantsAsync.when(
+              loading: () => const LoadingWidget(message: 'Loading restaurants...'),
+              error: (error, stackTrace) => CustomErrorWidget(
+                title: 'Could not load restaurants',
+                message: error.toString(),
+                onRetry: () => ref.invalidate(restaurantsProvider),
+              ),
+              data: (restaurants) {
+                final filteredRestaurants = _filteredRestaurants(restaurants);
+                if (filteredRestaurants.isEmpty) {
+                  return const EmptyStateWidget(title: 'No restaurants found');
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: filteredRestaurants.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    final restaurant = filteredRestaurants[index];
+                    return _RestaurantListItem(restaurant: restaurant)
+                        .animate(delay: Duration(milliseconds: 100 * index))
+                        .fadeIn(duration: 400.ms)
+                        .slideX(begin: 0.2, end: 0);
+                  },
+                );
               },
             ),
           ),

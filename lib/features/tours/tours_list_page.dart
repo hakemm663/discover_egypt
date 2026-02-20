@@ -4,11 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../../core/constants/image_urls.dart';
 import '../../core/widgets/app_bar_widget.dart';
 import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/rating_widget.dart';
 import '../../core/widgets/price_tag.dart';
+import '../../core/widgets/error_widget.dart';
+import '../../core/widgets/loading_widget.dart';
+import 'tours_provider.dart';
 
 class ToursListPage extends ConsumerStatefulWidget {
   const ToursListPage({super.key});
@@ -20,71 +22,15 @@ class ToursListPage extends ConsumerStatefulWidget {
 class _ToursListPageState extends ConsumerState<ToursListPage> {
   String _selectedCategory = 'All';
 
-  final List<Map<String, dynamic>> _tours = [
-    {
-      'id': '1',
-      'name': 'Pyramids & Sphinx Day Tour',
-      'category': 'Historical',
-      'duration': 'Full Day • 8 hours',
-      'image': Img.pyramidsMain,
-      'rating': 4.9,
-      'reviewCount': 1250,
-      'price': 65.0,
-      'pickupIncluded': true,
-    },
-    {
-      'id': '2',
-      'name': 'Nile River Cruise',
-      'category': 'Cruise',
-      'duration': '3 Days • Luxor to Aswan',
-      'image': Img.nileCruise,
-      'rating': 4.8,
-      'reviewCount': 890,
-      'price': 320.0,
-      'pickupIncluded': true,
-    },
-    {
-      'id': '3',
-      'name': 'Luxor Temple & Valley of Kings',
-      'category': 'Historical',
-      'duration': 'Full Day • 10 hours',
-      'image': Img.luxorTemple,
-      'rating': 4.7,
-      'reviewCount': 720,
-      'price': 85.0,
-      'pickupIncluded': true,
-    },
-    {
-      'id': '4',
-      'name': 'Red Sea Diving Adventure',
-      'category': 'Adventure',
-      'duration': 'Half Day • 4 hours',
-      'image': Img.coralReef,
-      'rating': 4.9,
-      'reviewCount': 540,
-      'price': 95.0,
-      'pickupIncluded': false,
-    },
-    {
-      'id': '5',
-      'name': 'Desert Safari & BBQ',
-      'category': 'Adventure',
-      'duration': 'Evening • 5 hours',
-      'image': Img.pyramidsCamels,
-      'rating': 4.6,
-      'reviewCount': 380,
-      'price': 75.0,
-      'pickupIncluded': true,
-    },
-  ];
-
-  List<Map<String, dynamic>> get _filteredTours {
-    if (_selectedCategory == 'All') return _tours;
-    return _tours.where((t) => t['category'] == _selectedCategory).toList();
+  List<Map<String, dynamic>> _filteredTours(List<Map<String, dynamic>> sourceTours) {
+    if (_selectedCategory == 'All') return sourceTours;
+    return sourceTours.where((t) => t['category'] == _selectedCategory).toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    final toursAsync = ref.watch(toursProvider);
+
     return Scaffold(
       appBar: CustomAppBar(
         title: 'Tours & Experiences',
@@ -118,16 +64,30 @@ class _ToursListPageState extends ConsumerState<ToursListPage> {
 
           // Tours List
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: _filteredTours.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 16),
-              itemBuilder: (context, index) {
-                final tour = _filteredTours[index];
-                return _TourListItem(tour: tour)
-                    .animate(delay: Duration(milliseconds: 100 * index))
-                    .fadeIn(duration: 400.ms)
-                    .slideX(begin: 0.2, end: 0);
+            child: toursAsync.when(
+              loading: () => const LoadingWidget(message: 'Loading tours...'),
+              error: (error, stackTrace) => CustomErrorWidget(
+                title: 'Could not load tours',
+                message: error.toString(),
+                onRetry: () => ref.invalidate(toursProvider),
+              ),
+              data: (tours) {
+                final filteredTours = _filteredTours(tours);
+                if (filteredTours.isEmpty) {
+                  return const EmptyStateWidget(title: 'No tours found');
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: filteredTours.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    final tour = filteredTours[index];
+                    return _TourListItem(tour: tour)
+                        .animate(delay: Duration(milliseconds: 100 * index))
+                        .fadeIn(duration: 400.ms)
+                        .slideX(begin: 0.2, end: 0);
+                  },
+                );
               },
             ),
           ),

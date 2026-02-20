@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-import '../../core/constants/image_urls.dart';
 import '../../core/widgets/app_bar_widget.dart';
 import '../../core/widgets/rounded_card.dart';
+import '../../core/widgets/error_widget.dart';
+import '../../core/widgets/loading_widget.dart';
+import 'profile_provider.dart';
 
 class MyBookingsPage extends ConsumerStatefulWidget {
   const MyBookingsPage({super.key});
@@ -16,36 +18,6 @@ class MyBookingsPage extends ConsumerStatefulWidget {
 class _MyBookingsPageState extends ConsumerState<MyBookingsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-
-  final List<Map<String, dynamic>> _bookings = [
-    {
-      'id': '1',
-      'type': 'Hotel',
-      'name': 'Pyramids View Hotel',
-      'image': Img.hotelLuxury,
-      'date': 'Apr 20 - Apr 24, 2024',
-      'status': 'Confirmed',
-      'amount': 410.40,
-    },
-    {
-      'id': '2',
-      'type': 'Tour',
-      'name': 'Nile Cruise & Giza Tour',
-      'image': Img.nileCruise,
-      'date': 'Apr 25, 2024',
-      'status': 'Confirmed',
-      'amount': 65.00,
-    },
-    {
-      'id': '3',
-      'type': 'Hotel',
-      'name': 'Nile Ritz Carlton',
-      'image': Img.hotelPool,
-      'date': 'Mar 10 - Mar 15, 2024',
-      'status': 'Completed',
-      'amount': 1250.00,
-    },
-  ];
 
   @override
   void initState() {
@@ -61,6 +33,8 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage>
 
   @override
   Widget build(BuildContext context) {
+    final bookingsAsync = ref.watch(myBookingsProvider);
+
     return Scaffold(
       appBar: CustomAppBar(
         title: 'My Bookings',
@@ -97,9 +71,9 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage>
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildBookingsList('Confirmed'),
-                _buildBookingsList('Completed'),
-                _buildBookingsList('Cancelled'),
+                _buildBookingsList(bookingsAsync, 'Confirmed'),
+                _buildBookingsList(bookingsAsync, 'Completed'),
+                _buildBookingsList(bookingsAsync, 'Cancelled'),
               ],
             ),
           ),
@@ -108,32 +82,30 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage>
     );
   }
 
-  Widget _buildBookingsList(String status) {
-    final filteredBookings = _bookings.where((b) => b['status'] == status).toList();
+  Widget _buildBookingsList(AsyncValue<List<Map<String, dynamic>>> bookingsAsync, String status) {
+    return bookingsAsync.when(
+      loading: () => const LoadingWidget(message: 'Loading bookings...'),
+      error: (error, stackTrace) => CustomErrorWidget(
+        title: 'Could not load bookings',
+        message: error.toString(),
+        onRetry: () => ref.invalidate(myBookingsProvider),
+      ),
+      data: (bookings) {
+        final filteredBookings = bookings.where((b) => b['status'] == status).toList();
 
-    if (filteredBookings.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              'No bookings found',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      );
-    }
+        if (filteredBookings.isEmpty) {
+          return const EmptyStateWidget(title: 'No bookings found');
+        }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: filteredBookings.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        final booking = filteredBookings[index];
-        return _BookingCard(booking: booking);
+        return ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: filteredBookings.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 16),
+          itemBuilder: (context, index) {
+            final booking = filteredBookings[index];
+            return _BookingCard(booking: booking);
+          },
+        );
       },
     );
   }
