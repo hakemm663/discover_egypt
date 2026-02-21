@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/constants/image_urls.dart';
+import '../../core/repositories/models/discovery_models.dart';
 import '../../core/widgets/error_widget.dart';
 import '../../core/widgets/loading_widget.dart';
 import '../../core/widgets/custom_app_bar.dart';
@@ -99,13 +100,13 @@ class HomePage extends ConsumerWidget {
                         (hotel) => Padding(
                           padding: const EdgeInsets.only(right: 16),
                           child: _HotelCard(
-                            id: hotel['id'],
-                            name: hotel['name'],
-                            location: hotel['location'],
-                            image: hotel['image'],
-                            rating: hotel['rating'],
-                            reviewCount: hotel['reviewCount'],
-                            price: hotel['price'],
+                            id: hotel.id,
+                            name: hotel.name,
+                            location: hotel.location,
+                            image: hotel.image,
+                            rating: hotel.rating,
+                            reviewCount: hotel.reviewCount,
+                            price: hotel.price,
                           ),
                         ),
                       )
@@ -134,13 +135,13 @@ class HomePage extends ConsumerWidget {
                         (tour) => Padding(
                           padding: const EdgeInsets.only(bottom: 16),
                           child: _TourCard(
-                            id: tour['id'],
-                            name: tour['name'],
-                            duration: tour['duration'],
-                            image: tour['image'],
-                            rating: tour['rating'],
-                            reviewCount: tour['reviewCount'],
-                            price: tour['price'],
+                            id: tour.id,
+                            name: tour.name,
+                            duration: tour.duration,
+                            image: tour.image,
+                            rating: tour.rating,
+                            reviewCount: tour.reviewCount,
+                            price: tour.price,
                           ),
                         ),
                       )
@@ -666,7 +667,7 @@ class _TourCard extends StatelessWidget {
 // ==================== FEATURED DESTINATIONS ====================
 
 class _FeaturedDestinations extends StatelessWidget {
-  final List<Map<String, dynamic>> destinations;
+  final List<DestinationListing> destinations;
 
   const _FeaturedDestinations({required this.destinations});
 
@@ -695,8 +696,8 @@ class _FeaturedDestinations extends StatelessWidget {
                   (destination) => Padding(
                     padding: const EdgeInsets.only(right: 16),
                     child: _DestinationCard(
-                      name: destination['name'],
-                      image: destination['image'],
+                      name: destination.name,
+                      image: destination.image,
                     ),
                   ),
                 )
@@ -779,7 +780,7 @@ class _DestinationCard extends StatelessWidget {
 // ==================== RECOMMENDED FOR YOU ====================
 
 class _RecommendedForYou extends StatelessWidget {
-  final List<Map<String, dynamic>> tours;
+  final List<TourListing> tours;
 
   const _RecommendedForYou({required this.tours});
 
@@ -806,13 +807,13 @@ class _RecommendedForYou extends StatelessWidget {
                   (tour) => Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: _TourCard(
-                      id: tour['id'],
-                      name: tour['name'],
-                      duration: tour['duration'],
-                      image: tour['image'],
-                      rating: tour['rating'],
-                      reviewCount: tour['reviewCount'],
-                      price: tour['price'],
+                      id: tour.id,
+                      name: tour.name,
+                      duration: tour.duration,
+                      image: tour.image,
+                      rating: tour.rating,
+                      reviewCount: tour.reviewCount,
+                      price: tour.price,
                     ),
                   ),
                 )
