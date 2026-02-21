@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../core/repositories/models/discovery_models.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/rating_widget.dart';
@@ -22,10 +23,6 @@ class ToursListPage extends ConsumerStatefulWidget {
 class _ToursListPageState extends ConsumerState<ToursListPage> {
   String _selectedCategory = 'All';
 
-  List<Map<String, dynamic>> _filteredTours(List<Map<String, dynamic>> sourceTours) {
-    if (_selectedCategory == 'All') return sourceTours;
-    return sourceTours.where((t) => t['category'] == _selectedCategory).toList();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +49,7 @@ class _ToursListPageState extends ConsumerState<ToursListPage> {
                             selected: _selectedCategory == cat,
                             onSelected: (selected) {
                               setState(() => _selectedCategory = cat);
+                              ref.read(toursQueryProvider.notifier).state = ToursQuery(category: cat);
                             },
                             selectedColor: const Color(0xFFC89B3C).withValues(alpha: 0.2),
                             checkmarkColor: const Color(0xFFC89B3C),
@@ -71,17 +69,17 @@ class _ToursListPageState extends ConsumerState<ToursListPage> {
                 message: error.toString(),
                 onRetry: () => ref.invalidate(toursProvider),
               ),
-              data: (tours) {
-                final filteredTours = _filteredTours(tours);
-                if (filteredTours.isEmpty) {
+              data: (toursPage) {
+                final tours = toursPage.items;
+                if (tours.isEmpty) {
                   return const EmptyStateWidget(title: 'No tours found');
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
-                  itemCount: filteredTours.length,
+                  itemCount: tours.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 16),
                   itemBuilder: (context, index) {
-                    final tour = filteredTours[index];
+                    final tour = tours[index];
                     return _TourListItem(tour: tour)
                         .animate(delay: Duration(milliseconds: 100 * index))
                         .fadeIn(duration: 400.ms)
@@ -98,14 +96,14 @@ class _ToursListPageState extends ConsumerState<ToursListPage> {
 }
 
 class _TourListItem extends StatelessWidget {
-  final Map<String, dynamic> tour;
+  final TourListing tour;
 
   const _TourListItem({required this.tour});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push('/tour/${tour['id']}'),
+      onTap: () => context.push('/tour/${tour.id}'),
       child: RoundedCard(
         padding: EdgeInsets.zero,
         child: Row(
@@ -142,7 +140,7 @@ class _TourListItem extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        tour['category'],
+                        tour.category,
                         style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
@@ -154,7 +152,7 @@ class _TourListItem extends StatelessWidget {
                     const SizedBox(height: 8),
 
                     Text(
-                      tour['name'],
+                      tour.name,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -171,7 +169,7 @@ class _TourListItem extends StatelessWidget {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            tour['duration'],
+                            tour.duration,
                             style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -180,7 +178,7 @@ class _TourListItem extends StatelessWidget {
                       ],
                     ),
 
-                    if (tour['pickupIncluded'])
+                    if (tour.pickupIncluded)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Row(
@@ -198,8 +196,8 @@ class _TourListItem extends StatelessWidget {
                     const SizedBox(height: 8),
 
                     RatingWidget(
-                      rating: tour['rating'],
-                      reviewCount: tour['reviewCount'],
+                      rating: tour.rating,
+                      reviewCount: tour.reviewCount,
                       size: 14,
                     ),
 
@@ -208,7 +206,7 @@ class _TourListItem extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        PriceTag(price: tour['price']),
+                        PriceTag(price: tour.price),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(

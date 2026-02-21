@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../core/repositories/models/discovery_models.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/rating_widget.dart';
@@ -21,14 +22,6 @@ class RestaurantsListPage extends ConsumerStatefulWidget {
 class _RestaurantsListPageState extends ConsumerState<RestaurantsListPage> {
   String _selectedCuisine = 'All';
 
-  List<Map<String, dynamic>> _filteredRestaurants(
-    List<Map<String, dynamic>> sourceRestaurants,
-  ) {
-    if (_selectedCuisine == 'All') return sourceRestaurants;
-    return sourceRestaurants
-        .where((r) => r['cuisine'] == _selectedCuisine)
-        .toList();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +48,7 @@ class _RestaurantsListPageState extends ConsumerState<RestaurantsListPage> {
                             selected: _selectedCuisine == cuisine,
                             onSelected: (selected) {
                               setState(() => _selectedCuisine = cuisine);
+                              ref.read(restaurantsQueryProvider.notifier).state = RestaurantsQuery(cuisine: cuisine);
                             },
                             selectedColor: const Color(0xFFC89B3C).withValues(alpha: 0.2),
                             checkmarkColor: const Color(0xFFC89B3C),
@@ -74,17 +68,17 @@ class _RestaurantsListPageState extends ConsumerState<RestaurantsListPage> {
                 message: error.toString(),
                 onRetry: () => ref.invalidate(restaurantsProvider),
               ),
-              data: (restaurants) {
-                final filteredRestaurants = _filteredRestaurants(restaurants);
-                if (filteredRestaurants.isEmpty) {
+              data: (restaurantsPage) {
+                final restaurants = restaurantsPage.items;
+                if (restaurants.isEmpty) {
                   return const EmptyStateWidget(title: 'No restaurants found');
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
-                  itemCount: filteredRestaurants.length,
+                  itemCount: restaurants.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 16),
                   itemBuilder: (context, index) {
-                    final restaurant = filteredRestaurants[index];
+                    final restaurant = restaurants[index];
                     return _RestaurantListItem(restaurant: restaurant)
                         .animate(delay: Duration(milliseconds: 100 * index))
                         .fadeIn(duration: 400.ms)
@@ -101,14 +95,14 @@ class _RestaurantsListPageState extends ConsumerState<RestaurantsListPage> {
 }
 
 class _RestaurantListItem extends StatelessWidget {
-  final Map<String, dynamic> restaurant;
+  final RestaurantListing restaurant;
 
   const _RestaurantListItem({required this.restaurant});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push('/restaurant/${restaurant['id']}'),
+      onTap: () => context.push('/restaurant/${restaurant.id}'),
       child: RoundedCard(
         padding: EdgeInsets.zero,
         child: Row(
@@ -123,7 +117,7 @@ class _RestaurantListItem extends StatelessWidget {
                 width: 120,
                 height: 140,
                 child: CachedNetworkImage(
-                  imageUrl: restaurant['image'],
+                  imageUrl: restaurant.image,
                   fit: BoxFit.cover,
                 ),
               ),
@@ -137,7 +131,7 @@ class _RestaurantListItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      restaurant['name'],
+                      restaurant.name,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -151,12 +145,12 @@ class _RestaurantListItem extends StatelessWidget {
                         Icon(Icons.restaurant_outlined, size: 14, color: Colors.grey[600]),
                         const SizedBox(width: 4),
                         Text(
-                          restaurant['cuisine'],
+                          restaurant.cuisine,
                           style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          restaurant['priceRange'],
+                          restaurant.priceRange,
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
@@ -172,7 +166,7 @@ class _RestaurantListItem extends StatelessWidget {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            restaurant['location'],
+                            restaurant.location,
                             style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -182,12 +176,12 @@ class _RestaurantListItem extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     RatingWidget(
-                      rating: restaurant['rating'],
-                      reviewCount: restaurant['reviewCount'],
+                      rating: restaurant.rating,
+                      reviewCount: restaurant.reviewCount,
                       size: 14,
                     ),
                     const SizedBox(height: 8),
-                    if (restaurant['delivery'])
+                    if (restaurant.delivery)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
@@ -200,7 +194,7 @@ class _RestaurantListItem extends StatelessWidget {
                             Icon(Icons.delivery_dining_rounded, size: 14, color: Colors.green[700]),
                             const SizedBox(width: 4),
                             Text(
-                              '${restaurant['deliveryTime']} min',
+                              '${restaurant.deliveryTime} min',
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Colors.green[700],

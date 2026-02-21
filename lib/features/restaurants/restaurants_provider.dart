@@ -1,57 +1,33 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants/image_urls.dart';
+import '../../app/providers.dart';
+import '../../core/repositories/models/discovery_models.dart';
+import '../../core/repositories/models/pagination_models.dart';
 
-final restaurantsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
-  await Future<void>.delayed(const Duration(milliseconds: 300));
-  return const [
-    {
-      'id': '1',
-      'name': 'Koshary Abou Tarek',
-      'cuisine': 'Egyptian',
-      'location': 'Downtown Cairo',
-      'image': Img.koshari,
-      'rating': 4.7,
-      'reviewCount': 2100,
-      'priceRange': r'$4-$10',
-      'deliveryTime': 30,
-      'delivery': true,
-    },
-    {
-      'id': '2',
-      'name': 'Sequoia',
-      'cuisine': 'Mediterranean',
-      'location': 'Zamalek, Cairo',
-      'image': Img.restaurant,
-      'rating': 4.8,
-      'reviewCount': 1400,
-      'priceRange': r'$30-$60',
-      'deliveryTime': 45,
-      'delivery': true,
-    },
-    {
-      'id': '3',
-      'name': 'Felfela Restaurant',
-      'cuisine': 'Egyptian',
-      'location': 'Downtown Cairo',
-      'image': Img.egyptianFood,
-      'rating': 4.5,
-      'reviewCount': 980,
-      'priceRange': r'$8-$20',
-      'deliveryTime': 25,
-      'delivery': false,
-    },
-    {
-      'id': '4',
-      'name': 'Kazoku',
-      'cuisine': 'Asian',
-      'location': 'New Cairo',
-      'image': Img.restaurantInterior,
-      'rating': 4.9,
-      'reviewCount': 760,
-      'priceRange': r'$40-$80',
-      'deliveryTime': 40,
-      'delivery': true,
-    },
-  ];
+class RestaurantsQuery {
+  final String cuisine;
+  final int page;
+  final int pageSize;
+
+  const RestaurantsQuery({
+    this.cuisine = 'All',
+    this.page = 1,
+    this.pageSize = 20,
+  });
+}
+
+final restaurantsQueryProvider = StateProvider<RestaurantsQuery>((ref) => const RestaurantsQuery());
+
+final restaurantsProvider = FutureProvider<PaginatedResult<RestaurantListing>>((ref) async {
+  final repository = ref.read(discoveryRepositoryProvider);
+  final query = ref.watch(restaurantsQueryProvider);
+
+  return repository.getRestaurants(
+    userId: 'demo-user',
+    query: PaginationQuery(
+      page: query.page,
+      pageSize: query.pageSize,
+      filters: {'cuisine': query.cuisine},
+    ),
+  );
 });
