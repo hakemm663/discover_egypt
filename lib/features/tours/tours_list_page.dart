@@ -1,9 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/repositories/models/discovery_models.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/error_widget.dart';
 import '../../core/widgets/loading_widget.dart';
@@ -11,6 +15,7 @@ import '../../core/widgets/price_tag.dart';
 import '../../core/widgets/rating_widget.dart';
 import '../../core/widgets/rounded_card.dart';
 import '../shared/models/catalog_models.dart';
+import '../../core/widgets/network_image_fallback.dart';
 import 'tours_provider.dart';
 
 class ToursListPage extends ConsumerStatefulWidget {
@@ -73,6 +78,11 @@ class _ToursListPageState extends ConsumerState<ToursListPage> {
                                 setState(() => _selectedCategory = cat),
                             selectedColor:
                                 const Color(0xFFC89B3C).withValues(alpha: 0.2),
+                            onSelected: (selected) {
+                              setState(() => _selectedCategory = cat);
+                              ref.read(toursQueryProvider.notifier).state = ToursQuery(category: cat);
+                            },
+                            selectedColor: const Color(0xFFC89B3C).withValues(alpha: 0.2),
                             checkmarkColor: const Color(0xFFC89B3C),
                           ),
                         ))
@@ -91,6 +101,9 @@ class _ToursListPageState extends ConsumerState<ToursListPage> {
               data: (pageState) {
                 final filteredTours = _filteredTours(pageState.items);
                 if (filteredTours.isEmpty) {
+              data: (toursPage) {
+                final tours = toursPage.items;
+                if (tours.isEmpty) {
                   return const EmptyStateWidget(title: 'No tours found');
                 }
                 return ListView.separated(
@@ -103,6 +116,10 @@ class _ToursListPageState extends ConsumerState<ToursListPage> {
                       return const Center(child: CircularProgressIndicator());
                     }
                     final tour = filteredTours[index];
+                  itemCount: tours.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    final tour = tours[index];
                     return _TourListItem(tour: tour)
                         .animate(delay: Duration(milliseconds: 100 * index))
                         .fadeIn(duration: 400.ms)
@@ -120,6 +137,7 @@ class _ToursListPageState extends ConsumerState<ToursListPage> {
 
 class _TourListItem extends StatelessWidget {
   final TourListItem tour;
+  final TourListing tour;
 
   const _TourListItem({required this.tour});
 
@@ -141,6 +159,9 @@ class _TourListItem extends StatelessWidget {
                 height: 160,
                 child: CachedNetworkImage(
                   imageUrl: tour.image,
+                child: NetworkImageFallback(
+                  imageUrl: tour['image'],
+                  type: NetworkImageFallbackType.tour,
                   fit: BoxFit.cover,
                   memCacheWidth: 640,
                   maxWidthDiskCache: 900,
@@ -166,6 +187,14 @@ class _TourListItem extends StatelessWidget {
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                               color: Color(0xFFC89B3C))),
+                      child: Text(
+                        tour.category,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFFC89B3C),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -190,6 +219,16 @@ class _TourListItem extends StatelessWidget {
                         ),
                       ],
                     ),
+                          child: Text(
+                            tour.duration,
+                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+
                     if (tour.pickupIncluded)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
@@ -209,6 +248,11 @@ class _TourListItem extends StatelessWidget {
                         rating: tour.rating,
                         reviewCount: tour.reviewCount,
                         size: 14),
+                      rating: tour.rating,
+                      reviewCount: tour.reviewCount,
+                      size: 14,
+                    ),
+
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,

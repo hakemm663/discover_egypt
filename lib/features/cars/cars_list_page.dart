@@ -1,16 +1,15 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/repositories/models/discovery_models.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/error_widget.dart';
 import '../../core/widgets/loading_widget.dart';
-import '../../core/widgets/price_tag.dart';
-import '../../core/widgets/rating_widget.dart';
-import '../../core/widgets/rounded_card.dart';
-import '../shared/models/catalog_models.dart';
+import '../../core/widgets/network_image_fallback.dart';
 import 'cars_provider.dart';
 
 class CarsListPage extends ConsumerStatefulWidget {
@@ -31,34 +30,6 @@ class _CarsListPageState extends ConsumerState<CarsListPage> {
     _scrollController.addListener(_onScroll);
   }
 
-  @override
-  void dispose() {
-    _scrollController
-      ..removeListener(_onScroll)
-      ..dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 180) {
-      ref.read(carsProvider.notifier).fetchNextPage();
-    }
-  }
-
-  List<CarListItem> _filteredCars(List<CarListItem> sourceCars) {
-    var cars = [...sourceCars];
-
-    if (_selectedType != 'All') {
-      cars = cars.where((c) => c.type == _selectedType).toList();
-    }
-
-    if (_withDriverOnly) {
-      cars = cars.where((c) => c.withDriver).toList();
-    }
-
-    return cars;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,10 +52,11 @@ class _CarsListPageState extends ConsumerState<CarsListPage> {
                               child: FilterChip(
                                 label: Text(type),
                                 selected: _selectedType == type,
-                                onSelected: (selected) =>
-                                    setState(() => _selectedType = type),
-                                selectedColor:
-                                    const Color(0xFFC89B3C).withValues(alpha: 0.2),
+                                onSelected: (selected) {
+                                  setState(() => _selectedType = type);
+                                  ref.read(carsQueryProvider.notifier).state = CarsQuery(type: type, withDriverOnly: _withDriverOnly);
+                                },
+                                selectedColor: const Color(0xFFC89B3C).withValues(alpha: 0.2),
                                 checkmarkColor: const Color(0xFFC89B3C),
                               ),
                             ))
@@ -98,6 +70,7 @@ class _CarsListPageState extends ConsumerState<CarsListPage> {
                   value: _withDriverOnly,
                   onChanged: (value) {
                     setState(() => _withDriverOnly = value ?? false);
+                    ref.read(carsQueryProvider.notifier).state = CarsQuery(type: _selectedType, withDriverOnly: _withDriverOnly);
                   },
                   controlAffinity: ListTileControlAffinity.leading,
                   activeColor: const Color(0xFFC89B3C),
@@ -114,21 +87,18 @@ class _CarsListPageState extends ConsumerState<CarsListPage> {
                 message: error.toString(),
                 onRetry: () => ref.invalidate(carsProvider),
               ),
-              data: (pageState) {
-                final filteredCars = _filteredCars(pageState.items);
-                if (filteredCars.isEmpty) {
+              data: (carsPage) {
+                final cars = carsPage.items;
+                if (cars.isEmpty) {
                   return const EmptyStateWidget(title: 'No cars found');
                 }
                 return ListView.separated(
                   controller: _scrollController,
                   padding: const EdgeInsets.all(16),
-                  itemCount: filteredCars.length + (pageState.hasMore ? 1 : 0),
+                  itemCount: cars.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 16),
                   itemBuilder: (context, index) {
-                    if (index >= filteredCars.length) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    final car = filteredCars[index];
+                    final car = cars[index];
                     return _CarListItem(car: car)
                         .animate(delay: Duration(milliseconds: 100 * index))
                         .fadeIn(duration: 400.ms)
@@ -145,7 +115,7 @@ class _CarsListPageState extends ConsumerState<CarsListPage> {
 }
 
 class _CarListItem extends StatelessWidget {
-  final CarListItem car;
+  final CarListing car;
 
   const _CarListItem({required this.car});
 
@@ -169,8 +139,9 @@ class _CarListItem extends StatelessWidget {
                     height: 160,
                     width: double.infinity,
                     color: Colors.grey[100],
-                    child: CachedNetworkImage(
-                      imageUrl: car.image,
+                    child: NetworkImageFallback(
+                      imageUrl: car['image'],
+                      type: NetworkImageFallbackType.car,
                       fit: BoxFit.cover,
                       memCacheWidth: 900,
                       maxWidthDiskCache: 1200,
@@ -205,18 +176,25 @@ class _CarListItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(car.name,
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.w700)),
+                  Text(
+                    car.name,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       _InfoChip(
-                          icon: Icons.airline_seat_recline_normal_rounded,
-                          text: '${car.seats} Seats'),
+                        icon: Icons.airline_seat_recline_normal_rounded,
+                        text: '${car.seats} Seats',
+                      ),
                       const SizedBox(width: 8),
                       _InfoChip(
-                          icon: Icons.settings_rounded, text: car.transmission),
+                        icon: Icons.settings_rounded,
+                        text: car.transmission,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -224,17 +202,22 @@ class _CarListItem extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       RatingWidget(
-                          rating: car.rating,
-                          reviewCount: car.reviewCount,
-                          size: 16),
+                        rating: car.rating,
+                        reviewCount: car.reviewCount,
+                        size: 16,
+                      ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           PriceTag(price: car.price, unit: 'day'),
                           if (car.withDriver)
-                            Text('+\$${car.driverPrice}/day with driver',
-                                style: TextStyle(
-                                    fontSize: 10, color: Colors.grey[600])),
+                            Text(
+                              '+\$${car.driverPrice}/day with driver',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey[600],
+                              ),
+                            ),
                         ],
                       ),
                     ],

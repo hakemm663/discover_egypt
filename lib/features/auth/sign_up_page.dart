@@ -61,7 +61,6 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
       );
 
       if (user != null && mounted) {
-        ref.read(currentUserProvider.notifier).setUser(user);
         await Helpers.showSuccessDialog(
           context,
           title: 'Account Created!',
