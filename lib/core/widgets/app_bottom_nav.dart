@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../themes/app_colors.dart';
+
 class AppBottomNavShell extends StatelessWidget {
   const AppBottomNavShell({
     required this.navigationShell,
@@ -20,13 +22,12 @@ class AppBottomNavShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context);
     final labels = _BottomNavLabels.fromLocale(locale);
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: NavigationBarTheme(
         data: NavigationBarThemeData(
-          indicatorColor: colorScheme.primaryContainer,
+          indicatorColor: AppColors.chipSelectedBackground(context),
           labelTextStyle: WidgetStatePropertyAll(
             Theme.of(context).textTheme.labelMedium,
           ),
@@ -88,7 +89,7 @@ class AppBottomNavShell extends StatelessWidget {
         button: true,
         child: Icon(
           selectedIcon,
-          color: Theme.of(context).colorScheme.primary,
+          color: AppColors.brandGold,
         ),
       ),
       label: label,
