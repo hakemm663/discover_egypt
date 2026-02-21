@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../core/constants/app_constants.dart';
-import '../core/models/user_model.dart';
-import '../core/navigation/navigation_tracking_observer.dart';
-import '../core/routes/router.dart';
+import '../core/repositories/api_clients/discovery_api_clients.dart';
+import '../core/repositories/discovery_repositories.dart';
+import '../core/repositories/firestore/discovery_firestore_client.dart';
 import '../core/services/auth_service.dart';
 import '../core/services/database_service.dart';
 import '../core/services/firebase_service.dart';
@@ -70,6 +70,23 @@ final navigationTrackingObserverProvider =
 final appRouterProvider = Provider<GoRouter>((ref) {
   return createAppRouter(
     observers: [ref.watch(navigationTrackingObserverProvider)],
+  );
+});
+
+final hotelsApiClientProvider = Provider<HotelsApiClient>((ref) => HotelsApiClient());
+final toursApiClientProvider = Provider<ToursApiClient>((ref) => ToursApiClient());
+final carsApiClientProvider = Provider<CarsApiClient>((ref) => CarsApiClient());
+final restaurantsApiClientProvider = Provider<RestaurantsApiClient>((ref) => RestaurantsApiClient());
+final discoveryFirestoreClientProvider =
+    Provider<DiscoveryFirestoreClient>((ref) => DiscoveryFirestoreClient());
+
+final discoveryRepositoryProvider = Provider<DiscoveryRepository>((ref) {
+  return DiscoveryRepository(
+    hotelsApiClient: ref.read(hotelsApiClientProvider),
+    toursApiClient: ref.read(toursApiClientProvider),
+    carsApiClient: ref.read(carsApiClientProvider),
+    restaurantsApiClient: ref.read(restaurantsApiClientProvider),
+    firestoreClient: ref.read(discoveryFirestoreClientProvider),
   );
 });
 

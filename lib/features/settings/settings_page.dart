@@ -60,7 +60,11 @@ class SettingsPage extends ConsumerWidget {
                   title: const Text('Push Notifications'),
                   subtitle: const Text('Receive booking updates'),
                   value: true,
-                  onChanged: (value) {},
+                  onChanged: (value) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Notification preferences are coming soon.')),
+                    );
+                  },
                   activeThumbColor: const Color(0xFFC89B3C),
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -69,7 +73,11 @@ class SettingsPage extends ConsumerWidget {
                   title: const Text('Email Notifications'),
                   subtitle: const Text('Receive email updates'),
                   value: false,
-                  onChanged: (value) {},
+                  onChanged: (value) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Notification preferences are coming soon.')),
+                    );
+                  },
                   activeThumbColor: const Color(0xFFC89B3C),
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -78,7 +86,11 @@ class SettingsPage extends ConsumerWidget {
                   title: const Text('Promotional Offers'),
                   subtitle: const Text('Receive special offers'),
                   value: true,
-                  onChanged: (value) {},
+                  onChanged: (value) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Notification preferences are coming soon.')),
+                    );
+                  },
                   activeThumbColor: const Color(0xFFC89B3C),
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -102,7 +114,11 @@ class SettingsPage extends ConsumerWidget {
                 _SettingsTile(
                   icon: Icons.lock_outline_rounded,
                   title: 'Change Password',
-                  onTap: () {},
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Password change is coming soon.')),
+                    );
+                  },
                 ),
                 const Divider(height: 24),
                 _SettingsTile(
@@ -116,7 +132,11 @@ class SettingsPage extends ConsumerWidget {
                   icon: Icons.location_on_outlined,
                   title: 'Country',
                   trailing: 'Egypt',
-                  onTap: () {},
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Country update is coming soon.')),
+                    );
+                  },
                 ),
               ],
             ),
@@ -165,26 +185,30 @@ class SettingsPage extends ConsumerWidget {
                 _SettingsTile(
                   icon: Icons.help_outline_rounded,
                   title: 'Help Center',
-                  onTap: () {},
+                  onTap: () => context.push('/help-center'),
                 ),
                 const Divider(height: 24),
                 _SettingsTile(
                   icon: Icons.privacy_tip_outlined,
                   title: 'Privacy Policy',
-                  onTap: () {},
+                  onTap: () => context.push('/privacy-policy'),
                 ),
                 const Divider(height: 24),
                 _SettingsTile(
                   icon: Icons.description_outlined,
                   title: 'Terms of Service',
-                  onTap: () {},
+                  onTap: () => context.push('/terms-of-service'),
                 ),
                 const Divider(height: 24),
                 _SettingsTile(
                   icon: Icons.info_outline_rounded,
                   title: 'About',
                   trailing: 'v1.0.0',
-                  onTap: () {},
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('About details are coming soon.')),
+                    );
+                  },
                 ),
               ],
             ),
@@ -198,7 +222,11 @@ class SettingsPage extends ConsumerWidget {
               icon: Icons.delete_outline_rounded,
               title: 'Delete Account',
               titleColor: Colors.red,
-              onTap: () {},
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Account deletion is coming soon.')),
+                );
+              },
             ),
           ),
 
@@ -226,6 +254,8 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return ListTile(
       onTap: onTap,
       leading: Container(
@@ -233,12 +263,12 @@ class _SettingsTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: titleColor != null
               ? titleColor!.withValues(alpha: 0.1)
-              : const Color(0xFFC89B3C).withValues(alpha: 0.1),
+              : colorScheme.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(
           icon,
-          color: titleColor ?? const Color(0xFFC89B3C),
+          color: titleColor ?? colorScheme.primary,
           size: 20,
         ),
       ),
@@ -246,7 +276,7 @@ class _SettingsTile extends StatelessWidget {
         title,
         style: TextStyle(
           fontWeight: FontWeight.w600,
-          color: titleColor,
+          color: titleColor ?? colorScheme.onSurface,
         ),
       ),
       trailing: Row(
@@ -257,13 +287,13 @@ class _SettingsTile extends StatelessWidget {
               trailing!,
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.grey[600],
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
           const SizedBox(width: 4),
           Icon(
             Icons.chevron_right_rounded,
-            color: Colors.grey[400],
+            color: colorScheme.outlineVariant,
           ),
         ],
       ),

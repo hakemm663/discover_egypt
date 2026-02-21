@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../themes/app_colors.dart';
+
 class RoundedCard extends StatelessWidget {
   final Widget child;
   final EdgeInsets padding;
@@ -27,13 +29,13 @@ class RoundedCard extends StatelessWidget {
     final cardWidget = Container(
       margin: margin,
       decoration: BoxDecoration(
-        color: color ?? Colors.white.withValues(alpha: 0.95),
+        color: color ?? AppColors.cardBackground(context),
         borderRadius: BorderRadius.circular(borderRadius),
         border: border,
         boxShadow: boxShadow ??
             [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
+                color: AppColors.cardShadow(context),
                 blurRadius: 20,
                 offset: const Offset(0, 4),
               ),

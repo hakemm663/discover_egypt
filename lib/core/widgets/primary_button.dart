@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../themes/app_colors.dart';
+
 class PrimaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -26,7 +28,7 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final goldColor = backgroundColor ?? const Color(0xFFC89B3C);
+    final goldColor = backgroundColor ?? AppColors.brandGold;
 
     if (isOutlined) {
       return SizedBox(

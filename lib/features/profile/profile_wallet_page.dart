@@ -21,9 +21,7 @@ class ProfileWalletPage extends StatelessWidget {
         showProfileButton: false,
         variant: CustomAppBarVariant.dark,
         backgroundImageUrl: Img.pyramidsMain,
-        onSettingsTap: () {
-          // Navigate to settings or show settings dialog
-        },
+        onSettingsTap: () => context.push('/settings'),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -112,7 +110,7 @@ class ProfileWalletPage extends StatelessWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () {},
+                        onPressed: () => context.push('/wallet/add-funds'),
                         icon: const Icon(Icons.add_circle_outline),
                         label: const Text('Add Funds'),
                       ),
@@ -150,7 +148,7 @@ class ProfileWalletPage extends StatelessWidget {
                   title: 'Reviews',
                   trailingText: '20',
                   trailingColor: Colors.red.shade700,
-                  onTap: () {},
+                  onTap: () => context.push('/reviews'),
                 ),
                 _divider(),
                 _MenuTile(
@@ -158,7 +156,7 @@ class ProfileWalletPage extends StatelessWidget {
                   title: 'Support',
                   trailingText: 'Chat',
                   trailingColor: Theme.of(context).colorScheme.primary,
-                  onTap: () {},
+                  onTap: () => context.push('/support'),
                 ),
                 _divider(),
                 _MenuTile(

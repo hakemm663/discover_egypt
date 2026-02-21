@@ -33,6 +33,13 @@ import '../../features/profile/profile_wallet_page.dart';
 import '../../features/profile/edit_profile_page.dart';
 import '../../features/profile/my_bookings_page.dart';
 
+import '../../features/profile/add_funds_page.dart';
+import '../../features/profile/reviews_page.dart';
+import '../../features/support/help_center_page.dart';
+import '../../features/support/support_page.dart';
+import '../../features/legal/privacy_policy_page.dart';
+import '../../features/legal/terms_of_service_page.dart';
+
 import '../../features/settings/settings_page.dart';
 
 import '../../features/shared/trip_planner.dart';
@@ -242,13 +249,57 @@ GoRouter createAppRouter({
         ),
       ),
 
-      // Settings
-      GoRoute(
-        path: '/settings',
-        pageBuilder: (context, state) => _buildPage(
-          state,
-          const SettingsPage(),
-        ),
+    GoRoute(
+      path: '/reviews',
+      pageBuilder: (context, state) => _buildPage(
+        state,
+        const ReviewsPage(),
+      ),
+    ),
+    GoRoute(
+      path: '/wallet/add-funds',
+      pageBuilder: (context, state) => _buildPage(
+        state,
+        const AddFundsPage(),
+      ),
+    ),
+
+    // Support & Legal
+    GoRoute(
+      path: '/help-center',
+      pageBuilder: (context, state) => _buildPage(
+        state,
+        const HelpCenterPage(),
+      ),
+    ),
+    GoRoute(
+      path: '/support',
+      pageBuilder: (context, state) => _buildPage(
+        state,
+        const SupportPage(),
+      ),
+    ),
+    GoRoute(
+      path: '/privacy-policy',
+      pageBuilder: (context, state) => _buildPage(
+        state,
+        const PrivacyPolicyPage(),
+      ),
+    ),
+    GoRoute(
+      path: '/terms-of-service',
+      pageBuilder: (context, state) => _buildPage(
+        state,
+        const TermsOfServicePage(),
+      ),
+    ),
+
+    // Settings
+    GoRoute(
+      path: '/settings',
+      pageBuilder: (context, state) => _buildPage(
+        state,
+        const SettingsPage(),
       ),
 
       // Trip Planner

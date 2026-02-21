@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../core/repositories/models/discovery_models.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/rating_widget.dart';
@@ -23,22 +24,8 @@ class _HotelsListPageState extends ConsumerState<HotelsListPage> {
   String _selectedCity = 'All';
   String _sortBy = 'Popular';
 
-  List<Map<String, dynamic>> _filteredHotels(List<Map<String, dynamic>> sourceHotels) {
-    var hotels = [...sourceHotels];
-
-    if (_selectedCity != 'All') {
-      hotels = hotels.where((h) => h['city'] == _selectedCity).toList();
-    }
-
-    if (_sortBy == 'Price: Low to High') {
-      hotels.sort((a, b) => a['price'].compareTo(b['price']));
-    } else if (_sortBy == 'Price: High to Low') {
-      hotels.sort((a, b) => b['price'].compareTo(a['price']));
-    } else if (_sortBy == 'Rating') {
-      hotels.sort((a, b) => b['rating'].compareTo(a['rating']));
-    }
-
-    return hotels;
+  void _syncQuery() {
+    ref.read(hotelsQueryProvider.notifier).state = HotelsQuery(city: _selectedCity, sortBy: _sortBy);
   }
 
   @override
@@ -46,18 +33,13 @@ class _HotelsListPageState extends ConsumerState<HotelsListPage> {
     final hotelsAsync = ref.watch(hotelsProvider);
 
     return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Hotels in Egypt',
-        showBackButton: true,
-      ),
+      appBar: CustomAppBar(title: 'Hotels in Egypt', showBackButton: true),
       body: Column(
         children: [
-          // Filters
           Container(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // City Filter
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -69,6 +51,7 @@ class _HotelsListPageState extends ConsumerState<HotelsListPage> {
                                 selected: _selectedCity == city,
                                 onSelected: (selected) {
                                   setState(() => _selectedCity = city);
+                                  _syncQuery();
                                 },
                                 selectedColor: const Color(0xFFC89B3C).withValues(alpha: 0.2),
                                 checkmarkColor: const Color(0xFFC89B3C),
@@ -78,7 +61,6 @@ class _HotelsListPageState extends ConsumerState<HotelsListPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                // Sort Dropdown
                 Row(
                   children: [
                     const Icon(Icons.sort_rounded, size: 20),
@@ -94,7 +76,10 @@ class _HotelsListPageState extends ConsumerState<HotelsListPage> {
                             .map((s) => DropdownMenuItem(value: s, child: Text(s)))
                             .toList(),
                         onChanged: (value) {
-                          if (value != null) setState(() => _sortBy = value);
+                          if (value != null) {
+                            setState(() => _sortBy = value);
+                            _syncQuery();
+                          }
                         },
                       ),
                     ),
@@ -103,8 +88,6 @@ class _HotelsListPageState extends ConsumerState<HotelsListPage> {
               ],
             ),
           ),
-
-          // Hotels List
           Expanded(
             child: hotelsAsync.when(
               loading: () => const LoadingWidget(message: 'Loading hotels...'),
@@ -113,23 +96,17 @@ class _HotelsListPageState extends ConsumerState<HotelsListPage> {
                 message: error.toString(),
                 onRetry: () => ref.invalidate(hotelsProvider),
               ),
-              data: (hotels) {
-                final filteredHotels = _filteredHotels(hotels);
-                if (filteredHotels.isEmpty) {
-                  return const EmptyStateWidget(title: 'No hotels found');
-                }
-
+              data: (hotelsPage) {
+                final hotels = hotelsPage.items;
+                if (hotels.isEmpty) return const EmptyStateWidget(title: 'No hotels found');
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
-                  itemCount: filteredHotels.length,
+                  itemCount: hotels.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final hotel = filteredHotels[index];
-                    return _HotelListItem(hotel: hotel)
-                        .animate(delay: Duration(milliseconds: 100 * index))
-                        .fadeIn(duration: 400.ms)
-                        .slideX(begin: 0.2, end: 0);
-                  },
+                  itemBuilder: (context, index) => _HotelListItem(hotel: hotels[index])
+                      .animate(delay: Duration(milliseconds: 100 * index))
+                      .fadeIn(duration: 400.ms)
+                      .slideX(begin: 0.2, end: 0),
                 );
               },
             ),
@@ -141,34 +118,27 @@ class _HotelsListPageState extends ConsumerState<HotelsListPage> {
 }
 
 class _HotelListItem extends StatelessWidget {
-  final Map<String, dynamic> hotel;
+  final HotelListing hotel;
 
   const _HotelListItem({required this.hotel});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push('/hotel/${hotel['id']}'),
+      onTap: () => context.push('/hotel/${hotel.id}'),
       child: RoundedCard(
         padding: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
+                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
                   child: SizedBox(
                     height: 180,
                     width: double.infinity,
-                    child: CachedNetworkImage(
-                      imageUrl: hotel['image'],
-                      fit: BoxFit.cover,
-                    ),
+                    child: CachedNetworkImage(imageUrl: hotel.image, fit: BoxFit.cover),
                   ),
                 ),
                 Positioned(
@@ -176,13 +146,10 @@ class _HotelListItem extends StatelessWidget {
                   right: 12,
                   child: Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.favorite_border_rounded,
-                      color: Color(0xFFC89B3C),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.9), shape: BoxShape.circle),
+                    child: Icon(
+                      hotel.isBookmarked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                      color: const Color(0xFFC89B3C),
                       size: 20,
                     ),
                   ),
@@ -192,77 +159,43 @@ class _HotelListItem extends StatelessWidget {
                   left: 12,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFC89B3C),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: List.generate(
-                        hotel['stars'],
-                        (i) => const Icon(Icons.star, color: Colors.white, size: 12),
-                      ),
-                    ),
+                    decoration: BoxDecoration(color: const Color(0xFFC89B3C), borderRadius: BorderRadius.circular(8)),
+                    child: Row(children: List.generate(hotel.stars, (i) => const Icon(Icons.star, color: Colors.white, size: 12))),
                   ),
                 ),
               ],
             ),
-
-            // Details
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    hotel['name'],
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(Icons.location_on_outlined, size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
-                      Text(
-                        hotel['location'],
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: (hotel['amenities'] as List<String>)
-                        .map((a) => Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                a,
-                                style: TextStyle(fontSize: 11, color: Colors.grey[700]),
-                              ),
-                            ))
-                        .toList(),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      RatingWidget(
-                        rating: hotel['rating'],
-                        reviewCount: hotel['reviewCount'],
-                        size: 16,
-                      ),
-                      PriceTag(price: hotel['price'], unit: 'night', large: true),
-                    ],
-                  ),
-                ],
-              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(hotel.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                Row(children: [
+                  Icon(Icons.location_on_outlined, size: 16, color: Colors.grey[600]),
+                  const SizedBox(width: 4),
+                  Text(hotel.location, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                ]),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: hotel.amenities
+                      .map((a) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8)),
+                            child: Text(a, style: TextStyle(fontSize: 11, color: Colors.grey[700])),
+                          ))
+                      .toList(),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    RatingWidget(rating: hotel.rating, reviewCount: hotel.reviewCount, size: 16),
+                    PriceTag(price: hotel.price, unit: 'night', large: true),
+                  ],
+                ),
+              ]),
             ),
           ],
         ),
