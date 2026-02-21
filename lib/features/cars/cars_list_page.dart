@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/repositories/models/discovery_models.dart';
 import '../../core/widgets/custom_app_bar.dart';
-import '../../core/widgets/rounded_card.dart';
-import '../../core/widgets/rating_widget.dart';
-import '../../core/widgets/price_tag.dart';
 import '../../core/widgets/error_widget.dart';
 import '../../core/widgets/loading_widget.dart';
 import '../../core/widgets/network_image_fallback.dart';
@@ -23,6 +22,13 @@ class CarsListPage extends ConsumerStatefulWidget {
 class _CarsListPageState extends ConsumerState<CarsListPage> {
   String _selectedType = 'All';
   bool _withDriverOnly = false;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
 
 
   @override
@@ -30,18 +36,13 @@ class _CarsListPageState extends ConsumerState<CarsListPage> {
     final carsAsync = ref.watch(carsProvider);
 
     return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Car Rental',
-        showBackButton: true,
-      ),
+      appBar: const CustomAppBar(title: 'Car Rental', showBackButton: true),
       body: Column(
         children: [
-          // Filters
           Container(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // Type Filter
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -63,9 +64,9 @@ class _CarsListPageState extends ConsumerState<CarsListPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                // With Driver Toggle
                 CheckboxListTile(
-                  title: const Text('With Driver Only', style: TextStyle(fontSize: 14)),
+                  title: const Text('With Driver Only',
+                      style: TextStyle(fontSize: 14)),
                   value: _withDriverOnly,
                   onChanged: (value) {
                     setState(() => _withDriverOnly = value ?? false);
@@ -78,8 +79,6 @@ class _CarsListPageState extends ConsumerState<CarsListPage> {
               ],
             ),
           ),
-
-          // Cars List
           Expanded(
             child: carsAsync.when(
               loading: () => const LoadingWidget(message: 'Loading cars...'),
@@ -94,6 +93,7 @@ class _CarsListPageState extends ConsumerState<CarsListPage> {
                   return const EmptyStateWidget(title: 'No cars found');
                 }
                 return ListView.separated(
+                  controller: _scrollController,
                   padding: const EdgeInsets.all(16),
                   itemCount: cars.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 16),
@@ -128,7 +128,6 @@ class _CarListItem extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
             Stack(
               children: [
                 ClipRRect(
@@ -144,6 +143,9 @@ class _CarListItem extends StatelessWidget {
                       imageUrl: car['image'],
                       type: NetworkImageFallbackType.car,
                       fit: BoxFit.cover,
+                      memCacheWidth: 900,
+                      maxWidthDiskCache: 1200,
+                      fadeInDuration: const Duration(milliseconds: 150),
                     ),
                   ),
                 ),
@@ -151,7 +153,8 @@ class _CarListItem extends StatelessWidget {
                   top: 12,
                   left: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFFC89B3C),
                       borderRadius: BorderRadius.circular(8),
@@ -168,8 +171,6 @@ class _CarListItem extends StatelessWidget {
                 ),
               ],
             ),
-
-            // Details
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -250,10 +251,7 @@ class _InfoChip extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: Colors.grey[700]),
           const SizedBox(width: 4),
-          Text(
-            text,
-            style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-          ),
+          Text(text, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
         ],
       ),
     );
