@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/constants/image_urls.dart';
@@ -12,6 +11,7 @@ import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/section_title.dart';
 import '../../core/widgets/rating_widget.dart';
 import '../../core/widgets/price_tag.dart';
+import '../../core/widgets/network_image_fallback.dart';
 import 'home_provider.dart';
 
 class HomePage extends ConsumerWidget {
@@ -234,19 +234,10 @@ class _HeroBanner extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              CachedNetworkImage(
+              const NetworkImageFallback(
                 imageUrl: Img.pyramidsSunset,
+                type: NetworkImageFallbackType.tour,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  color: Colors.grey[300],
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Color(0xFFC89B3C),
-                      ),
-                    ),
-                  ),
-                ),
               ),
               Container(
                 decoration: BoxDecoration(
@@ -442,11 +433,10 @@ class _HotelCard extends StatelessWidget {
                   SizedBox(
                     height: 160,
                     width: double.infinity,
-                    child: CachedNetworkImage(
+                    child: NetworkImageFallback(
                       imageUrl: image,
+                      type: NetworkImageFallbackType.hotel,
                       fit: BoxFit.cover,
-                      placeholder: (context, url) =>
-                          Container(color: Colors.grey[300]),
                     ),
                   ),
 
@@ -571,11 +561,10 @@ class _TourCard extends StatelessWidget {
               child: SizedBox(
                 width: 120,
                 height: 140,
-                child: CachedNetworkImage(
+                child: NetworkImageFallback(
                   imageUrl: image,
+                  type: NetworkImageFallbackType.tour,
                   fit: BoxFit.cover,
-                  placeholder: (context, url) =>
-                      Container(color: Colors.grey[300]),
                 ),
               ),
             ),
@@ -733,10 +722,10 @@ class _DestinationCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            CachedNetworkImage(
+            NetworkImageFallback(
               imageUrl: image,
+              type: NetworkImageFallbackType.tour,
               fit: BoxFit.cover,
-              placeholder: (context, url) => Container(color: Colors.grey[300]),
             ),
             Container(
               decoration: BoxDecoration(
