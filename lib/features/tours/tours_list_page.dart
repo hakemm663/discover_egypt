@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/widgets/custom_app_bar.dart';
@@ -10,6 +9,7 @@ import '../../core/widgets/rating_widget.dart';
 import '../../core/widgets/price_tag.dart';
 import '../../core/widgets/error_widget.dart';
 import '../../core/widgets/loading_widget.dart';
+import '../../core/widgets/network_image_fallback.dart';
 import 'tours_provider.dart';
 
 class ToursListPage extends ConsumerStatefulWidget {
@@ -119,8 +119,9 @@ class _TourListItem extends StatelessWidget {
               child: SizedBox(
                 width: 130,
                 height: 160,
-                child: CachedNetworkImage(
+                child: NetworkImageFallback(
                   imageUrl: tour['image'],
+                  type: NetworkImageFallbackType.tour,
                   fit: BoxFit.cover,
                 ),
               ),
