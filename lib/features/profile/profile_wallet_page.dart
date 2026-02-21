@@ -22,7 +22,7 @@ class ProfileWalletPage extends ConsumerWidget {
         showProfileButton: false,
         variant: CustomAppBarVariant.dark,
         backgroundImageUrl: Img.pyramidsMain,
-        onSettingsTap: () {},
+        onSettingsTap: () => context.push('/settings'),
       ),
       body: userAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -49,9 +49,12 @@ class ProfileWalletPage extends ConsumerWidget {
               RoundedCard(
                 child: Row(
                   children: [
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundImage: NetworkImage(user.avatarUrl ?? Img.avatarWoman),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => context.push('/wallet/add-funds'),
+                        icon: const Icon(Icons.add_circle_outline),
+                        label: const Text('Add Funds'),
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -76,33 +79,38 @@ class ProfileWalletPage extends ConsumerWidget {
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 12),
-              RoundedCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Wallet',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                    ),
-                    const SizedBox(height: 12),
-                    _AmountRow(
-                      icon: Icons.account_balance_wallet_outlined,
-                      label: 'Balance',
-                      value: '\$${user.walletBalance.toStringAsFixed(2)}',
-                      valueColor: Colors.green.shade700,
-                    ),
-                    const SizedBox(height: 10),
-                    _AmountRow(
-                      icon: Icons.card_giftcard_outlined,
-                      label: 'Credits',
-                      value: '\$${user.credits.toStringAsFixed(2)}',
-                      valueColor: Theme.of(context).colorScheme.primary,
-                    ),
-                  ],
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Quick actions / menu like the mock
+          RoundedCard(
+            child: Column(
+              children: [
+                _MenuTile(
+                  icon: Icons.calendar_month_outlined,
+                  title: 'Bookings',
+                  trailingText: '\$3,800',
+                  trailingColor: Colors.green.shade700,
+                  onTap: () => context.go('/booking-summary'),
+                ),
+                _divider(),
+                _MenuTile(
+                  icon: Icons.rate_review_outlined,
+                  title: 'Reviews',
+                  trailingText: '20',
+                  trailingColor: Colors.red.shade700,
+                  onTap: () => context.push('/reviews'),
+                ),
+                _divider(),
+                _MenuTile(
+                  icon: Icons.support_agent_outlined,
+                  title: 'Support',
+                  trailingText: 'Chat',
+                  trailingColor: Theme.of(context).colorScheme.primary,
+                  onTap: () => context.push('/support'),
                 ),
               ),
               const SizedBox(height: 12),
