@@ -110,12 +110,6 @@ final homeDataProvider = FutureProvider<HomeData>((ref) async {
       DestinationItem(name: 'Nile River', image: Img.nileRiver),
     ],
   );
-import '../../app/providers.dart';
-import '../../core/repositories/discovery_repositories.dart';
-
-final homeDataProvider = FutureProvider<HomeFeed>((ref) async {
-  final repository = ref.read(discoveryRepositoryProvider);
-  return repository.getHomeFeed(userId: 'demo-user');
 });
 
 final homeHotelsProvider = Provider<List<HotelListItem>>((ref) {

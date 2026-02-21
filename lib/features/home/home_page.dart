@@ -1,25 +1,19 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/image_urls.dart';
 import '../../core/widgets/custom_app_bar.dart';
-import '../../core/repositories/models/discovery_models.dart';
 import '../../core/widgets/error_widget.dart';
 import '../../core/widgets/loading_widget.dart';
 import '../../core/widgets/price_tag.dart';
 import '../../core/widgets/rating_widget.dart';
 import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/section_title.dart';
-import '../shared/models/catalog_models.dart';
-import '../../core/widgets/rating_widget.dart';
-import '../../core/widgets/price_tag.dart';
 import '../../core/widgets/network_image_fallback.dart';
+import '../shared/models/catalog_models.dart';
 import 'home_provider.dart';
 
 const _categories = <HomeCategoryItem>[
@@ -89,85 +83,8 @@ class HomePage extends ConsumerWidget {
                       backgroundColor: const Color(0xFFC89B3C),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-                  children: homeData.hotels
-                      .map(
-                        (hotel) => Padding(
-                          padding: const EdgeInsets.only(right: 16),
-                          child: _HotelCard(
-                            id: hotel.id,
-                            name: hotel.name,
-                            location: hotel.location,
-                            image: hotel.image,
-                            rating: hotel.rating,
-                            reviewCount: hotel.reviewCount,
-                            price: hotel.price,
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
-
-              const SizedBox(height: 24),
-
-              // Popular Tours
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: SectionTitle(
-                  title: 'Popular Tours',
-                  trailing: 'View All',
-                  trailingIcon: Icons.arrow_forward_ios_rounded,
-                  onTrailingTap: () => context.push('/tours'),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: homeData.tours
-                      .map(
-                        (tour) => Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: _TourCard(
-                            id: tour.id,
-                            name: tour.name,
-                            duration: tour.duration,
-                            image: tour.image,
-                            rating: tour.rating,
-                            reviewCount: tour.reviewCount,
-                            price: tour.price,
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ).animate().fadeIn(delay: 500.ms, duration: 500.ms),
-
-              const SizedBox(height: 24),
-
-              // Recommended for You
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: _RecommendedForYou(tours: homeData.recommendedTours),
-              ),
-
-              const SizedBox(height: 32),
-
-              // Trip Planner Button
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: ElevatedButton(
-                  onPressed: () {
-                    context.push('/trip-planner');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFC89B3C),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
                     ),
-                    child: const Text('Plan Your Trip',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    child: const Text('Plan Your Trip', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -214,14 +131,10 @@ class _HeroBanner extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              const NetworkImageFallback(
+              NetworkImageFallback(
                 imageUrl: Img.pyramidsSunset,
                 type: NetworkImageFallbackType.tour,
                 fit: BoxFit.cover,
-                memCacheWidth: 1440,
-                maxWidthDiskCache: 1920,
-                fadeInDuration: const Duration(milliseconds: 150),
-                placeholder: (context, url) => Container(color: Colors.grey[300]),
               ),
               Container(
                 decoration: BoxDecoration(
@@ -241,41 +154,8 @@ class _HeroBanner extends StatelessWidget {
                     _PromoBadge(),
                     SizedBox(height: 8),
                     Text('Explore the Wonders of Egypt', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFC89B3C),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        '20% OFF',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.surface,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Explore the Wonders of Egypt',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.surface,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Book now and get special discounts',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontSize: 14,
-                      ),
-                    ),
+                    SizedBox(height: 4),
+                    Text('Book now and get special discounts', style: TextStyle(color: Colors.white, fontSize: 14)),
                   ],
                 ),
               ),
@@ -318,7 +198,16 @@ class _CategoryItem extends StatelessWidget {
   final VoidCallback onTap;
   const _CategoryItem({required this.icon, required this.label, required this.onTap});
   @override
-  Widget build(BuildContext context) => InkWell(onTap: onTap, child: Column(children: [Icon(icon), Text(label)]));
+  Widget build(BuildContext context) => InkWell(
+        onTap: onTap,
+        child: Column(
+          children: [
+            Icon(icon, size: 32, color: const Color(0xFFC89B3C)),
+            const SizedBox(height: 8),
+            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+          ],
+        ),
+      );
 }
 
 class _PopularHotelsSection extends StatelessWidget {
@@ -349,14 +238,6 @@ class _PopularHotelsSection extends StatelessWidget {
                         child: _HotelCard(hotel: hotel),
                       ))
                   .toList(),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
             ),
           ),
         ],
@@ -396,197 +277,28 @@ class _HotelCard extends StatelessWidget {
         onTap: () => context.push('/hotel/${hotel.id}'),
         child: SizedBox(
           width: 240,
-          child: Column(children: [
-            SizedBox(
-              height: 160,
-              width: double.infinity,
-              child: CachedNetworkImage(
-                imageUrl: hotel.image,
-                fit: BoxFit.cover,
-                memCacheWidth: 900,
-                maxWidthDiskCache: 1200,
-  Widget build(BuildContext context) {
-    final isCompactDevice = MediaQuery.sizeOf(context).width < 360;
-    final detailPadding = isCompactDevice ? 10.0 : 12.0;
-    final titleFontSize = isCompactDevice ? 15.0 : 16.0;
-    final locationFontSize = isCompactDevice ? 11.0 : 12.0;
-    final detailsSpacing = isCompactDevice ? 6.0 : 8.0;
-
-    return GestureDetector(
-      onTap: () => context.push('/hotel/$id'),
-      child: Container(
-        width: 240,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Stack(
+          child: Column(
             children: [
-              // Background Image
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Image
-                  AspectRatio(
-                    aspectRatio: 3 / 2,
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: CachedNetworkImage(
-                        imageUrl: image,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) =>
-                            Container(color: Colors.grey[300]),
-                      ),
-                    ),
-                  ),
-
-                  // Details
-                  Expanded(
-                    child: Container(
-                      padding: EdgeInsets.all(detailPadding),
-                      color: Theme.of(context).colorScheme.surface,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name,
-                            style: TextStyle(
-                              fontSize: titleFontSize,
-                              fontWeight: FontWeight.w700,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          SizedBox(height: isCompactDevice ? 2 : 4),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.location_on_outlined,
-                                size: 14,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  location,
-                                  style: TextStyle(
-                                    fontSize: locationFontSize,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    color: Theme.of(context).colorScheme.surface,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_on_outlined,
-                              size: 14,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                location,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: detailsSpacing),
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Flexible(
-                                  child: FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    alignment: Alignment.centerLeft,
-                                    child: RatingWidget(
-                                      rating: rating,
-                                      reviewCount: reviewCount,
-                                      size: 14,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Flexible(
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      child: Text(
-                                        '\$${price.toStringAsFixed(0)}/night',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: isCompactDevice ? 16 : 18,
-                                          fontWeight: FontWeight.w800,
-                                          color: const Color(0xFFC89B3C),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              // Favorite Button
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.favorite_border_rounded,
-                    color: Color(0xFFC89B3C),
-                    size: 20,
-                  ),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: SizedBox(
+                  height: 160,
+                  width: double.infinity,
+                  child: CachedNetworkImage(imageUrl: hotel.image, fit: BoxFit.cover),
                 ),
               ),
-            ),
-            RatingWidget(rating: hotel.rating, reviewCount: hotel.reviewCount, size: 14),
-            PriceTag(price: hotel.price, unit: 'night')
-          ]),
+              const SizedBox(height: 8),
+              Text(hotel.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(hotel.location, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  RatingWidget(rating: hotel.rating, reviewCount: hotel.reviewCount, size: 14),
+                  PriceTag(price: hotel.price, unit: 'night'),
+                ],
+              ),
+            ],
+          ),
         ),
       );
 }
@@ -599,145 +311,69 @@ class _TourCard extends StatelessWidget {
         onTap: () => context.push('/tour/${tour.id}'),
         child: RoundedCard(
           padding: EdgeInsets.zero,
-          child: Row(children: [
-            SizedBox(
-              width: 120,
-              height: 140,
-              child: CachedNetworkImage(
-                imageUrl: tour.image,
-                fit: BoxFit.cover,
-                memCacheWidth: 600,
-                maxWidthDiskCache: 900,
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push('/tour/$id'),
-      child: RoundedCard(
-        padding: EdgeInsets.zero,
-        child: Row(
-          children: [
-            // Image
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                bottomLeft: Radius.circular(20),
-              ),
-              child: SizedBox(
-                width: 120,
-                height: 140,
-                child: NetworkImageFallback(
-                  imageUrl: image,
-                  type: NetworkImageFallbackType.tour,
-                  fit: BoxFit.cover,
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), bottomLeft: Radius.circular(20)),
+                child: SizedBox(
+                  width: 120,
+                  height: 140,
+                  child: CachedNetworkImage(imageUrl: tour.image, fit: BoxFit.cover),
                 ),
               ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(tour.name), Text(tour.duration), RatingWidget(rating: tour.rating, reviewCount: tour.reviewCount, size: 14), PriceTag(price: tour.price)]),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.access_time_rounded,
-                          size: 14,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            duration,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    RatingWidget(
-                      rating: rating,
-                      reviewCount: reviewCount,
-                      size: 14,
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        PriceTag(price: price),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(
-                              0xFFC89B3C,
-                            ).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            'Book Now',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFFC89B3C),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(tour.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(tour.duration, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                      const SizedBox(height: 8),
+                      RatingWidget(rating: tour.rating, reviewCount: tour.reviewCount, size: 14),
+                      const SizedBox(height: 8),
+                      PriceTag(price: tour.price),
+                    ],
+                  ),
                 ),
               ),
-            )
-          ]),
+            ],
+          ),
         ),
       );
 }
 
 class _FeaturedDestinations extends StatelessWidget {
   final List<DestinationItem> destinations;
-  final List<DestinationListing> destinations;
 
   const _FeaturedDestinations({required this.destinations});
   @override
-  Widget build(BuildContext context) => SizedBox(
-        height: 200,
-        child: ListView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          children: destinations
-              .map((destination) => Padding(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: _DestinationCard(name: destination.name, image: destination.image),
-                  ))
-              .toList(),
-                    child: _DestinationCard(
-                      name: destination.name,
-                      image: destination.image,
-                    ),
-                  ),
-                )
-                .toList(),
+  Widget build(BuildContext context) => Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: SectionTitle(
+              title: 'Featured Destinations',
+              trailing: 'View All',
+              trailingIcon: Icons.arrow_forward_ios_rounded,
+              onTrailingTap: () {},
+            ),
           ),
-        ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 200,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              children: destinations
+                  .map((destination) => Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: _DestinationCard(name: destination.name, image: destination.image),
+                      ))
+                  .toList(),
+            ),
+          ),
+        ],
       );
 }
 
@@ -746,101 +382,55 @@ class _DestinationCard extends StatelessWidget {
   final String image;
   const _DestinationCard({required this.name, required this.image});
   @override
-  Widget build(BuildContext context) => SizedBox(
-        width: 160,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            NetworkImageFallback(
-              imageUrl: image,
-              type: NetworkImageFallbackType.tour,
-              fit: BoxFit.cover,
-              memCacheWidth: 720,
-              maxWidthDiskCache: 1080,
-            ),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.7),
-                  ],
+  Widget build(BuildContext context) => ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: SizedBox(
+          width: 160,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              NetworkImageFallback(imageUrl: image, type: NetworkImageFallbackType.tour, fit: BoxFit.cover),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
+                  ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    name,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.surface,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
               ),
-            ),
-            Align(alignment: Alignment.bottomLeft, child: Padding(padding: const EdgeInsets.all(12), child: Text(name, style: const TextStyle(color: Colors.white))))
-          ],
+            ],
+          ),
         ),
       );
 }
 
 class _RecommendedForYou extends StatelessWidget {
   final List<TourListItem> tours;
-  final List<TourListing> tours;
 
   const _RecommendedForYou({required this.tours});
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(children: tours.map((tour) => Padding(padding: const EdgeInsets.only(bottom: 16), child: _TourCard(tour: tour))).toList()),
+  Widget build(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Text('Recommended for You', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: tours.map((tour) => Padding(padding: const EdgeInsets.only(bottom: 16), child: _TourCard(tour: tour))).toList(),
+            ),
+          ),
+        ],
       );
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Recommended for You',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: tours
-                .map(
-                  (tour) => Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: _TourCard(
-                      id: tour.id,
-                      name: tour.name,
-                      duration: tour.duration,
-                      image: tour.image,
-                      rating: tour.rating,
-                      reviewCount: tour.reviewCount,
-                      price: tour.price,
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-        ),
-      ],
-    );
-  }
 }

@@ -8,9 +8,12 @@ import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../core/constants/app_constants.dart';
+import '../core/models/user_model.dart';
+import '../core/navigation/navigation_tracking_observer.dart';
 import '../core/repositories/api_clients/discovery_api_clients.dart';
 import '../core/repositories/discovery_repositories.dart';
 import '../core/repositories/firestore/discovery_firestore_client.dart';
+import '../core/routes/router.dart';
 import '../core/services/auth_service.dart';
 import '../core/services/database_service.dart';
 import '../core/services/firebase_service.dart';

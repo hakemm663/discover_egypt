@@ -36,8 +36,7 @@ class ProfileWalletPage extends ConsumerWidget {
           if (user == null) {
             return _ProfileEmptyState(
               title: 'Profile not found',
-              message:
-                  'Your account is signed in, but profile details are missing or expired.',
+              message: 'Your account is signed in, but profile details are missing or expired.',
               buttonLabel: 'Back to Sign In',
               onPressed: () => context.go('/sign-in'),
             );
@@ -47,70 +46,55 @@ class ProfileWalletPage extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             children: [
               RoundedCard(
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => context.push('/wallet/add-funds'),
-                        icon: const Icon(Icons.add_circle_outline),
-                        label: const Text('Add Funds'),
-                      ),
+                    Text(
+                      user.fullName,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            user.fullName,
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            user.isPremium ? 'Premium Member' : 'Member',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Colors.black.withValues(alpha: 0.6),
-                                ),
-                          ),
-                        ],
-                      ),
+                    const SizedBox(height: 4),
+                    Text(
+                      user.isPremium ? 'Premium Member' : 'Member',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.black.withValues(alpha: 0.6)),
+                    ),
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: () => context.push('/wallet/add-funds'),
+                      icon: const Icon(Icons.add_circle_outline),
+                      label: const Text('Add Funds'),
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Quick actions / menu like the mock
-          RoundedCard(
-            child: Column(
-              children: [
-                _MenuTile(
-                  icon: Icons.calendar_month_outlined,
-                  title: 'Bookings',
-                  trailingText: '\$3,800',
-                  trailingColor: Colors.green.shade700,
-                  onTap: () => context.go('/booking-summary'),
-                ),
-                _divider(),
-                _MenuTile(
-                  icon: Icons.rate_review_outlined,
-                  title: 'Reviews',
-                  trailingText: '20',
-                  trailingColor: Colors.red.shade700,
-                  onTap: () => context.push('/reviews'),
-                ),
-                _divider(),
-                _MenuTile(
-                  icon: Icons.support_agent_outlined,
-                  title: 'Support',
-                  trailingText: 'Chat',
-                  trailingColor: Theme.of(context).colorScheme.primary,
-                  onTap: () => context.push('/support'),
+              ),
+              const SizedBox(height: 12),
+              RoundedCard(
+                child: Column(
+                  children: [
+                    _MenuTile(
+                      icon: Icons.calendar_month_outlined,
+                      title: 'Bookings',
+                      trailingText: '\$3,800',
+                      trailingColor: Colors.green.shade700,
+                      onTap: () => context.push('/my-bookings'),
+                    ),
+                    _divider(),
+                    _MenuTile(
+                      icon: Icons.rate_review_outlined,
+                      title: 'Reviews',
+                      trailingText: '20',
+                      trailingColor: Colors.red.shade700,
+                      onTap: () => context.push('/reviews'),
+                    ),
+                    _divider(),
+                    _MenuTile(
+                      icon: Icons.support_agent_outlined,
+                      title: 'Support',
+                      trailingText: 'Chat',
+                      trailingColor: Theme.of(context).colorScheme.primary,
+                      onTap: () => context.push('/support'),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),
@@ -163,8 +147,7 @@ class ProfileWalletPage extends ConsumerWidget {
     }
   }
 
-  Widget _divider() =>
-      Divider(height: 18, color: Colors.black.withValues(alpha: 0.08));
+  Widget _divider() => Divider(height: 18, color: Colors.black.withValues(alpha: 0.08));
 }
 
 class _ProfileEmptyState extends StatelessWidget {
@@ -202,46 +185,6 @@ class _ProfileEmptyState extends StatelessWidget {
   }
 }
 
-class _AmountRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color valueColor;
-
-  const _AmountRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.valueColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.black.withValues(alpha: 0.7)),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            label,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w600),
-          ),
-        ),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: valueColor,
-              ),
-        ),
-      ],
-    );
-  }
-}
-
 class _MenuTile extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -264,16 +207,11 @@ class _MenuTile extends StatelessWidget {
       leading: CircleAvatar(
         radius: 18,
         backgroundColor: Colors.black.withValues(alpha: 0.06),
-        child: Icon(
-          icon,
-          size: 18,
-          color: Colors.black.withValues(alpha: 0.75),
-        ),
+        child: Icon(icon, size: 18, color: Colors.black.withValues(alpha: 0.75)),
       ),
       title: Text(
         title,
-        style:
-            Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
       ),
       trailing: trailingText.isEmpty
           ? const Icon(Icons.chevron_right)

@@ -1,10 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/repositories/models/discovery_models.dart';
@@ -14,8 +11,6 @@ import '../../core/widgets/loading_widget.dart';
 import '../../core/widgets/price_tag.dart';
 import '../../core/widgets/rating_widget.dart';
 import '../../core/widgets/rounded_card.dart';
-import '../shared/models/catalog_models.dart';
-import '../../core/widgets/network_image_fallback.dart';
 import 'tours_provider.dart';
 
 class ToursListPage extends ConsumerStatefulWidget {
@@ -32,27 +27,16 @@ class _ToursListPageState extends ConsumerState<ToursListPage> {
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _scrollController
-      ..removeListener(_onScroll)
-      ..dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 180) {
-      ref.read(toursProvider.notifier).fetchNextPage();
-    }
-  }
-
-  List<TourListItem> _filteredTours(List<TourListItem> sourceTours) {
-    if (_selectedCategory == 'All') return sourceTours;
-    return sourceTours.where((t) => t.category == _selectedCategory).toList();
+  void _syncQuery() {
+    ref.read(toursQueryProvider.notifier).state = ToursQuery(category: _selectedCategory);
   }
 
   @override
@@ -74,13 +58,9 @@ class _ToursListPageState extends ConsumerState<ToursListPage> {
                           child: FilterChip(
                             label: Text(cat),
                             selected: _selectedCategory == cat,
-                            onSelected: (selected) =>
-                                setState(() => _selectedCategory = cat),
-                            selectedColor:
-                                const Color(0xFFC89B3C).withValues(alpha: 0.2),
                             onSelected: (selected) {
                               setState(() => _selectedCategory = cat);
-                              ref.read(toursQueryProvider.notifier).state = ToursQuery(category: cat);
+                              _syncQuery();
                             },
                             selectedColor: const Color(0xFFC89B3C).withValues(alpha: 0.2),
                             checkmarkColor: const Color(0xFFC89B3C),
@@ -98,9 +78,6 @@ class _ToursListPageState extends ConsumerState<ToursListPage> {
                 message: error.toString(),
                 onRetry: () => ref.invalidate(toursProvider),
               ),
-              data: (pageState) {
-                final filteredTours = _filteredTours(pageState.items);
-                if (filteredTours.isEmpty) {
               data: (toursPage) {
                 final tours = toursPage.items;
                 if (tours.isEmpty) {
@@ -109,13 +86,6 @@ class _ToursListPageState extends ConsumerState<ToursListPage> {
                 return ListView.separated(
                   controller: _scrollController,
                   padding: const EdgeInsets.all(16),
-                  itemCount: filteredTours.length + (pageState.hasMore ? 1 : 0),
-                  separatorBuilder: (_, __) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    if (index >= filteredTours.length) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    final tour = filteredTours[index];
                   itemCount: tours.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 16),
                   itemBuilder: (context, index) {
@@ -136,7 +106,6 @@ class _ToursListPageState extends ConsumerState<ToursListPage> {
 }
 
 class _TourListItem extends StatelessWidget {
-  final TourListItem tour;
   final TourListing tour;
 
   const _TourListItem({required this.tour});
@@ -159,13 +128,7 @@ class _TourListItem extends StatelessWidget {
                 height: 160,
                 child: CachedNetworkImage(
                   imageUrl: tour.image,
-                child: NetworkImageFallback(
-                  imageUrl: tour['image'],
-                  type: NetworkImageFallbackType.tour,
                   fit: BoxFit.cover,
-                  memCacheWidth: 640,
-                  maxWidthDiskCache: 900,
-                  fadeInDuration: const Duration(milliseconds: 150),
                 ),
               ),
             ),
@@ -176,17 +139,11 @@ class _TourListItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: const Color(0xFFC89B3C).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(tour.category,
-                          style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFFC89B3C))),
                       child: Text(
                         tour.category,
                         style: const TextStyle(
@@ -199,26 +156,16 @@ class _TourListItem extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       tour.name,
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w700),
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        Icon(Icons.access_time_rounded,
-                            size: 14, color: Colors.grey[600]),
+                        Icon(Icons.access_time_rounded, size: 14, color: Colors.grey[600]),
                         const SizedBox(width: 4),
                         Expanded(
-                          child: Text(tour.duration,
-                              style:
-                                  TextStyle(fontSize: 12, color: Colors.grey[600]),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis),
-                        ),
-                      ],
-                    ),
                           child: Text(
                             tour.duration,
                             style: TextStyle(fontSize: 12, color: Colors.grey[600]),
@@ -228,49 +175,12 @@ class _TourListItem extends StatelessWidget {
                         ),
                       ],
                     ),
-
-                    if (tour.pickupIncluded)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Row(
-                          children: [
-                            Icon(Icons.check_circle_outline,
-                                size: 14, color: Colors.green[600]),
-                            const SizedBox(width: 4),
-                            Text('Pickup included',
-                                style: TextStyle(
-                                    fontSize: 11, color: Colors.green[600])),
-                          ],
-                        ),
-                      ),
-                    const SizedBox(height: 8),
-                    RatingWidget(
-                        rating: tour.rating,
-                        reviewCount: tour.reviewCount,
-                        size: 14),
-                      rating: tour.rating,
-                      reviewCount: tour.reviewCount,
-                      size: 14,
-                    ),
-
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                        RatingWidget(rating: tour.rating, reviewCount: tour.reviewCount, size: 14),
                         PriceTag(price: tour.price),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFC89B3C).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text('View',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFFC89B3C))),
-                        ),
                       ],
                     ),
                   ],
@@ -279,6 +189,22 @@ class _TourListItem extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class EmptyStateWidget extends StatelessWidget {
+  final String title;
+
+  const EmptyStateWidget({super.key, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        title,
+        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
       ),
     );
   }

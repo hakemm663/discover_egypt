@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/repositories/models/discovery_models.dart';
@@ -10,6 +8,9 @@ import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/error_widget.dart';
 import '../../core/widgets/loading_widget.dart';
 import '../../core/widgets/network_image_fallback.dart';
+import '../../core/widgets/rating_widget.dart';
+import '../../core/widgets/price_tag.dart';
+import '../../core/widgets/rounded_card.dart';
 import 'cars_provider.dart';
 
 class CarsListPage extends ConsumerStatefulWidget {
@@ -27,7 +28,12 @@ class _CarsListPageState extends ConsumerState<CarsListPage> {
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
 
@@ -140,12 +146,9 @@ class _CarListItem extends StatelessWidget {
                     width: double.infinity,
                     color: Colors.grey[100],
                     child: NetworkImageFallback(
-                      imageUrl: car['image'],
+                      imageUrl: car.image,
                       type: NetworkImageFallbackType.car,
                       fit: BoxFit.cover,
-                      memCacheWidth: 900,
-                      maxWidthDiskCache: 1200,
-                      fadeInDuration: const Duration(milliseconds: 150),
                     ),
                   ),
                 ),
@@ -241,7 +244,7 @@ class _InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.grey[100],
         borderRadius: BorderRadius.circular(8),
@@ -251,8 +254,27 @@ class _InfoChip extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: Colors.grey[700]),
           const SizedBox(width: 4),
-          Text(text, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+          Text(
+            text,
+            style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class EmptyStateWidget extends StatelessWidget {
+  final String title;
+
+  const EmptyStateWidget({super.key, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        title,
+        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
       ),
     );
   }
