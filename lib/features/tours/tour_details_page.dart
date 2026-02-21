@@ -51,7 +51,11 @@ class TourDetailsPage extends ConsumerWidget {
         showBackButton: true,
         additionalActions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Share is coming soon.')),
+              );
+            },
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -225,8 +229,7 @@ class TourDetailsPage extends ConsumerWidget {
               color: Colors.white,
               child: ElevatedButton(
                 onPressed: () {
-                  // Navigate to booking page or perform booking action
-                  context.push('/booking/confirm');
+                  context.push('/booking-summary');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFC89B3C),
