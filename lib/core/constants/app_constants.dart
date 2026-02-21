@@ -11,6 +11,9 @@ class AppConstants {
   static const String languageKey = 'language_code';
   static const String onboardingKey = 'onboarding_completed';
   static const String userTokenKey = 'user_token';
+  static const String navigationTrackingConsentKey =
+      'navigation_tracking_consent';
+  static const String navigationEventsQueueKey = 'navigation_events_queue';
 
   // Firebase Collections
   static const String usersCollection = 'users';
@@ -20,6 +23,7 @@ class AppConstants {
   static const String restaurantsCollection = 'restaurants';
   static const String bookingsCollection = 'bookings';
   static const String reviewsCollection = 'reviews';
+  static const String navigationEventsCollection = 'user_navigation_events';
 
   // Booking Types
   static const String bookingHotel = 'hotel';

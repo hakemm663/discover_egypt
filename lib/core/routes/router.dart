@@ -45,205 +45,209 @@ import '../../features/settings/settings_page.dart';
 import '../../features/shared/trip_planner.dart';
 import '../widgets/app_bottom_nav.dart';
 
-final appRouter = GoRouter(
-  initialLocation: '/home',
-  routes: [
-    // Onboarding
-    GoRoute(
-      path: '/cover',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const CoverPage(),
-      ),
-    ),
-    GoRoute(
-      path: '/language',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const LanguagePage(),
-      ),
-    ),
-    GoRoute(
-      path: '/nationality',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const NationalityPage(),
-      ),
-    ),
-    GoRoute(
-      path: '/interests',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const InterestsPage(),
-      ),
-    ),
-
-    // Auth
-    GoRoute(
-      path: '/sign-in',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const SignInPage(),
-      ),
-    ),
-    GoRoute(
-      path: '/sign-up',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const SignUpPage(),
-      ),
-    ),
-    GoRoute(
-      path: '/forgot-password',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const ForgotPasswordPage(),
-      ),
-    ),
-
-    StatefulShellRoute.indexedStack(
-      builder: (context, state, navigationShell) =>
-          AppBottomNavShell(navigationShell: navigationShell),
-      branches: [
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/home',
-              pageBuilder: (context, state) => _buildPage(
-                state,
-                const HomePage(),
-              ),
-            ),
-          ],
+GoRouter createAppRouter({
+  List<NavigatorObserver> observers = const <NavigatorObserver>[],
+}) {
+  return GoRouter(
+    observers: observers,
+    initialLocation: '/home',
+    routes: [
+      // Onboarding
+      GoRoute(
+        path: '/cover',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const CoverPage(),
         ),
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/hotels',
-              pageBuilder: (context, state) => _buildPage(
-                state,
-                const HotelsListPage(),
-              ),
-            ),
-          ],
+      ),
+      GoRoute(
+        path: '/language',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const LanguagePage(),
         ),
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/tours',
-              pageBuilder: (context, state) => _buildPage(
-                state,
-                const ToursListPage(),
-              ),
-            ),
-          ],
+      ),
+      GoRoute(
+        path: '/nationality',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const NationalityPage(),
         ),
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/cars',
-              pageBuilder: (context, state) => _buildPage(
-                state,
-                const CarsListPage(),
-              ),
-            ),
-          ],
+      ),
+      GoRoute(
+        path: '/interests',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const InterestsPage(),
         ),
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/profile',
-              pageBuilder: (context, state) => _buildPage(
-                state,
-                const ProfileWalletPage(),
-              ),
-            ),
-          ],
+      ),
+
+      // Auth
+      GoRoute(
+        path: '/sign-in',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const SignInPage(),
         ),
-      ],
-    ),
+      ),
+      GoRoute(
+        path: '/sign-up',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const SignUpPage(),
+        ),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const ForgotPasswordPage(),
+        ),
+      ),
 
-    // Hotels
-    GoRoute(
-      path: '/hotel/:id',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        HotelDetailsPage(id: state.pathParameters['id']!),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            AppBottomNavShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                pageBuilder: (context, state) => _buildPage(
+                  state,
+                  const HomePage(),
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/hotels',
+                pageBuilder: (context, state) => _buildPage(
+                  state,
+                  const HotelsListPage(),
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/tours',
+                pageBuilder: (context, state) => _buildPage(
+                  state,
+                  const ToursListPage(),
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/cars',
+                pageBuilder: (context, state) => _buildPage(
+                  state,
+                  const CarsListPage(),
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                pageBuilder: (context, state) => _buildPage(
+                  state,
+                  const ProfileWalletPage(),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
-    ),
 
-    // Tours
-    GoRoute(
-      path: '/tour/:id',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        TourDetailsPage(id: state.pathParameters['id']!),
+      // Hotels
+      GoRoute(
+        path: '/hotel/:id',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          HotelDetailsPage(id: state.pathParameters['id']!),
+        ),
       ),
-    ),
 
-    // Cars
-    GoRoute(
-      path: '/car/:id',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        CarDetailsPage(id: state.pathParameters['id']!),
+      // Tours
+      GoRoute(
+        path: '/tour/:id',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          TourDetailsPage(id: state.pathParameters['id']!),
+        ),
       ),
-    ),
 
-    // Restaurants
-    GoRoute(
-      path: '/restaurants',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const RestaurantsListPage(),
+      // Cars
+      GoRoute(
+        path: '/car/:id',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          CarDetailsPage(id: state.pathParameters['id']!),
+        ),
       ),
-    ),
-    GoRoute(
-      path: '/restaurant/:id',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        RestaurantDetailsPage(id: state.pathParameters['id']!),
-      ),
-    ),
 
-    // Booking
-    GoRoute(
-      path: '/booking-summary',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const BookingSummaryPage(),
+      // Restaurants
+      GoRoute(
+        path: '/restaurants',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const RestaurantsListPage(),
+        ),
       ),
-    ),
-    GoRoute(
-      path: '/confirm-pay',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        ConfirmPayPage(checkoutData: _checkoutDataFromState(state)),
+      GoRoute(
+        path: '/restaurant/:id',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          RestaurantDetailsPage(id: state.pathParameters['id']!),
+        ),
       ),
-    ),
-    GoRoute(
-      path: '/payment-success',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const PaymentSuccessPage(),
-      ),
-    ),
 
-    // Profile
-    GoRoute(
-      path: '/edit-profile',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const EditProfilePage(),
+      // Booking
+      GoRoute(
+        path: '/booking-summary',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const BookingSummaryPage(),
+        ),
       ),
-    ),
-    GoRoute(
-      path: '/my-bookings',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const MyBookingsPage(),
+      GoRoute(
+        path: '/confirm-pay',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          ConfirmPayPage(checkoutData: _checkoutDataFromState(state)),
+        ),
       ),
-    ),
+      GoRoute(
+        path: '/payment-success',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const PaymentSuccessPage(),
+        ),
+      ),
+
+      // Profile
+      GoRoute(
+        path: '/edit-profile',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const EditProfilePage(),
+        ),
+      ),
+      GoRoute(
+        path: '/my-bookings',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const MyBookingsPage(),
+        ),
+      ),
 
     GoRoute(
       path: '/reviews',
@@ -297,15 +301,15 @@ final appRouter = GoRouter(
         state,
         const SettingsPage(),
       ),
-    ),
 
-    // Trip Planner
-    GoRoute(
-      path: '/trip-planner',
-      builder: (context, state) => const TripPlannerPage(),
-    ),
-  ],
-);
+      // Trip Planner
+      GoRoute(
+        path: '/trip-planner',
+        builder: (context, state) => const TripPlannerPage(),
+      ),
+    ],
+  );
+}
 
 CustomTransitionPage _buildPage(GoRouterState state, Widget child) {
   return CustomTransitionPage(

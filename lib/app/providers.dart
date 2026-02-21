@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../core/constants/app_constants.dart';
@@ -8,13 +9,69 @@ import '../core/repositories/discovery_repositories.dart';
 import '../core/repositories/firestore/discovery_firestore_client.dart';
 import '../core/services/auth_service.dart';
 import '../core/services/database_service.dart';
+import '../core/services/firebase_service.dart';
 import '../core/services/payment_service.dart';
-import '../core/models/user_model.dart';
 
 // Services
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
-final databaseServiceProvider = Provider<DatabaseService>((ref) => DatabaseService());
+final databaseServiceProvider =
+    Provider<DatabaseService>((ref) => DatabaseService());
 final paymentServiceProvider = Provider<PaymentService>((ref) => PaymentService());
+final firebaseServiceProvider = Provider<FirebaseService>((ref) => FirebaseService());
+
+// Navigation Tracking Consent Provider
+final navigationTrackingConsentProvider =
+    StateNotifierProvider<NavigationTrackingConsentNotifier, bool>((ref) {
+  return NavigationTrackingConsentNotifier();
+});
+
+class NavigationTrackingConsentNotifier extends StateNotifier<bool> {
+  NavigationTrackingConsentNotifier() : super(false) {
+    _loadConsent();
+  }
+
+  void _loadConsent() {
+    final box = Hive.box(AppConstants.settingsBox);
+    state = box.get(
+      AppConstants.navigationTrackingConsentKey,
+      defaultValue: false,
+    ) as bool;
+  }
+
+  void setConsent(bool consentGranted) {
+    state = consentGranted;
+    final box = Hive.box(AppConstants.settingsBox);
+    box.put(AppConstants.navigationTrackingConsentKey, consentGranted);
+  }
+}
+
+final navigationTrackingServiceProvider = Provider<NavigationTrackingService>((ref) {
+  final service = NavigationTrackingService(
+    firebaseService: ref.watch(firebaseServiceProvider),
+    settingsBox: Hive.box(AppConstants.settingsBox),
+  );
+
+  ref.listen<bool>(navigationTrackingConsentProvider, (previous, next) {
+    service.updateConsent(next);
+  });
+
+  ref.onDispose(service.dispose);
+
+  return service;
+});
+
+final navigationTrackingObserverProvider =
+    Provider<NavigationTrackingObserver>((ref) {
+  return NavigationTrackingObserver(
+    trackingService: ref.watch(navigationTrackingServiceProvider),
+  );
+});
+
+final appRouterProvider = Provider<GoRouter>((ref) {
+  return createAppRouter(
+    observers: [ref.watch(navigationTrackingObserverProvider)],
+  );
+});
 
 final hotelsApiClientProvider = Provider<HotelsApiClient>((ref) => HotelsApiClient());
 final toursApiClientProvider = Provider<ToursApiClient>((ref) => ToursApiClient());
@@ -109,11 +166,7 @@ class LanguageNotifier extends StateNotifier<Locale> {
   }
 
   String _normalizeLanguageCode(String languageCode) {
-    final normalized = languageCode
-        .replaceAll('-', '_')
-        .split('_')
-        .first
-        .toLowerCase();
+    final normalized = languageCode.replaceAll('-', '_').split('_').first.toLowerCase();
 
     if (_supportedLanguageCodes.contains(normalized)) {
       return normalized;

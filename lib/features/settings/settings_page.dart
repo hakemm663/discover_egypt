@@ -144,6 +144,33 @@ class SettingsPage extends ConsumerWidget {
 
           const SizedBox(height: 24),
 
+          // Privacy
+          Text(
+            'Privacy',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
+          const SizedBox(height: 12),
+          RoundedCard(
+            child: SwitchListTile(
+              title: const Text('Share navigation insights'),
+              subtitle: const Text(
+                'Help improve your experience by sharing journey analytics',
+              ),
+              value: ref.watch(navigationTrackingConsentProvider),
+              onChanged: (value) {
+                ref
+                    .read(navigationTrackingConsentProvider.notifier)
+                    .setConsent(value);
+              },
+              activeThumbColor: const Color(0xFFC89B3C),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
           // Support
           Text(
             'Support',
