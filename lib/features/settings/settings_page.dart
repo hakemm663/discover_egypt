@@ -199,6 +199,8 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return ListTile(
       onTap: onTap,
       leading: Container(
@@ -206,12 +208,12 @@ class _SettingsTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: titleColor != null
               ? titleColor!.withValues(alpha: 0.1)
-              : const Color(0xFFC89B3C).withValues(alpha: 0.1),
+              : colorScheme.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(
           icon,
-          color: titleColor ?? const Color(0xFFC89B3C),
+          color: titleColor ?? colorScheme.primary,
           size: 20,
         ),
       ),
@@ -219,7 +221,7 @@ class _SettingsTile extends StatelessWidget {
         title,
         style: TextStyle(
           fontWeight: FontWeight.w600,
-          color: titleColor,
+          color: titleColor ?? colorScheme.onSurface,
         ),
       ),
       trailing: Row(
@@ -230,13 +232,13 @@ class _SettingsTile extends StatelessWidget {
               trailing!,
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.grey[600],
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
           const SizedBox(width: 4),
           Icon(
             Icons.chevron_right_rounded,
-            color: Colors.grey[400],
+            color: colorScheme.outlineVariant,
           ),
         ],
       ),

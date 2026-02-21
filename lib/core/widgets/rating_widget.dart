@@ -19,6 +19,8 @@ class RatingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -30,7 +32,7 @@ class RatingWidget extends StatelessWidget {
           ),
           itemCount: 5,
           itemSize: size,
-          unratedColor: Colors.grey[300],
+          unratedColor: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
         ),
         if (showValue) ...[
           const SizedBox(width: 6),
@@ -39,7 +41,7 @@ class RatingWidget extends StatelessWidget {
             style: TextStyle(
               fontSize: size * 0.85,
               fontWeight: FontWeight.w700,
-              color: Colors.black87,
+              color: colorScheme.onSurface,
             ),
           ),
         ],
@@ -49,7 +51,7 @@ class RatingWidget extends StatelessWidget {
             '($reviewCount)',
             style: TextStyle(
               fontSize: size * 0.75,
-              color: Colors.grey[600],
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -72,6 +74,8 @@ class RatingInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return RatingBar.builder(
       initialRating: rating,
       minRating: 1,
@@ -84,7 +88,7 @@ class RatingInput extends StatelessWidget {
         Icons.star_rounded,
         color: Color(0xFFC89B3C),
       ),
-      unratedColor: Colors.grey[300],
+      unratedColor: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
       onRatingUpdate: onRatingChanged,
     );
   }
