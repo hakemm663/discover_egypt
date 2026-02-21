@@ -462,7 +462,7 @@ class _HotelCard extends StatelessWidget {
                   Expanded(
                     child: Container(
                       padding: EdgeInsets.all(detailPadding),
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -471,7 +471,7 @@ class _HotelCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: titleFontSize,
                               fontWeight: FontWeight.w700,
-                              color: Colors.black87,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -482,7 +482,7 @@ class _HotelCard extends StatelessWidget {
                               Icon(
                                 Icons.location_on_outlined,
                                 size: 14,
-                                color: Colors.grey[600],
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
                               ),
                               const SizedBox(width: 4),
                               Expanded(
@@ -490,7 +490,9 @@ class _HotelCard extends StatelessWidget {
                                   location,
                                   style: TextStyle(
                                     fontSize: locationFontSize,
-                                    color: Colors.grey[600],
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -550,7 +552,7 @@ class _HotelCard extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
