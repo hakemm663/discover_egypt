@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -44,37 +48,50 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
   }
 }
 
-// Current User Provider
-final currentUserProvider = StateNotifierProvider<CurrentUserNotifier, UserModel?>((ref) {
-  return CurrentUserNotifier(ref.read(authServiceProvider));
+// Auth + Current User Providers
+final authStateChangesProvider = StreamProvider<User?>((ref) {
+  return ref.watch(authServiceProvider).authStateChanges;
 });
 
-class CurrentUserNotifier extends StateNotifier<UserModel?> {
-  final AuthService _authService;
+final currentUserProvider = StreamProvider<UserModel?>((ref) {
+  final controller = StreamController<UserModel?>();
+  final firestore = FirebaseFirestore.instance;
+  final authService = ref.watch(authServiceProvider);
 
-  CurrentUserNotifier(this._authService) : super(null) {
-    _loadUser();
-  }
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? profileSubscription;
+  final authSubscription = authService.authStateChanges.listen((authUser) {
+    profileSubscription?.cancel();
 
-  Future<void> _loadUser() async {
-    final user = _authService.currentUser;
-    if (user != null) {
-      state = await _authService.getUserProfile(user.uid);
+    if (authUser == null) {
+      controller.add(null);
+      return;
     }
-  }
 
-  void setUser(UserModel? user) {
-    state = user;
-  }
+    profileSubscription = firestore
+        .collection(AppConstants.usersCollection)
+        .doc(authUser.uid)
+        .snapshots()
+        .listen(
+          (doc) {
+            if (!doc.exists || doc.data() == null) {
+              controller.add(null);
+              return;
+            }
 
-  Future<void> refreshUser() async {
-    await _loadUser();
-  }
+            controller.add(UserModel.fromJson(doc.data()!));
+          },
+          onError: controller.addError,
+        );
+  }, onError: controller.addError);
 
-  void clear() {
-    state = null;
-  }
-}
+  ref.onDispose(() {
+    profileSubscription?.cancel();
+    authSubscription.cancel();
+    controller.close();
+  });
+
+  return controller.stream;
+});
 
 // Language Provider
 final languageProvider = StateNotifierProvider<LanguageNotifier, Locale>((ref) {

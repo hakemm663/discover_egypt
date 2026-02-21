@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../services/auth_service.dart';
 import '../../features/onboarding/cover_page.dart';
 import '../../features/onboarding/language_page.dart';
 import '../../features/onboarding/nationality_page.dart';
@@ -38,8 +41,48 @@ import '../../features/settings/settings_page.dart';
 import '../../features/shared/trip_planner.dart';
 import '../widgets/app_bottom_nav.dart';
 
+final _authService = AuthService();
+
 final appRouter = GoRouter(
   initialLocation: '/home',
+  refreshListenable: _AuthRouterRefreshStream(_authService.authStateChanges),
+  redirect: (context, state) {
+    final isSignedIn = _authService.currentUser != null;
+    final path = state.uri.path;
+
+    const authRoutes = {'/sign-in', '/sign-up', '/forgot-password'};
+    final isAuthRoute = authRoutes.contains(path);
+
+    final isShellRoute = {
+      '/home',
+      '/hotels',
+      '/tours',
+      '/cars',
+      '/profile',
+      '/restaurants',
+      '/booking-summary',
+      '/confirm-pay',
+      '/payment-success',
+      '/edit-profile',
+      '/my-bookings',
+      '/settings',
+      '/trip-planner',
+    }.contains(path) ||
+        path.startsWith('/hotel/') ||
+        path.startsWith('/tour/') ||
+        path.startsWith('/car/') ||
+        path.startsWith('/restaurant/');
+
+    if (!isSignedIn && isShellRoute) {
+      return '/sign-in';
+    }
+
+    if (isSignedIn && isAuthRoute) {
+      return '/home';
+    }
+
+    return null;
+  },
   routes: [
     // Onboarding
     GoRoute(
@@ -254,6 +297,20 @@ final appRouter = GoRouter(
     ),
   ],
 );
+
+class _AuthRouterRefreshStream extends ChangeNotifier {
+  _AuthRouterRefreshStream(Stream<dynamic> stream) {
+    _subscription = stream.asBroadcastStream().listen((_) => notifyListeners());
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
 
 CustomTransitionPage _buildPage(GoRouterState state, Widget child) {
   return CustomTransitionPage(

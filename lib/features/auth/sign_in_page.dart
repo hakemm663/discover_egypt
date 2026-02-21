@@ -45,7 +45,6 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       );
 
       if (user != null && mounted) {
-        ref.read(currentUserProvider.notifier).setUser(user);
         context.go('/home');
       }
     } catch (e) {

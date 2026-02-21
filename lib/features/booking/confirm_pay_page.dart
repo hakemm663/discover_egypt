@@ -69,7 +69,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
     try {
       final paymentService = ref.read(paymentServiceProvider);
       final databaseService = ref.read(databaseServiceProvider);
-      final user = ref.read(currentUserProvider);
+      final user = ref.read(currentUserProvider).valueOrNull;
       final customerId = user?.id.isNotEmpty == true ? user!.id : 'guest';
 
       final bookingId = await databaseService.createPendingBooking(
@@ -171,7 +171,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(currentUserProvider);
+    final user = ref.watch(currentUserProvider).valueOrNull;
 
     return Scaffold(
       appBar: CustomAppBar(
