@@ -27,7 +27,7 @@ class AppBottomNavShell extends StatelessWidget {
       bottomNavigationBar: NavigationBarTheme(
         data: NavigationBarThemeData(
           indicatorColor: colorScheme.primaryContainer,
-          labelTextStyle: MaterialStatePropertyAll(
+          labelTextStyle: WidgetStatePropertyAll(
             Theme.of(context).textTheme.labelMedium,
           ),
         ),

@@ -310,7 +310,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
                                 controller: _cvvController,
                                 keyboardType: TextInputType.number,
                                 maxLength: 4,
-                                inputFormatters: const [
+                                inputFormatters: [
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
                                 obscureText: true,
