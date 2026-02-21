@@ -1,15 +1,16 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/custom_app_bar.dart';
-import '../../core/widgets/rounded_card.dart';
-import '../../core/widgets/rating_widget.dart';
-import '../../core/widgets/price_tag.dart';
 import '../../core/widgets/error_widget.dart';
 import '../../core/widgets/loading_widget.dart';
+import '../../core/widgets/price_tag.dart';
+import '../../core/widgets/rating_widget.dart';
+import '../../core/widgets/rounded_card.dart';
+import '../shared/models/catalog_models.dart';
 import 'hotels_provider.dart';
 
 class HotelsListPage extends ConsumerStatefulWidget {
@@ -22,20 +23,42 @@ class HotelsListPage extends ConsumerStatefulWidget {
 class _HotelsListPageState extends ConsumerState<HotelsListPage> {
   String _selectedCity = 'All';
   String _sortBy = 'Popular';
+  final ScrollController _scrollController = ScrollController();
 
-  List<Map<String, dynamic>> _filteredHotels(List<Map<String, dynamic>> sourceHotels) {
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 180) {
+      ref.read(hotelsProvider.notifier).fetchNextPage();
+    }
+  }
+
+  List<HotelListItem> _filteredHotels(List<HotelListItem> sourceHotels) {
     var hotels = [...sourceHotels];
 
     if (_selectedCity != 'All') {
-      hotels = hotels.where((h) => h['city'] == _selectedCity).toList();
+      hotels = hotels.where((h) => h.city == _selectedCity).toList();
     }
 
     if (_sortBy == 'Price: Low to High') {
-      hotels.sort((a, b) => a['price'].compareTo(b['price']));
+      hotels.sort((a, b) => a.price.compareTo(b.price));
     } else if (_sortBy == 'Price: High to Low') {
-      hotels.sort((a, b) => b['price'].compareTo(a['price']));
+      hotels.sort((a, b) => b.price.compareTo(a.price));
     } else if (_sortBy == 'Rating') {
-      hotels.sort((a, b) => b['rating'].compareTo(a['rating']));
+      hotels.sort((a, b) => b.rating.compareTo(a.rating));
     }
 
     return hotels;
@@ -46,18 +69,13 @@ class _HotelsListPageState extends ConsumerState<HotelsListPage> {
     final hotelsAsync = ref.watch(hotelsProvider);
 
     return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Hotels in Egypt',
-        showBackButton: true,
-      ),
+      appBar: const CustomAppBar(title: 'Hotels in Egypt', showBackButton: true),
       body: Column(
         children: [
-          // Filters
           Container(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // City Filter
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -67,10 +85,10 @@ class _HotelsListPageState extends ConsumerState<HotelsListPage> {
                               child: FilterChip(
                                 label: Text(city),
                                 selected: _selectedCity == city,
-                                onSelected: (selected) {
-                                  setState(() => _selectedCity = city);
-                                },
-                                selectedColor: const Color(0xFFC89B3C).withValues(alpha: 0.2),
+                                onSelected: (selected) =>
+                                    setState(() => _selectedCity = city),
+                                selectedColor:
+                                    const Color(0xFFC89B3C).withValues(alpha: 0.2),
                                 checkmarkColor: const Color(0xFFC89B3C),
                               ),
                             ))
@@ -78,19 +96,24 @@ class _HotelsListPageState extends ConsumerState<HotelsListPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                // Sort Dropdown
                 Row(
                   children: [
                     const Icon(Icons.sort_rounded, size: 20),
                     const SizedBox(width: 8),
-                    const Text('Sort by:', style: TextStyle(fontWeight: FontWeight.w600)),
+                    const Text('Sort by:',
+                        style: TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButton<String>(
                         value: _sortBy,
                         isExpanded: true,
                         underline: const SizedBox(),
-                        items: ['Popular', 'Rating', 'Price: Low to High', 'Price: High to Low']
+                        items: [
+                          'Popular',
+                          'Rating',
+                          'Price: Low to High',
+                          'Price: High to Low'
+                        ]
                             .map((s) => DropdownMenuItem(value: s, child: Text(s)))
                             .toList(),
                         onChanged: (value) {
@@ -103,8 +126,6 @@ class _HotelsListPageState extends ConsumerState<HotelsListPage> {
               ],
             ),
           ),
-
-          // Hotels List
           Expanded(
             child: hotelsAsync.when(
               loading: () => const LoadingWidget(message: 'Loading hotels...'),
@@ -113,17 +134,21 @@ class _HotelsListPageState extends ConsumerState<HotelsListPage> {
                 message: error.toString(),
                 onRetry: () => ref.invalidate(hotelsProvider),
               ),
-              data: (hotels) {
-                final filteredHotels = _filteredHotels(hotels);
+              data: (pageState) {
+                final filteredHotels = _filteredHotels(pageState.items);
                 if (filteredHotels.isEmpty) {
                   return const EmptyStateWidget(title: 'No hotels found');
                 }
 
                 return ListView.separated(
+                  controller: _scrollController,
                   padding: const EdgeInsets.all(16),
-                  itemCount: filteredHotels.length,
+                  itemCount: filteredHotels.length + (pageState.hasMore ? 1 : 0),
                   separatorBuilder: (_, __) => const SizedBox(height: 16),
                   itemBuilder: (context, index) {
+                    if (index >= filteredHotels.length) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
                     final hotel = filteredHotels[index];
                     return _HotelListItem(hotel: hotel)
                         .animate(delay: Duration(milliseconds: 100 * index))
@@ -141,20 +166,19 @@ class _HotelsListPageState extends ConsumerState<HotelsListPage> {
 }
 
 class _HotelListItem extends StatelessWidget {
-  final Map<String, dynamic> hotel;
+  final HotelListItem hotel;
 
   const _HotelListItem({required this.hotel});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push('/hotel/${hotel['id']}'),
+      onTap: () => context.push('/hotel/${hotel.id}'),
       child: RoundedCard(
         padding: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
             Stack(
               children: [
                 ClipRRect(
@@ -166,8 +190,11 @@ class _HotelListItem extends StatelessWidget {
                     height: 180,
                     width: double.infinity,
                     child: CachedNetworkImage(
-                      imageUrl: hotel['image'],
+                      imageUrl: hotel.image,
                       fit: BoxFit.cover,
+                      memCacheWidth: 900,
+                      maxWidthDiskCache: 1200,
+                      fadeInDuration: const Duration(milliseconds: 150),
                     ),
                   ),
                 ),
@@ -180,72 +207,64 @@ class _HotelListItem extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.9),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
-                      Icons.favorite_border_rounded,
-                      color: Color(0xFFC89B3C),
-                      size: 20,
-                    ),
+                    child: const Icon(Icons.favorite_border_rounded,
+                        color: Color(0xFFC89B3C), size: 20),
                   ),
                 ),
                 Positioned(
                   top: 12,
                   left: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFFC89B3C),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       children: List.generate(
-                        hotel['stars'],
-                        (i) => const Icon(Icons.star, color: Colors.white, size: 12),
+                        hotel.stars,
+                        (i) =>
+                            const Icon(Icons.star, color: Colors.white, size: 12),
                       ),
                     ),
                   ),
                 ),
               ],
             ),
-
-            // Details
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    hotel['name'],
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  Text(hotel.name,
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Icon(Icons.location_on_outlined, size: 16, color: Colors.grey[600]),
+                      Icon(Icons.location_on_outlined,
+                          size: 16, color: Colors.grey[600]),
                       const SizedBox(width: 4),
-                      Text(
-                        hotel['location'],
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                      ),
+                      Text(hotel.location,
+                          style: TextStyle(fontSize: 14, color: Colors.grey[600])),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: (hotel['amenities'] as List<String>)
+                    children: hotel.amenities
                         .map((a) => Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
                                 color: Colors.grey[100],
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Text(
-                                a,
-                                style: TextStyle(fontSize: 11, color: Colors.grey[700]),
-                              ),
+                              child: Text(a,
+                                  style: TextStyle(
+                                      fontSize: 11, color: Colors.grey[700])),
                             ))
                         .toList(),
                   ),
@@ -254,11 +273,10 @@ class _HotelListItem extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       RatingWidget(
-                        rating: hotel['rating'],
-                        reviewCount: hotel['reviewCount'],
-                        size: 16,
-                      ),
-                      PriceTag(price: hotel['price'], unit: 'night', large: true),
+                          rating: hotel.rating,
+                          reviewCount: hotel.reviewCount,
+                          size: 16),
+                      PriceTag(price: hotel.price, unit: 'night', large: true),
                     ],
                   ),
                 ],
