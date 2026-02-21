@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class AppTheme {
-  // Colors
-  static const Color primaryGold = Color(0xFFC89B3C);
-  static const Color darkGold = Color(0xFFB58526);
-  static const Color lightGold = Color(0xFFE5C87B);
+import 'app_colors.dart';
 
+class AppTheme {
   static const Color surfaceLight = Color(0xFFF7F2E8);
   static const Color surfaceDark = Color(0xFF1A1A1A);
 
@@ -19,10 +16,10 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryGold,
+        seedColor: AppColors.brandGold,
         brightness: Brightness.light,
-        primary: primaryGold,
-        secondary: darkGold,
+        primary: AppColors.brandGold,
+        secondary: AppColors.brandGoldDark,
         surface: surfaceLight,
         onSurface: inkLight,
       ),
@@ -46,7 +43,7 @@ class AppTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        color: Colors.white.withValues(alpha: 0.95),
+        color: surfaceLight,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
@@ -67,7 +64,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: primaryGold, width: 2),
+          borderSide: const BorderSide(color: AppColors.brandGold, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -77,7 +74,7 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: primaryGold,
+          backgroundColor: AppColors.brandGold,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
@@ -91,12 +88,12 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: primaryGold,
+          foregroundColor: AppColors.brandGold,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          side: const BorderSide(color: primaryGold, width: 2),
+          side: const BorderSide(color: AppColors.brandGold, width: 2),
           textStyle: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w700,
@@ -105,7 +102,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: primaryGold,
+          foregroundColor: AppColors.brandGold,
           textStyle: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -113,8 +110,8 @@ class AppTheme {
         ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: Colors.white,
-        selectedColor: primaryGold.withValues(alpha: 0.15),
+        backgroundColor: surfaceLight,
+        selectedColor: AppColors.brandGold.withValues(alpha: 0.15),
         labelStyle: GoogleFonts.poppins(
           fontSize: 14,
           fontWeight: FontWeight.w500,
@@ -125,8 +122,8 @@ class AppTheme {
         side: BorderSide(color: Colors.grey.shade300),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: Colors.white,
-        selectedItemColor: primaryGold,
+        backgroundColor: surfaceLight,
+        selectedItemColor: AppColors.brandGold,
         unselectedItemColor: Colors.grey[400],
         type: BottomNavigationBarType.fixed,
         elevation: 8,
@@ -144,10 +141,10 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryGold,
+        seedColor: AppColors.brandGold,
         brightness: Brightness.dark,
-        primary: primaryGold,
-        secondary: lightGold,
+        primary: AppColors.brandGold,
+        secondary: AppColors.brandGoldLight,
         surface: surfaceDark,
         onSurface: inkDark,
       ),
@@ -192,13 +189,13 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: primaryGold, width: 2),
+          borderSide: const BorderSide(color: AppColors.brandGold, width: 2),
         ),
         hintStyle: TextStyle(color: Colors.grey[600]),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: primaryGold,
+          backgroundColor: AppColors.brandGold,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
@@ -208,7 +205,7 @@ class AppTheme {
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: const Color(0xFF2A2A2A),
-        selectedItemColor: primaryGold,
+        selectedItemColor: AppColors.brandGold,
         unselectedItemColor: Colors.grey[600],
         type: BottomNavigationBarType.fixed,
         elevation: 8,

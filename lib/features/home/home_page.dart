@@ -278,7 +278,7 @@ class _HeroBanner extends StatelessWidget {
                       child: const Text(
                         '20% OFF',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.surface,
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
@@ -288,7 +288,7 @@ class _HeroBanner extends StatelessWidget {
                     const Text(
                       'Explore the Wonders of Egypt',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.surface,
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                       ),
@@ -380,10 +380,10 @@ class _CategoryItem extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],
@@ -453,16 +453,16 @@ class _HotelCard extends StatelessWidget {
                   // Details
                   Container(
                     padding: const EdgeInsets.all(12),
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: Colors.black87,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -473,7 +473,7 @@ class _HotelCard extends StatelessWidget {
                             Icon(
                               Icons.location_on_outlined,
                               size: 14,
-                              color: Colors.grey[600],
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 4),
                             Expanded(
@@ -481,7 +481,7 @@ class _HotelCard extends StatelessWidget {
                                 location,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.grey[600],
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -589,10 +589,10 @@ class _TourCard extends StatelessWidget {
                   children: [
                     Text(
                       name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -603,7 +603,7 @@ class _TourCard extends StatelessWidget {
                         Icon(
                           Icons.access_time_rounded,
                           size: 14,
-                          color: Colors.grey[600],
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(width: 4),
                         Expanded(
@@ -611,7 +611,7 @@ class _TourCard extends StatelessWidget {
                             duration,
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -758,8 +758,8 @@ class _DestinationCard extends StatelessWidget {
                 children: [
                   Text(
                     name,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.surface,
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
