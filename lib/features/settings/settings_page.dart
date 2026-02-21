@@ -12,6 +12,7 @@ class SettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
+    final userAsync = ref.watch(currentUserProvider);
     final isDark = themeMode == ThemeMode.dark;
 
     return Scaffold(
@@ -99,6 +100,40 @@ class SettingsPage extends ConsumerWidget {
           ),
 
           const SizedBox(height: 24),
+
+          userAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.only(bottom: 16),
+              child: LinearProgressIndicator(minHeight: 2),
+            ),
+            error: (error, _) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Text(
+                'Could not load account details.',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
+            data: (user) {
+              if (user == null) {
+                return const Padding(
+                  padding: EdgeInsets.only(bottom: 16),
+                  child: Text('Profile document missing or expired.'),
+                );
+              }
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: RoundedCard(
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.account_circle_outlined),
+                    title: Text(user.fullName),
+                    subtitle: Text(user.email),
+                  ),
+                ),
+              );
+            },
+          ),
 
           // Account
           Text(

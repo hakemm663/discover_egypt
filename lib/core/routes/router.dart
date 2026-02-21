@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../services/auth_service.dart';
 import '../../features/onboarding/cover_page.dart';
 import '../../features/onboarding/language_page.dart';
 import '../../features/onboarding/nationality_page.dart';
@@ -309,6 +312,20 @@ GoRouter createAppRouter({
       ),
     ],
   );
+}
+
+class _AuthRouterRefreshStream extends ChangeNotifier {
+  _AuthRouterRefreshStream(Stream<dynamic> stream) {
+    _subscription = stream.asBroadcastStream().listen((_) => notifyListeners());
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
 }
 
 CustomTransitionPage _buildPage(GoRouterState state, Widget child) {
