@@ -1,4 +1,7 @@
 class Img {
+  // NOTE: URLs in this file are demo-only third-party hotlinks.
+  // For production, migrate media to controlled storage (Firebase Storage/CDN)
+  // and keep only managed URLs here.
   // ========== PYRAMIDS & GIZA ==========
   static const String pyramidsMain =
       'https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?auto=format&fit=crop&w=1400&q=80';

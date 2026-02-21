@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/repositories/models/discovery_models.dart';
 import '../../core/widgets/custom_app_bar.dart';
-import '../../core/widgets/rounded_card.dart';
-import '../../core/widgets/rating_widget.dart';
-import '../../core/widgets/price_tag.dart';
 import '../../core/widgets/error_widget.dart';
 import '../../core/widgets/loading_widget.dart';
+import '../../core/widgets/network_image_fallback.dart';
 import 'cars_provider.dart';
 
 class CarsListPage extends ConsumerStatefulWidget {
@@ -22,38 +22,27 @@ class CarsListPage extends ConsumerStatefulWidget {
 class _CarsListPageState extends ConsumerState<CarsListPage> {
   String _selectedType = 'All';
   bool _withDriverOnly = false;
+  final ScrollController _scrollController = ScrollController();
 
-  List<Map<String, dynamic>> _filteredCars(List<Map<String, dynamic>> sourceCars) {
-    var cars = [...sourceCars];
-
-    if (_selectedType != 'All') {
-      cars = cars.where((c) => c['type'] == _selectedType).toList();
-    }
-
-    if (_withDriverOnly) {
-      cars = cars.where((c) => c['withDriver'] == true).toList();
-    }
-
-    return cars;
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
   }
+
 
   @override
   Widget build(BuildContext context) {
     final carsAsync = ref.watch(carsProvider);
 
     return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Car Rental',
-        showBackButton: true,
-      ),
+      appBar: const CustomAppBar(title: 'Car Rental', showBackButton: true),
       body: Column(
         children: [
-          // Filters
           Container(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // Type Filter
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -65,6 +54,7 @@ class _CarsListPageState extends ConsumerState<CarsListPage> {
                                 selected: _selectedType == type,
                                 onSelected: (selected) {
                                   setState(() => _selectedType = type);
+                                  ref.read(carsQueryProvider.notifier).state = CarsQuery(type: type, withDriverOnly: _withDriverOnly);
                                 },
                                 selectedColor: const Color(0xFFC89B3C).withValues(alpha: 0.2),
                                 checkmarkColor: const Color(0xFFC89B3C),
@@ -74,12 +64,13 @@ class _CarsListPageState extends ConsumerState<CarsListPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                // With Driver Toggle
                 CheckboxListTile(
-                  title: const Text('With Driver Only', style: TextStyle(fontSize: 14)),
+                  title: const Text('With Driver Only',
+                      style: TextStyle(fontSize: 14)),
                   value: _withDriverOnly,
                   onChanged: (value) {
                     setState(() => _withDriverOnly = value ?? false);
+                    ref.read(carsQueryProvider.notifier).state = CarsQuery(type: _selectedType, withDriverOnly: _withDriverOnly);
                   },
                   controlAffinity: ListTileControlAffinity.leading,
                   activeColor: const Color(0xFFC89B3C),
@@ -88,8 +79,6 @@ class _CarsListPageState extends ConsumerState<CarsListPage> {
               ],
             ),
           ),
-
-          // Cars List
           Expanded(
             child: carsAsync.when(
               loading: () => const LoadingWidget(message: 'Loading cars...'),
@@ -98,17 +87,18 @@ class _CarsListPageState extends ConsumerState<CarsListPage> {
                 message: error.toString(),
                 onRetry: () => ref.invalidate(carsProvider),
               ),
-              data: (cars) {
-                final filteredCars = _filteredCars(cars);
-                if (filteredCars.isEmpty) {
+              data: (carsPage) {
+                final cars = carsPage.items;
+                if (cars.isEmpty) {
                   return const EmptyStateWidget(title: 'No cars found');
                 }
                 return ListView.separated(
+                  controller: _scrollController,
                   padding: const EdgeInsets.all(16),
-                  itemCount: filteredCars.length,
+                  itemCount: cars.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 16),
                   itemBuilder: (context, index) {
-                    final car = filteredCars[index];
+                    final car = cars[index];
                     return _CarListItem(car: car)
                         .animate(delay: Duration(milliseconds: 100 * index))
                         .fadeIn(duration: 400.ms)
@@ -125,20 +115,19 @@ class _CarsListPageState extends ConsumerState<CarsListPage> {
 }
 
 class _CarListItem extends StatelessWidget {
-  final Map<String, dynamic> car;
+  final CarListing car;
 
   const _CarListItem({required this.car});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push('/car/${car['id']}'),
+      onTap: () => context.push('/car/${car.id}'),
       child: RoundedCard(
         padding: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
             Stack(
               children: [
                 ClipRRect(
@@ -150,9 +139,13 @@ class _CarListItem extends StatelessWidget {
                     height: 160,
                     width: double.infinity,
                     color: Colors.grey[100],
-                    child: CachedNetworkImage(
+                    child: NetworkImageFallback(
                       imageUrl: car['image'],
+                      type: NetworkImageFallbackType.car,
                       fit: BoxFit.cover,
+                      memCacheWidth: 900,
+                      maxWidthDiskCache: 1200,
+                      fadeInDuration: const Duration(milliseconds: 150),
                     ),
                   ),
                 ),
@@ -160,13 +153,14 @@ class _CarListItem extends StatelessWidget {
                   top: 12,
                   left: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFFC89B3C),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      car['type'],
+                      car.type,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
@@ -177,15 +171,13 @@ class _CarListItem extends StatelessWidget {
                 ),
               ],
             ),
-
-            // Details
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    car['name'],
+                    car.name,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -196,12 +188,12 @@ class _CarListItem extends StatelessWidget {
                     children: [
                       _InfoChip(
                         icon: Icons.airline_seat_recline_normal_rounded,
-                        text: '${car['seats']} Seats',
+                        text: '${car.seats} Seats',
                       ),
                       const SizedBox(width: 8),
                       _InfoChip(
                         icon: Icons.settings_rounded,
-                        text: car['transmission'],
+                        text: car.transmission,
                       ),
                     ],
                   ),
@@ -210,17 +202,17 @@ class _CarListItem extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       RatingWidget(
-                        rating: car['rating'],
-                        reviewCount: car['reviewCount'],
+                        rating: car.rating,
+                        reviewCount: car.reviewCount,
                         size: 16,
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          PriceTag(price: car['price'], unit: 'day'),
-                          if (car['withDriver'])
+                          PriceTag(price: car.price, unit: 'day'),
+                          if (car.withDriver)
                             Text(
-                              '+\$${car['driverPrice']}/day with driver',
+                              '+\$${car.driverPrice}/day with driver',
                               style: TextStyle(
                                 fontSize: 10,
                                 color: Colors.grey[600],
@@ -259,10 +251,7 @@ class _InfoChip extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: Colors.grey[700]),
           const SizedBox(width: 4),
-          Text(
-            text,
-            style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-          ),
+          Text(text, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
         ],
       ),
     );

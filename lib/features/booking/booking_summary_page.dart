@@ -255,10 +255,12 @@ class _BookingSummaryPageState extends ConsumerState<BookingSummaryPage> {
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.black.withValues(alpha: 0.3)
+                        : Colors.black.withValues(alpha: 0.1),
                     blurRadius: 20,
                     offset: const Offset(0, -5),
                   ),
@@ -397,7 +399,9 @@ class _PriceRow extends StatelessWidget {
           style: TextStyle(
             fontSize: isTotal ? 16 : 14,
             fontWeight: isTotal ? FontWeight.w800 : FontWeight.w600,
-            color: isTotal ? Colors.black : Colors.grey[700],
+            color: isTotal
+                ? Theme.of(context).colorScheme.onSurface
+                : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         Text(
@@ -405,7 +409,9 @@ class _PriceRow extends StatelessWidget {
           style: TextStyle(
             fontSize: isTotal ? 18 : 15,
             fontWeight: FontWeight.w800,
-            color: isTotal ? const Color(0xFFC89B3C) : Colors.black87,
+            color: isTotal
+                ? const Color(0xFFC89B3C)
+                : Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],

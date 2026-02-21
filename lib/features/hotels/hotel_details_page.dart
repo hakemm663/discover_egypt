@@ -48,7 +48,11 @@ class HotelDetailsPage extends ConsumerWidget {
         showBackButton: true,
         additionalActions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Share is coming soon.')),
+              );
+            },
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(

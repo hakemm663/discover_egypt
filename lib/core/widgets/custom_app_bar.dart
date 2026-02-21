@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../constants/image_urls.dart';
+import '../themes/app_colors.dart';
 
 enum CustomAppBarVariant { light, dark }
 
@@ -64,7 +65,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             ? null
             : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: AppColors.cardShadow(context),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -98,7 +99,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                     style: TextStyle(
                       color: _isDark || backgroundImageUrl != null
                           ? Colors.white
-                          : Colors.black87,
+                          : Theme.of(context).colorScheme.onSurface,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.3,
@@ -156,16 +157,17 @@ class _AppBarButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final foreground = isDark ? Colors.white : Colors.black87;
+    final foreground =
+        isDark ? Colors.white : Theme.of(context).colorScheme.onSurface;
     final background = isDark
         ? Colors.white.withValues(alpha: 0.22)
-        : Colors.white.withValues(alpha: 0.95);
+        : AppColors.cardBackground(context);
 
     return Material(
       color: background,
       borderRadius: BorderRadius.circular(12),
       elevation: isDark ? 0 : 2,
-      shadowColor: Colors.black.withValues(alpha: 0.1),
+      shadowColor: AppColors.cardShadow(context),
       child: InkWell(
         onTap: onPressed,
         borderRadius: BorderRadius.circular(12),

@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/constants/image_urls.dart';
-import '../../core/widgets/rounded_card.dart';
-import '../../core/widgets/custom_app_bar.dart';
 
-class ProfileWalletPage extends StatelessWidget {
+import '../../app/providers.dart';
+import '../../core/constants/image_urls.dart';
+import '../../core/utils/helpers.dart';
+import '../../core/widgets/custom_app_bar.dart';
+import '../../core/widgets/rounded_card.dart';
+
+class ProfileWalletPage extends ConsumerWidget {
   const ProfileWalletPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    const userName = 'Sarah';
-    const membership = 'Premium Member';
-    const walletBalance = 70.00;
-    const credits = 20.00;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userAsync = ref.watch(currentUserProvider);
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -21,108 +22,59 @@ class ProfileWalletPage extends StatelessWidget {
         showProfileButton: false,
         variant: CustomAppBarVariant.dark,
         backgroundImageUrl: Img.pyramidsMain,
-        onSettingsTap: () {
-          // Navigate to settings or show settings dialog
-        },
+        onSettingsTap: () => context.push('/settings'),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Header profile card
-          RoundedCard(
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundImage: NetworkImage(Img.avatarWoman),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        userName,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        membership,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.black.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    'Online',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+      body: userAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => _ProfileEmptyState(
+          title: 'Could not load your profile',
+          message: 'Please try again or sign in again.',
+          buttonLabel: 'Retry',
+          onPressed: () => ref.invalidate(currentUserProvider),
+        ),
+        data: (user) {
+          if (user == null) {
+            return _ProfileEmptyState(
+              title: 'Profile not found',
+              message:
+                  'Your account is signed in, but profile details are missing or expired.',
+              buttonLabel: 'Back to Sign In',
+              onPressed: () => context.go('/sign-in'),
+            );
+          }
 
-          const SizedBox(height: 12),
-
-          // Wallet summary
-          RoundedCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Wallet',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _AmountRow(
-                  icon: Icons.account_balance_wallet_outlined,
-                  label: 'Balance',
-                  value: '\$${walletBalance.toStringAsFixed(2)}',
-                  valueColor: Colors.green.shade700,
-                ),
-                const SizedBox(height: 10),
-                _AmountRow(
-                  icon: Icons.card_giftcard_outlined,
-                  label: 'Credits',
-                  value: '\$${credits.toStringAsFixed(2)}',
-                  valueColor: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(height: 12),
-                Row(
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              RoundedCard(
+                child: Row(
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () {},
+                        onPressed: () => context.push('/wallet/add-funds'),
                         icon: const Icon(Icons.add_circle_outline),
                         label: const Text('Add Funds'),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 12),
                     Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () => context.go('/booking-summary'),
-                        icon: const Icon(Icons.receipt_long_outlined),
-                        label: const Text('My Bookings'),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user.fullName,
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            user.isPremium ? 'Premium Member' : 'Member',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Colors.black.withValues(alpha: 0.6),
+                                ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -150,7 +102,7 @@ class ProfileWalletPage extends StatelessWidget {
                   title: 'Reviews',
                   trailingText: '20',
                   trailingColor: Colors.red.shade700,
-                  onTap: () {},
+                  onTap: () => context.push('/reviews'),
                 ),
                 _divider(),
                 _MenuTile(
@@ -158,35 +110,96 @@ class ProfileWalletPage extends StatelessWidget {
                   title: 'Support',
                   trailingText: 'Chat',
                   trailingColor: Theme.of(context).colorScheme.primary,
-                  onTap: () {},
+                  onTap: () => context.push('/support'),
                 ),
-                _divider(),
-                _MenuTile(
-                  icon: Icons.logout_outlined,
-                  title: 'Logout',
-                  trailingText: '',
-                  trailingColor: Colors.black54,
-                  onTap: () => context.go('/sign-in'),
+              ),
+              const SizedBox(height: 12),
+              RoundedCard(
+                child: Column(
+                  children: [
+                    _MenuTile(
+                      icon: Icons.person_outline,
+                      title: 'Edit Profile',
+                      trailingText: '',
+                      trailingColor: Colors.black54,
+                      onTap: () => context.push('/edit-profile'),
+                    ),
+                    _divider(),
+                    _MenuTile(
+                      icon: Icons.settings_outlined,
+                      title: 'Settings',
+                      trailingText: '',
+                      trailingColor: Colors.black54,
+                      onTap: () => context.push('/settings'),
+                    ),
+                    _divider(),
+                    _MenuTile(
+                      icon: Icons.logout_outlined,
+                      title: 'Logout',
+                      trailingText: '',
+                      trailingColor: Colors.black54,
+                      onTap: () => _logout(context, ref),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 14),
-
-          Text(
-            'Tip: This is UI-only for now. Next we will connect it to real user data, bookings, and payments.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.black.withValues(alpha: 0.55),
-            ),
-          ),
-        ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
+  Future<void> _logout(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(authServiceProvider).signOut();
+      if (context.mounted) {
+        context.go('/sign-in');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Helpers.showSnackBar(context, 'Logout failed: $e', isError: true);
+      }
+    }
+  }
+
   Widget _divider() =>
       Divider(height: 18, color: Colors.black.withValues(alpha: 0.08));
+}
+
+class _ProfileEmptyState extends StatelessWidget {
+  const _ProfileEmptyState({
+    required this.title,
+    required this.message,
+    required this.buttonLabel,
+    required this.onPressed,
+  });
+
+  final String title;
+  final String message;
+  final String buttonLabel;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.account_circle_outlined, size: 60),
+            const SizedBox(height: 12),
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            FilledButton(onPressed: onPressed, child: Text(buttonLabel)),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _AmountRow extends StatelessWidget {
@@ -211,17 +224,18 @@ class _AmountRow extends StatelessWidget {
         Expanded(
           child: Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(fontWeight: FontWeight.w600),
           ),
         ),
         Text(
           value,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: valueColor,
-          ),
+                fontWeight: FontWeight.w800,
+                color: valueColor,
+              ),
         ),
       ],
     );
@@ -258,9 +272,8 @@ class _MenuTile extends StatelessWidget {
       ),
       title: Text(
         title,
-        style: Theme.of(
-          context,
-        ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+        style:
+            Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
       ),
       trailing: trailingText.isEmpty
           ? const Icon(Icons.chevron_right)
@@ -270,9 +283,9 @@ class _MenuTile extends StatelessWidget {
                 Text(
                   trailingText,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: trailingColor,
-                  ),
+                        fontWeight: FontWeight.w800,
+                        color: trailingColor,
+                      ),
                 ),
                 const SizedBox(width: 6),
                 const Icon(Icons.chevron_right),
