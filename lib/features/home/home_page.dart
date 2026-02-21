@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/constants/image_urls.dart';
@@ -13,6 +12,7 @@ import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/section_title.dart';
 import '../../core/widgets/rating_widget.dart';
 import '../../core/widgets/price_tag.dart';
+import '../../core/widgets/network_image_fallback.dart';
 import 'home_provider.dart';
 
 class HomePage extends ConsumerWidget {
@@ -235,19 +235,10 @@ class _HeroBanner extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              CachedNetworkImage(
+              const NetworkImageFallback(
                 imageUrl: Img.pyramidsSunset,
+                type: NetworkImageFallbackType.tour,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  color: Colors.grey[300],
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Color(0xFFC89B3C),
-                      ),
-                    ),
-                  ),
-                ),
               ),
               Container(
                 decoration: BoxDecoration(
@@ -279,7 +270,7 @@ class _HeroBanner extends StatelessWidget {
                       child: const Text(
                         '20% OFF',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.surface,
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
@@ -289,7 +280,7 @@ class _HeroBanner extends StatelessWidget {
                     const Text(
                       'Explore the Wonders of Egypt',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.surface,
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                       ),
@@ -381,10 +372,10 @@ class _CategoryItem extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],
@@ -417,6 +408,12 @@ class _HotelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isCompactDevice = MediaQuery.sizeOf(context).width < 360;
+    final detailPadding = isCompactDevice ? 10.0 : 12.0;
+    final titleFontSize = isCompactDevice ? 15.0 : 16.0;
+    final locationFontSize = isCompactDevice ? 11.0 : 12.0;
+    final detailsSpacing = isCompactDevice ? 6.0 : 8.0;
+
     return GestureDetector(
       onTap: () => context.push('/hotel/$id'),
       child: Container(
@@ -440,30 +437,69 @@ class _HotelCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Image
-                  SizedBox(
-                    height: 160,
-                    width: double.infinity,
-                    child: CachedNetworkImage(
-                      imageUrl: image,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) =>
-                          Container(color: Colors.grey[300]),
+                  AspectRatio(
+                    aspectRatio: 3 / 2,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: CachedNetworkImage(
+                        imageUrl: image,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) =>
+                            Container(color: Colors.grey[300]),
+                      ),
                     ),
                   ),
 
                   // Details
+                  Expanded(
+                    child: Container(
+                      padding: EdgeInsets.all(detailPadding),
+                      color: Theme.of(context).colorScheme.surface,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            style: TextStyle(
+                              fontSize: titleFontSize,
+                              fontWeight: FontWeight.w700,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: isCompactDevice ? 2 : 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.location_on_outlined,
+                                size: 14,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  location,
+                                  style: TextStyle(
+                                    fontSize: locationFontSize,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                   Container(
                     padding: const EdgeInsets.all(12),
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: Colors.black87,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -474,7 +510,7 @@ class _HotelCard extends StatelessWidget {
                             Icon(
                               Icons.location_on_outlined,
                               size: 14,
-                              color: Colors.grey[600],
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 4),
                             Expanded(
@@ -482,27 +518,50 @@ class _HotelCard extends StatelessWidget {
                                 location,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.grey[600],
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
+                            ],
+                          ),
+                          SizedBox(height: detailsSpacing),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerLeft,
+                                    child: RatingWidget(
+                                      rating: rating,
+                                      reviewCount: reviewCount,
+                                      size: 14,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        '\$${price.toStringAsFixed(0)}/night',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: isCompactDevice ? 16 : 18,
+                                          fontWeight: FontWeight.w800,
+                                          color: const Color(0xFFC89B3C),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            RatingWidget(
-                              rating: rating,
-                              reviewCount: reviewCount,
-                              size: 14,
-                            ),
-                            PriceTag(price: price, unit: 'night'),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -516,7 +575,7 @@ class _HotelCard extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -572,11 +631,10 @@ class _TourCard extends StatelessWidget {
               child: SizedBox(
                 width: 120,
                 height: 140,
-                child: CachedNetworkImage(
+                child: NetworkImageFallback(
                   imageUrl: image,
+                  type: NetworkImageFallbackType.tour,
                   fit: BoxFit.cover,
-                  placeholder: (context, url) =>
-                      Container(color: Colors.grey[300]),
                 ),
               ),
             ),
@@ -590,10 +648,10 @@ class _TourCard extends StatelessWidget {
                   children: [
                     Text(
                       name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -604,7 +662,7 @@ class _TourCard extends StatelessWidget {
                         Icon(
                           Icons.access_time_rounded,
                           size: 14,
-                          color: Colors.grey[600],
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(width: 4),
                         Expanded(
@@ -612,7 +670,7 @@ class _TourCard extends StatelessWidget {
                             duration,
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -734,10 +792,10 @@ class _DestinationCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            CachedNetworkImage(
+            NetworkImageFallback(
               imageUrl: image,
+              type: NetworkImageFallbackType.tour,
               fit: BoxFit.cover,
-              placeholder: (context, url) => Container(color: Colors.grey[300]),
             ),
             Container(
               decoration: BoxDecoration(
@@ -759,8 +817,8 @@ class _DestinationCard extends StatelessWidget {
                 children: [
                   Text(
                     name,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.surface,
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),

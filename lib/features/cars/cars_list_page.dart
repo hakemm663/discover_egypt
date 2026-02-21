@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/repositories/models/discovery_models.dart';
@@ -11,6 +10,7 @@ import '../../core/widgets/rating_widget.dart';
 import '../../core/widgets/price_tag.dart';
 import '../../core/widgets/error_widget.dart';
 import '../../core/widgets/loading_widget.dart';
+import '../../core/widgets/network_image_fallback.dart';
 import 'cars_provider.dart';
 
 class CarsListPage extends ConsumerStatefulWidget {
@@ -140,8 +140,9 @@ class _CarListItem extends StatelessWidget {
                     height: 160,
                     width: double.infinity,
                     color: Colors.grey[100],
-                    child: CachedNetworkImage(
-                      imageUrl: car.image,
+                    child: NetworkImageFallback(
+                      imageUrl: car['image'],
+                      type: NetworkImageFallbackType.car,
                       fit: BoxFit.cover,
                     ),
                   ),
