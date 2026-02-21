@@ -104,3 +104,36 @@ Before opening a PR:
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contributor checklist.
+
+## Fixing `flutter doctor` Android SDK issues on Windows
+
+If you see errors like:
+- `cmdline-tools component is missing`
+- `Android license status unknown`
+
+use the helper script in this repo:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\fix_android_sdk_windows.ps1
+```
+
+What it does:
+1. Downloads Android command-line tools.
+2. Installs them under `%LOCALAPPDATA%\Android\Sdk\cmdline-tools\latest`.
+3. Installs required packages (`platform-tools`, `platforms;android-36`, `build-tools;36.0.0`).
+4. Accepts Android SDK licenses.
+
+After the script finishes:
+1. Ensure user environment variables exist:
+   - `ANDROID_HOME=%LOCALAPPDATA%\Android\Sdk`
+   - `ANDROID_SDK_ROOT=%LOCALAPPDATA%\Android\Sdk`
+2. Ensure your `Path` includes:
+   - `%ANDROID_HOME%\platform-tools`
+   - `%ANDROID_HOME%\cmdline-tools\latest\bin`
+3. Restart terminal and run:
+
+```powershell
+flutter doctor
+```
+
+If you also need Windows desktop support, install **Visual Studio 2022** with **Desktop development with C++**.
