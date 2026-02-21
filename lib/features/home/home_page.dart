@@ -90,7 +90,7 @@ class HomePage extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               SizedBox(
-                height: 248,
+                height: 260,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -426,7 +426,6 @@ class _HotelCard extends StatelessWidget {
       onTap: () => context.push('/hotel/$id'),
       child: Container(
         width: 240,
-        height: 248,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
