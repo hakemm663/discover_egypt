@@ -1,26 +1,29 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/image_urls.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/error_widget.dart';
 import '../../core/widgets/loading_widget.dart';
+import '../../core/widgets/network_image_fallback.dart';
 import '../../core/widgets/price_tag.dart';
 import '../../core/widgets/rating_widget.dart';
 import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/section_title.dart';
-import '../../core/widgets/network_image_fallback.dart';
 import '../shared/models/catalog_models.dart';
 import 'home_provider.dart';
 
 const _categories = <HomeCategoryItem>[
-  HomeCategoryItem(icon: Icons.hotel_outlined, label: 'Hotels', route: '/hotels'),
+  HomeCategoryItem(
+      icon: Icons.hotel_outlined, label: 'Hotels', route: '/hotels'),
   HomeCategoryItem(icon: Icons.tour_outlined, label: 'Tours', route: '/tours'),
-  HomeCategoryItem(icon: Icons.directions_car_outlined, label: 'Cars', route: '/cars'),
-  HomeCategoryItem(icon: Icons.restaurant_outlined, label: 'Food', route: '/restaurants'),
+  HomeCategoryItem(
+      icon: Icons.directions_car_outlined, label: 'Cars', route: '/cars'),
+  HomeCategoryItem(
+      icon: Icons.restaurant_outlined, label: 'Food', route: '/restaurants'),
 ];
 
 class HomePage extends ConsumerWidget {
@@ -33,7 +36,7 @@ class HomePage extends ConsumerWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Discover Egypt',
-        showBackButton: false,
+        showBackButton: true,
         showMenuButton: true,
         showProfileButton: true,
       ),
@@ -60,20 +63,25 @@ class HomePage extends ConsumerWidget {
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20),
                   child: _HeroBanner(),
-                ).animate().fadeIn(delay: 200.ms, duration: 500.ms).slideY(begin: 0.1),
+                )
+                    .animate()
+                    .fadeIn(delay: 200.ms, duration: 500.ms)
+                    .slideY(begin: 0.1),
                 const SizedBox(height: 24),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20),
                   child: _CategoriesSection(),
                 ).animate().fadeIn(delay: 300.ms, duration: 500.ms),
                 const SizedBox(height: 24),
-                _FeaturedDestinations(destinations: ref.watch(homeDestinationsProvider)),
+                _FeaturedDestinations(
+                    destinations: ref.watch(homeDestinationsProvider)),
                 const SizedBox(height: 24),
                 _PopularHotelsSection(hotels: ref.watch(homeHotelsProvider)),
                 const SizedBox(height: 24),
                 _PopularToursSection(tours: ref.watch(homeToursProvider)),
                 const SizedBox(height: 24),
-                _RecommendedForYou(tours: ref.watch(homeRecommendedToursProvider)),
+                _RecommendedForYou(
+                    tours: ref.watch(homeRecommendedToursProvider)),
                 const SizedBox(height: 32),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -82,9 +90,12 @@ class HomePage extends ConsumerWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFC89B3C),
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0)),
                     ),
-                    child: const Text('Plan Your Trip', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    child: const Text('Plan Your Trip',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -141,7 +152,10 @@ class _HeroBanner extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.7)
+                    ],
                   ),
                 ),
               ),
@@ -153,9 +167,14 @@ class _HeroBanner extends StatelessWidget {
                   children: [
                     _PromoBadge(),
                     SizedBox(height: 8),
-                    Text('Explore the Wonders of Egypt', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
+                    Text('Explore the Wonders of Egypt',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800)),
                     SizedBox(height: 4),
-                    Text('Book now and get special discounts', style: TextStyle(color: Colors.white, fontSize: 14)),
+                    Text('Book now and get special discounts',
+                        style: TextStyle(color: Colors.white, fontSize: 14)),
                   ],
                 ),
               ),
@@ -173,8 +192,14 @@ class _PromoBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(color: const Color(0xFFC89B3C), borderRadius: BorderRadius.circular(20)),
-        child: const Text('20% OFF', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+        decoration: BoxDecoration(
+            color: const Color(0xFFC89B3C),
+            borderRadius: BorderRadius.circular(20)),
+        child: const Text('20% OFF',
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w700)),
       );
 }
 
@@ -186,7 +211,10 @@ class _CategoriesSection extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: _categories
-              .map((cat) => _CategoryItem(icon: cat.icon, label: cat.label, onTap: () => context.push(cat.route)))
+              .map((cat) => _CategoryItem(
+                  icon: cat.icon,
+                  label: cat.label,
+                  onTap: () => context.push(cat.route)))
               .toList(),
         ),
       );
@@ -196,7 +224,8 @@ class _CategoryItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  const _CategoryItem({required this.icon, required this.label, required this.onTap});
+  const _CategoryItem(
+      {required this.icon, required this.label, required this.onTap});
   @override
   Widget build(BuildContext context) => InkWell(
         onTap: onTap,
@@ -204,7 +233,9 @@ class _CategoryItem extends StatelessWidget {
           children: [
             Icon(icon, size: 32, color: const Color(0xFFC89B3C)),
             const SizedBox(height: 8),
-            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            Text(label,
+                style:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
           ],
         ),
       );
@@ -263,7 +294,12 @@ class _PopularToursSection extends StatelessWidget {
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(children: tours.map((tour) => Padding(padding: const EdgeInsets.only(bottom: 16), child: _TourCard(tour: tour))).toList()),
+            child: Column(
+                children: tours
+                    .map((tour) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _TourCard(tour: tour)))
+                    .toList()),
           ),
         ],
       );
@@ -284,16 +320,22 @@ class _HotelCard extends StatelessWidget {
                 child: SizedBox(
                   height: 160,
                   width: double.infinity,
-                  child: CachedNetworkImage(imageUrl: hotel.image, fit: BoxFit.cover),
+                  child: CachedNetworkImage(
+                      imageUrl: hotel.image, fit: BoxFit.cover),
                 ),
               ),
               const SizedBox(height: 8),
-              Text(hotel.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-              Text(hotel.location, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+              Text(hotel.name,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(hotel.location,
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12)),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  RatingWidget(rating: hotel.rating, reviewCount: hotel.reviewCount, size: 14),
+                  RatingWidget(
+                      rating: hotel.rating,
+                      reviewCount: hotel.reviewCount,
+                      size: 14),
                   PriceTag(price: hotel.price, unit: 'night'),
                 ],
               ),
@@ -314,11 +356,14 @@ class _TourCard extends StatelessWidget {
           child: Row(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), bottomLeft: Radius.circular(20)),
+                borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    bottomLeft: Radius.circular(20)),
                 child: SizedBox(
                   width: 120,
                   height: 140,
-                  child: CachedNetworkImage(imageUrl: tour.image, fit: BoxFit.cover),
+                  child: CachedNetworkImage(
+                      imageUrl: tour.image, fit: BoxFit.cover),
                 ),
               ),
               Expanded(
@@ -327,10 +372,16 @@ class _TourCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(tour.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      Text(tour.duration, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                      Text(tour.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(tour.duration,
+                          style:
+                              TextStyle(color: Colors.grey[600], fontSize: 12)),
                       const SizedBox(height: 8),
-                      RatingWidget(rating: tour.rating, reviewCount: tour.reviewCount, size: 14),
+                      RatingWidget(
+                          rating: tour.rating,
+                          reviewCount: tour.reviewCount,
+                          size: 14),
                       const SizedBox(height: 8),
                       PriceTag(price: tour.price),
                     ],
@@ -368,7 +419,8 @@ class _FeaturedDestinations extends StatelessWidget {
               children: destinations
                   .map((destination) => Padding(
                         padding: const EdgeInsets.only(right: 16),
-                        child: _DestinationCard(name: destination.name, image: destination.image),
+                        child: _DestinationCard(
+                            name: destination.name, image: destination.image),
                       ))
                   .toList(),
             ),
@@ -389,13 +441,19 @@ class _DestinationCard extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              NetworkImageFallback(imageUrl: image, type: NetworkImageFallbackType.tour, fit: BoxFit.cover),
+              NetworkImageFallback(
+                  imageUrl: image,
+                  type: NetworkImageFallbackType.tour,
+                  fit: BoxFit.cover),
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.7)
+                    ],
                   ),
                 ),
               ),
@@ -403,7 +461,9 @@ class _DestinationCard extends StatelessWidget {
                 alignment: Alignment.bottomLeft,
                 child: Padding(
                   padding: const EdgeInsets.all(12),
-                  child: Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: Text(name,
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -422,13 +482,18 @@ class _RecommendedForYou extends StatelessWidget {
         children: [
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Text('Recommended for You', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            child: Text('Recommended for You',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           ),
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
-              children: tours.map((tour) => Padding(padding: const EdgeInsets.only(bottom: 16), child: _TourCard(tour: tour))).toList(),
+              children: tours
+                  .map((tour) => Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: _TourCard(tour: tour)))
+                  .toList(),
             ),
           ),
         ],

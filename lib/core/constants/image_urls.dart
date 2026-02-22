@@ -16,9 +16,9 @@ class Img {
 
   // ========== NILE RIVER ==========
   static const String nileRiver =
-      'https://images.unsplash.com/photo-1547483238-f400e65ccd56?auto=format&fit=crop&w=1400&q=80';
+      'https://images.unsplash.com/photo-1719659018185-8a239c35fb4a?q=80&w=627&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
   static const String nileCruise =
-      'https://images.unsplash.com/photo-1548950379-c60e00acdc4b?auto=format&fit=crop&w=1400&q=80';
+      'https://images.unsplash.com/photo-1719659018185-8a239c35fb4a?q=80&w=627&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
   static const String nileSunset =
       'https://images.unsplash.com/photo-1574169208507-843761648bff?auto=format&fit=crop&w=1400&q=80';
   static const String nileFelucca =
@@ -50,9 +50,9 @@ class Img {
 
   // ========== ALEXANDRIA ==========
   static const String alexandria =
-      'https://images.unsplash.com/photo-1568702846914-96b305d2ebb1?auto=format&fit=crop&w=1400&q=80';
+      'https://images.unsplash.com/photo-1652258943679-1516be59461f?q=80&w=764&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
   static const String qaitbayCitadel =
-      'https://images.unsplash.com/photo-1591825729269-caeb344f6df2?auto=format&fit=crop&w=1400&q=80';
+      'https://images.unsplash.com/photo-1652258943679-1516be59461f?q=80&w=764&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
 
   // ========== RED SEA ==========
   static const String redSeaHurghada =
@@ -74,15 +74,15 @@ class Img {
 
   // ========== HOTELS ==========
   static const String hotelLuxury =
-      'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1400&q=80';
+      'https://media-cdn.tripadvisor.com/media/photo-s/1c/e4/a5/e7/best-view-pyramids-hotel.jpg';
   static const String hotelPool =
-      'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=1400&q=80';
+      'https://images.unsplash.com/photo-1770028711694-456745837ede?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
   static const String hotelRoom =
-      'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1400&q=80';
+      'https://images.unsplash.com/photo-1679058616742-4ef31525c01c?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
   static const String hotelLobby =
-      'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=1400&q=80';
+      'https://cf.bstatic.com/xdata/images/hotel/max1024x768/309415020.jpg?k=dcb6171c38231fb4a6f63a8ef5c26d6c49f2e150a1b2272843fd541ccffcea1c&o=';
   static const String hotelResort =
-      'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1400&q=80';
+      'https://cf.bstatic.com/xdata/images/hotel/max1024x768/105937871.jpg?k=84f93913257527ff5fba72db1a7713925bc1e21f922dee8428aa77247629d677&o=';
 
   // ========== FOOD ==========
   static const String egyptianFood =
@@ -98,13 +98,13 @@ class Img {
 
   // ========== CARS ==========
   static const String carLuxury =
-      'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=1400&q=80';
+      'https://assets.carandclassic.com/uploads/new/28035743/2016-mercedes-benz-c-class-69957c557e093.jpg?fit=fillmax&h=1200&ixlib=php-4.1.0&q=85&w=1200&s=fc1ea6a216fec8ac882c943e898b5fb6';
   static const String carSuv =
-      'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=1400&q=80';
+      'https://images.unsplash.com/photo-1653227158553-ddaa680cdd65?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
   static const String carSedan =
-      'https://images.unsplash.com/photo-1550355291-bbee04a92027?auto=format&fit=crop&w=1400&q=80';
+      'https://images.unsplash.com/photo-1624578571415-09e9b1991929?q=80&w=990&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
   static const String carVan =
-      'https://images.unsplash.com/photo-1559416523-140ddc3d238c?auto=format&fit=crop&w=1400&q=80';
+      'https://images.unsplash.com/photo-1615715073328-39c148b37b23?q=80&w=1227&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
 
   // ========== AVATARS ==========
   static const String avatarMan =
