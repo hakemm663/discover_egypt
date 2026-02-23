@@ -96,7 +96,23 @@ lib/
 
 ---
 
+## App screens
+
+The following screens showcase the current UI and user journey (place the provided screenshots in `docs/screens/` using the same filenames):
+
+<p align="center">
+  <img src="docs/screens/home.jpg" alt="Home screen" width="220" />
+  <img src="docs/screens/booking-summary.jpg" alt="Booking summary screen" width="220" />
+  <img src="docs/screens/car-rental.jpg" alt="Car rental screen" width="220" />
+  <img src="docs/screens/settings.jpg" alt="Settings screen" width="220" />
+  <img src="docs/screens/sign-in.jpg" alt="Sign in screen" width="220" />
+</p>
+
+---
+
 ## Runtime configuration
+
+✅ The app is **ready for API configuration** using runtime `--dart-define` values, so you can point it to your chosen environment without changing source code.
 
 Inject **non-secret** client config at runtime:
 
@@ -213,4 +229,3 @@ Then confirm:
 - `Path` contains:
   - `%ANDROID_HOME%\platform-tools`
   - `%ANDROID_HOME%\cmdline-tools\latest\bin`
-
