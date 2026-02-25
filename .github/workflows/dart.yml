@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Verify generated API client is current
+        run: ./scripts/check_generated_api_client.sh
+
       - name: Analyze project source
         run: flutter analyze
 

@@ -83,8 +83,9 @@ lib/
   app/                  # App bootstrap + global providers
   core/
     config/             # Runtime config and environment reads
+    api/generated/      # Generated Dart SDK from OpenAPI (do not hand edit)
     constants/          # API endpoints, app constants, assets URLs
-    repositories/       # Repository contracts + API/Firestore clients
+    repositories/       # Repository contracts + API clients + Firestore adapters
     routes/             # go_router route graph
     services/           # Auth, DB, payment, notifications, firebase wrappers
     themes/             # Theme/colors
@@ -93,6 +94,38 @@ lib/
     auth/ onboarding/ home/ hotels/ tours/ cars/ restaurants/
     booking/ profile/ support/ settings/ legal/ shared/
 ```
+
+
+## API spec -> generated Dart client workflow
+
+The app now uses a reproducible OpenAPI-driven client generation workflow:
+
+- Source spec (committed fallback): `docs/openapi/discovery_api.openapi.json`
+- Optional Scalar source (remote): set `SCALAR_OPENAPI_URL` when generating
+- Generated SDK output: `lib/core/api/generated/`
+- Hand-written adapters/repository-facing clients: `lib/core/repositories/api_clients/`
+
+### Regenerate the SDK
+
+```bash
+./scripts/generate_api_client.sh
+```
+
+To pull from a Scalar-managed OpenAPI document instead of the committed spec:
+
+```bash
+SCALAR_OPENAPI_URL="https://your-scalar-host/openapi.json" ./scripts/generate_api_client.sh
+```
+
+### CI guard (generated code drift)
+
+CI runs:
+
+```bash
+./scripts/check_generated_api_client.sh
+```
+
+This command regenerates files and fails if `lib/core/api/generated/` changes, which enforces that generated client code and the committed spec stay in sync.
 
 ---
 
