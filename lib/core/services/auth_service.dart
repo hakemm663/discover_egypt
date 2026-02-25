@@ -151,6 +151,39 @@ class AuthService {
         .update(user.toJson());
   }
 
+
+  Future<void> updateCountry({
+    required String userId,
+    required String country,
+  }) async {
+    await _firestore
+        .collection(AppConstants.usersCollection)
+        .doc(userId)
+        .set({'nationality': country, 'updatedAt': Timestamp.now()}, SetOptions(merge: true));
+  }
+
+  Future<void> updatePassword({
+    required String email,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw 'You need to sign in again before changing your password.';
+    }
+
+    try {
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+      await user.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthError(e);
+    }
+  }
+
   // Handle auth errors
   String _handleAuthError(FirebaseAuthException e) {
     switch (e.code) {
