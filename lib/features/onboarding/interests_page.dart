@@ -1,38 +1,125 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../app/providers.dart';
 import '../../core/widgets/custom_app_bar.dart';
-import '../../core/widgets/rounded_card.dart';
 import '../../core/widgets/primary_button.dart';
+import '../../core/widgets/rounded_card.dart';
 
-class InterestsPage extends StatefulWidget {
+class InterestsPage extends ConsumerStatefulWidget {
   const InterestsPage({super.key});
 
   @override
-  State<InterestsPage> createState() => _InterestsPageState();
+  ConsumerState<InterestsPage> createState() => _InterestsPageState();
 }
 
-class _InterestsPageState extends State<InterestsPage> {
+class _InterestsPageState extends ConsumerState<InterestsPage> {
   final Set<String> _selectedInterests = {'History'};
 
   final List<Map<String, dynamic>> _interests = [
-    {'id': 'history', 'name': 'History', 'icon': Icons.account_balance_rounded, 'emoji': '🏛️'},
-    {'id': 'adventure', 'name': 'Adventure', 'icon': Icons.landscape_rounded, 'emoji': '🏔️'},
-    {'id': 'relaxation', 'name': 'Relaxation', 'icon': Icons.spa_rounded, 'emoji': '🧘'},
-    {'id': 'beaches', 'name': 'Beaches', 'icon': Icons.beach_access_rounded, 'emoji': '🏖️'},
-    {'id': 'diving', 'name': 'Diving', 'icon': Icons.scuba_diving_rounded, 'emoji': '🤿'},
-    {'id': 'culture', 'name': 'Culture', 'icon': Icons.theater_comedy_rounded, 'emoji': '🎭'},
-    {'id': 'food', 'name': 'Food & Cuisine', 'icon': Icons.restaurant_rounded, 'emoji': '🍽️'},
-    {'id': 'shopping', 'name': 'Shopping', 'icon': Icons.shopping_bag_rounded, 'emoji': '🛍️'},
-    {'id': 'photography', 'name': 'Photography', 'icon': Icons.camera_alt_rounded, 'emoji': '📸'},
-    {'id': 'nightlife', 'name': 'Nightlife', 'icon': Icons.nightlife_rounded, 'emoji': '🌙'},
-    {'id': 'cruises', 'name': 'Cruises', 'icon': Icons.directions_boat_rounded, 'emoji': '🚢'},
-    {'id': 'museums', 'name': 'Museums', 'icon': Icons.museum_rounded, 'emoji': '🖼️'},
-    {'id': 'temples', 'name': 'Temples', 'icon': Icons.temple_hindu_rounded, 'emoji': '⛩️'},
-    {'id': 'desert', 'name': 'Desert Safari', 'icon': Icons.terrain_rounded, 'emoji': '🏜️'},
-    {'id': 'wellness', 'name': 'Wellness', 'icon': Icons.self_improvement_rounded, 'emoji': '💆'},
+    {
+      'id': 'history',
+      'name': 'History',
+      'icon': Icons.account_balance_rounded,
+      'emoji': '🏛️',
+    },
+    {
+      'id': 'adventure',
+      'name': 'Adventure',
+      'icon': Icons.landscape_rounded,
+      'emoji': '🏔️',
+    },
+    {
+      'id': 'relaxation',
+      'name': 'Relaxation',
+      'icon': Icons.spa_rounded,
+      'emoji': '🧘',
+    },
+    {
+      'id': 'beaches',
+      'name': 'Beaches',
+      'icon': Icons.beach_access_rounded,
+      'emoji': '🏖️',
+    },
+    {
+      'id': 'diving',
+      'name': 'Diving',
+      'icon': Icons.scuba_diving_rounded,
+      'emoji': '🤿',
+    },
+    {
+      'id': 'culture',
+      'name': 'Culture',
+      'icon': Icons.theater_comedy_rounded,
+      'emoji': '🎭',
+    },
+    {
+      'id': 'food',
+      'name': 'Food & Cuisine',
+      'icon': Icons.restaurant_rounded,
+      'emoji': '🍽️',
+    },
+    {
+      'id': 'shopping',
+      'name': 'Shopping',
+      'icon': Icons.shopping_bag_rounded,
+      'emoji': '🛍️',
+    },
+    {
+      'id': 'photography',
+      'name': 'Photography',
+      'icon': Icons.camera_alt_rounded,
+      'emoji': '📸',
+    },
+    {
+      'id': 'nightlife',
+      'name': 'Nightlife',
+      'icon': Icons.nightlife_rounded,
+      'emoji': '🌙',
+    },
+    {
+      'id': 'cruises',
+      'name': 'Cruises',
+      'icon': Icons.directions_boat_rounded,
+      'emoji': '🚢',
+    },
+    {
+      'id': 'museums',
+      'name': 'Museums',
+      'icon': Icons.museum_rounded,
+      'emoji': '🖼️',
+    },
+    {
+      'id': 'temples',
+      'name': 'Temples',
+      'icon': Icons.temple_hindu_rounded,
+      'emoji': '⛩️',
+    },
+    {
+      'id': 'desert',
+      'name': 'Desert Safari',
+      'icon': Icons.terrain_rounded,
+      'emoji': '🏜️',
+    },
+    {
+      'id': 'wellness',
+      'name': 'Wellness',
+      'icon': Icons.self_improvement_rounded,
+      'emoji': '💆',
+    },
   ];
+
+  Future<void> _completeOnboardingAndContinue() async {
+    await ref.read(onboardingCompletedProvider.notifier).setCompleted(true);
+
+    if (!mounted) {
+      return;
+    }
+
+    context.go('/sign-up');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,14 +153,12 @@ class _InterestsPageState extends State<InterestsPage> {
               const SizedBox(height: 8),
               Text(
                 '${_selectedInterests.length} selected',
-                style: TextStyle(
-                  color: const Color(0xFFC89B3C),
+                style: const TextStyle(
+                  color: Color(0xFFC89B3C),
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 20),
-
-              // Interests Grid
               Expanded(
                 child: RoundedCard(
                   padding: const EdgeInsets.all(16),
@@ -111,24 +196,17 @@ class _InterestsPageState extends State<InterestsPage> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // Continue Button
               PrimaryButton(
                 label: 'Continue',
                 icon: Icons.arrow_forward_rounded,
-                onPressed: _selectedInterests.isNotEmpty
-                    ? () => context.go('/sign-up')
-                    : null,
+                onPressed:
+                    _selectedInterests.isNotEmpty ? _completeOnboardingAndContinue : null,
               ),
-
               const SizedBox(height: 12),
-
-              // Skip Button
               Center(
                 child: TextButton(
-                  onPressed: () => context.go('/sign-up'),
+                  onPressed: _completeOnboardingAndContinue,
                   child: Text(
                     'Skip for now',
                     style: TextStyle(

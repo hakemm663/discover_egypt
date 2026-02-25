@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../features/onboarding/cover_page.dart';
 import '../../features/onboarding/language_page.dart';
 import '../../features/onboarding/nationality_page.dart';
@@ -44,12 +45,63 @@ import '../../features/settings/settings_page.dart';
 import '../../features/shared/trip_planner.dart';
 import '../widgets/app_bottom_nav.dart';
 
+const Set<String> _onboardingRoutes = {
+  '/cover',
+  '/language',
+  '/nationality',
+  '/interests',
+};
+
+const Set<String> _authRoutes = {
+  '/sign-in',
+  '/sign-up',
+  '/forgot-password',
+};
+
+String? resolveAppRedirect({
+  required String location,
+  required bool isAuthenticated,
+  required bool onboardingCompleted,
+}) {
+  final isOnboardingRoute = _onboardingRoutes.contains(location);
+  final isAuthRoute = _authRoutes.contains(location);
+
+  if (!onboardingCompleted && !isOnboardingRoute) {
+    return '/cover';
+  }
+
+  if (onboardingCompleted && isOnboardingRoute) {
+    return isAuthenticated ? '/home' : '/sign-in';
+  }
+
+  if (!isAuthenticated && onboardingCompleted && !isAuthRoute) {
+    return '/sign-in';
+  }
+
+  if (isAuthenticated && isAuthRoute) {
+    return '/home';
+  }
+
+  return null;
+}
+
 GoRouter createAppRouter({
+  required bool isAuthenticated,
+  required bool onboardingCompleted,
   List<NavigatorObserver> observers = const <NavigatorObserver>[],
+  Listenable? refreshListenable,
 }) {
   return GoRouter(
     observers: observers,
+    refreshListenable: refreshListenable,
     initialLocation: '/home',
+    redirect: (context, state) {
+      return resolveAppRedirect(
+        location: state.uri.path,
+        isAuthenticated: isAuthenticated,
+        onboardingCompleted: onboardingCompleted,
+      );
+    },
     routes: [
       // Onboarding
       GoRoute(
@@ -247,69 +299,68 @@ GoRouter createAppRouter({
           const MyBookingsPage(),
         ),
       ),
+      GoRoute(
+        path: '/reviews',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const ReviewsPage(),
+        ),
+      ),
+      GoRoute(
+        path: '/wallet/add-funds',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const AddFundsPage(),
+        ),
+      ),
 
-    GoRoute(
-      path: '/reviews',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const ReviewsPage(),
+      // Support & Legal
+      GoRoute(
+        path: '/help-center',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const HelpCenterPage(),
+        ),
       ),
-    ),
-    GoRoute(
-      path: '/wallet/add-funds',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const AddFundsPage(),
+      GoRoute(
+        path: '/support',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const SupportPage(),
+        ),
       ),
-    ),
+      GoRoute(
+        path: '/privacy-policy',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const PrivacyPolicyPage(),
+        ),
+      ),
+      GoRoute(
+        path: '/terms-of-service',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const TermsOfServicePage(),
+        ),
+      ),
 
-    // Support & Legal
-    GoRoute(
-      path: '/help-center',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const HelpCenterPage(),
+      // Settings
+      GoRoute(
+        path: '/settings',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const SettingsPage(),
+        ),
       ),
-    ),
-    GoRoute(
-      path: '/support',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const SupportPage(),
-      ),
-    ),
-    GoRoute(
-      path: '/privacy-policy',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const PrivacyPolicyPage(),
-      ),
-    ),
-    GoRoute(
-      path: '/terms-of-service',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const TermsOfServicePage(),
-      ),
-    ),
 
-    // Settings
-    GoRoute(
-      path: '/settings',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const SettingsPage(),
+      // Trip Planner
+      GoRoute(
+        path: '/trip-planner',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const TripPlannerPage(),
+        ),
       ),
-    ),
-
-    // Trip Planner
-    GoRoute(
-      path: '/trip-planner',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const TripPlannerPage(),
-      ),
-    ),
     ],
   );
 }

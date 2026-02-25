@@ -75,7 +75,12 @@ final navigationTrackingObserverProvider =
 });
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final authUser = ref.watch(authStateChangesProvider).valueOrNull;
+  final onboardingCompleted = ref.watch(onboardingCompletedProvider);
+
   return createAppRouter(
+    isAuthenticated: authUser != null,
+    onboardingCompleted: onboardingCompleted,
     observers: [ref.watch(navigationTrackingObserverProvider)],
   );
 });
@@ -215,7 +220,67 @@ class LanguageNotifier extends StateNotifier<Locale> {
 }
 
 // Onboarding Completed Provider
-final onboardingCompletedProvider = StateProvider<bool>((ref) {
-  final box = Hive.box(AppConstants.settingsBox);
-  return box.get(AppConstants.onboardingKey, defaultValue: false);
+final onboardingCompletedProvider =
+    StateNotifierProvider<OnboardingStatusNotifier, bool>((ref) {
+  return OnboardingStatusNotifier(ref);
 });
+
+class OnboardingStatusNotifier extends StateNotifier<bool> {
+  OnboardingStatusNotifier(this._ref) : super(false) {
+    _loadLocalOnboardingStatus();
+    _authSubscription = _ref.read(authServiceProvider).authStateChanges.listen(
+      _syncFromRemote,
+    );
+  }
+
+  final Ref _ref;
+  StreamSubscription<User?>? _authSubscription;
+
+  void _loadLocalOnboardingStatus() {
+    final box = Hive.box(AppConstants.settingsBox);
+    state = box.get(AppConstants.onboardingKey, defaultValue: false) as bool;
+  }
+
+  Future<void> _syncFromRemote(User? user) async {
+    if (user == null) {
+      return;
+    }
+
+    final authService = _ref.read(authServiceProvider);
+    final remoteStatus = await authService.fetchOnboardingCompleted(user.uid);
+
+    if (remoteStatus == null) {
+      await authService.updateOnboardingCompleted(
+        userId: user.uid,
+        completed: state,
+      );
+      return;
+    }
+
+    if (remoteStatus != state) {
+      state = remoteStatus;
+      final box = Hive.box(AppConstants.settingsBox);
+      box.put(AppConstants.onboardingKey, remoteStatus);
+    }
+  }
+
+  Future<void> setCompleted(bool completed) async {
+    state = completed;
+    final box = Hive.box(AppConstants.settingsBox);
+    await box.put(AppConstants.onboardingKey, completed);
+
+    final authUser = _ref.read(authServiceProvider).currentUser;
+    if (authUser != null) {
+      await _ref.read(authServiceProvider).updateOnboardingCompleted(
+            userId: authUser.uid,
+            completed: completed,
+          );
+    }
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
+  }
+}
