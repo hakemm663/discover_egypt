@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../core/constants/api_endpoints.dart';
 import '../core/constants/app_constants.dart';
 import '../core/models/user_model.dart';
 import '../core/navigation/navigation_tracking_observer.dart';
@@ -80,10 +82,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
-final hotelsApiClientProvider = Provider<HotelsApiClient>((ref) => HotelsApiClient());
-final toursApiClientProvider = Provider<ToursApiClient>((ref) => ToursApiClient());
-final carsApiClientProvider = Provider<CarsApiClient>((ref) => CarsApiClient());
-final restaurantsApiClientProvider = Provider<RestaurantsApiClient>((ref) => RestaurantsApiClient());
+final discoveryDioProvider = Provider<Dio>((ref) => Dio(BaseOptions(baseUrl: ApiEndpoints.baseUrl)));
+final discoveryHttpClientProvider = Provider<DiscoveryHttpClient>((ref) {
+  return DiscoveryHttpClient(dio: ref.read(discoveryDioProvider));
+});
+
+final hotelsApiClientProvider =
+    Provider<HotelsApiClient>((ref) => HotelsApiClient(httpClient: ref.read(discoveryHttpClientProvider)));
+final toursApiClientProvider =
+    Provider<ToursApiClient>((ref) => ToursApiClient(httpClient: ref.read(discoveryHttpClientProvider)));
+final carsApiClientProvider =
+    Provider<CarsApiClient>((ref) => CarsApiClient(httpClient: ref.read(discoveryHttpClientProvider)));
+final restaurantsApiClientProvider = Provider<RestaurantsApiClient>(
+  (ref) => RestaurantsApiClient(httpClient: ref.read(discoveryHttpClientProvider)),
+);
 final discoveryFirestoreClientProvider =
     Provider<DiscoveryFirestoreClient>((ref) => DiscoveryFirestoreClient());
 

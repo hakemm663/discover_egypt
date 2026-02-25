@@ -23,16 +23,23 @@ final hotelsQueryProvider = StateProvider<HotelsQuery>((ref) => const HotelsQuer
 final hotelsProvider = FutureProvider<PaginatedResult<HotelListing>>((ref) async {
   final repository = ref.read(discoveryRepositoryProvider);
   final query = ref.watch(hotelsQueryProvider);
+  final profileUserId = ref.watch(currentUserProvider).valueOrNull?.id;
+  final authUserId = ref.read(authServiceProvider).currentUser?.uid;
+  final userId = profileUserId ?? authUserId ?? 'guest-user';
 
-  return repository.getHotels(
-    userId: 'demo-user',
-    query: PaginationQuery(
-      page: query.page,
-      pageSize: query.pageSize,
-      filters: {
-        'city': query.city,
-        'sortBy': query.sortBy,
-      },
-    ),
-  );
+  try {
+    return await repository.getHotels(
+      userId: userId,
+      query: PaginationQuery(
+        page: query.page,
+        pageSize: query.pageSize,
+        filters: {
+          'city': query.city,
+          'sortBy': query.sortBy,
+        },
+      ),
+    );
+  } catch (error) {
+    throw Exception('Unable to load hotels: $error');
+  }
 });

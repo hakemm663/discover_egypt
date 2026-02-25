@@ -23,16 +23,23 @@ final carsQueryProvider = StateProvider<CarsQuery>((ref) => const CarsQuery());
 final carsProvider = FutureProvider<PaginatedResult<CarListing>>((ref) async {
   final repository = ref.read(discoveryRepositoryProvider);
   final query = ref.watch(carsQueryProvider);
+  final profileUserId = ref.watch(currentUserProvider).valueOrNull?.id;
+  final authUserId = ref.read(authServiceProvider).currentUser?.uid;
+  final userId = profileUserId ?? authUserId ?? 'guest-user';
 
-  return repository.getCars(
-    userId: 'demo-user',
-    query: PaginationQuery(
-      page: query.page,
-      pageSize: query.pageSize,
-      filters: {
-        'type': query.type,
-        'withDriverOnly': query.withDriverOnly.toString(),
-      },
-    ),
-  );
+  try {
+    return await repository.getCars(
+      userId: userId,
+      query: PaginationQuery(
+        page: query.page,
+        pageSize: query.pageSize,
+        filters: {
+          'type': query.type,
+          'withDriverOnly': query.withDriverOnly.toString(),
+        },
+      ),
+    );
+  } catch (error) {
+    throw Exception('Unable to load cars: $error');
+  }
 });
