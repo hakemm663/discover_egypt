@@ -45,7 +45,7 @@ class AuthService {
       await _firestore
           .collection(AppConstants.usersCollection)
           .doc(credential.user!.uid)
-          .set(userModel.toJson());
+          .set({...userModel.toJson(), 'onboardingCompleted': false});
 
       // Send email verification
       await credential.user!.sendEmailVerification();
@@ -114,6 +114,35 @@ class AuthService {
     return UserModel.fromJson(doc.data()!);
   }
 
+
+
+  Future<bool?> fetchOnboardingCompleted(String userId) async {
+    final doc = await _firestore
+        .collection(AppConstants.usersCollection)
+        .doc(userId)
+        .get();
+
+    if (!doc.exists) {
+      return null;
+    }
+
+    final data = doc.data();
+    if (data == null) {
+      return null;
+    }
+
+    return data['onboardingCompleted'] == true;
+  }
+
+  Future<void> updateOnboardingCompleted({
+    required String userId,
+    required bool completed,
+  }) async {
+    await _firestore
+        .collection(AppConstants.usersCollection)
+        .doc(userId)
+        .set({'onboardingCompleted': completed}, SetOptions(merge: true));
+  }
   // Update user profile
   Future<void> updateUserProfile(UserModel user) async {
     await _firestore

@@ -305,6 +305,37 @@ class DatabaseService {
     });
   }
 
+
+
+  Future<void> reconcileWalletTopUp({
+    required String userId,
+    required double amount,
+    required String paymentId,
+    required String paymentStatus,
+  }) async {
+    final userRef = _firestore.collection(AppConstants.usersCollection).doc(userId);
+    final txRef = userRef.collection('wallet_transactions').doc(paymentId);
+    final normalized = paymentStatus.toLowerCase();
+
+    await _firestore.runTransaction((transaction) async {
+      transaction.set(txRef, {
+        'id': paymentId,
+        'userId': userId,
+        'type': 'top_up',
+        'amount': amount,
+        'status': normalized,
+        'createdAt': Timestamp.now(),
+        'updatedAt': Timestamp.now(),
+      }, SetOptions(merge: true));
+
+      if (normalized == 'succeeded') {
+        transaction.set(userRef, {
+          'walletBalance': FieldValue.increment(amount),
+          'updatedAt': Timestamp.now(),
+        }, SetOptions(merge: true));
+      }
+    });
+  }
   Future<void> applyBackendPaymentStatus({
     required String bookingId,
     required String paymentStatus,
