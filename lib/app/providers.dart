@@ -52,6 +52,108 @@ class NavigationTrackingConsentNotifier extends StateNotifier<bool> {
   }
 }
 
+class NotificationPreferences {
+  const NotificationPreferences({
+    this.pushEnabled = true,
+    this.emailEnabled = false,
+    this.promotionsEnabled = true,
+  });
+
+  final bool pushEnabled;
+  final bool emailEnabled;
+  final bool promotionsEnabled;
+
+  NotificationPreferences copyWith({
+    bool? pushEnabled,
+    bool? emailEnabled,
+    bool? promotionsEnabled,
+  }) {
+    return NotificationPreferences(
+      pushEnabled: pushEnabled ?? this.pushEnabled,
+      emailEnabled: emailEnabled ?? this.emailEnabled,
+      promotionsEnabled: promotionsEnabled ?? this.promotionsEnabled,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'push': pushEnabled,
+      'email': emailEnabled,
+      'promotions': promotionsEnabled,
+      'updatedAt': Timestamp.now(),
+    };
+  }
+
+  Map<String, dynamic> toLocalJson() {
+    return {
+      'push': pushEnabled,
+      'email': emailEnabled,
+      'promotions': promotionsEnabled,
+    };
+  }
+
+  static NotificationPreferences fromLocal(dynamic value) {
+    if (value is! Map) {
+      return const NotificationPreferences();
+    }
+
+    final map = Map<String, dynamic>.from(value.cast<dynamic, dynamic>());
+    return NotificationPreferences(
+      pushEnabled: map['push'] == true,
+      emailEnabled: map['email'] == true,
+      promotionsEnabled: map['promotions'] != false,
+    );
+  }
+}
+
+final notificationPreferencesProvider = StateNotifierProvider<
+    NotificationPreferencesNotifier, NotificationPreferences>((ref) {
+  return NotificationPreferencesNotifier(
+    authService: ref.read(authServiceProvider),
+    firestore: FirebaseFirestore.instance,
+  );
+});
+
+class NotificationPreferencesNotifier
+    extends StateNotifier<NotificationPreferences> {
+  NotificationPreferencesNotifier({
+    required AuthService authService,
+    required FirebaseFirestore firestore,
+  })  : _authService = authService,
+        _firestore = firestore,
+        super(const NotificationPreferences()) {
+    _loadPreferences();
+  }
+
+  final AuthService _authService;
+  final FirebaseFirestore _firestore;
+
+  void _loadPreferences() {
+    final box = Hive.box(AppConstants.settingsBox);
+    state = NotificationPreferences.fromLocal(
+      box.get(AppConstants.notificationPreferencesKey),
+    );
+  }
+
+  Future<void> setPreferences(NotificationPreferences preferences) async {
+    state = preferences;
+
+    final box = Hive.box(AppConstants.settingsBox);
+    await box.put(
+      AppConstants.notificationPreferencesKey,
+      preferences.toLocalJson(),
+    );
+
+    final user = _authService.currentUser;
+    if (user == null) return;
+
+    await _firestore
+        .collection(AppConstants.usersCollection)
+        .doc(user.uid)
+        .set({'notificationPreferences': preferences.toJson()}, SetOptions(merge: true));
+  }
+}
+
 final navigationTrackingServiceProvider = Provider<NavigationTrackingService>((ref) {
   final service = NavigationTrackingService(
     firebaseService: ref.watch(firebaseServiceProvider),

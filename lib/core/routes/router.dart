@@ -268,7 +268,7 @@ GoRouter createAppRouter({
       path: '/help-center',
       pageBuilder: (context, state) => _buildPage(
         state,
-        const HelpCenterPage(),
+        HelpCenterPage(topic: state.uri.queryParameters['topic']),
       ),
     ),
     GoRoute(

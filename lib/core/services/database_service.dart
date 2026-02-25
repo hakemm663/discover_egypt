@@ -388,6 +388,64 @@ class DatabaseService {
         .toList();
   }
 
+
+  Stream<List<ReviewModel>> watchUserReviews(String userId) {
+    return _firestore
+        .collection(AppConstants.reviewsCollection)
+        .where('userId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => ReviewModel.fromJson(doc.data())).toList());
+  }
+
+  Future<void> updateReview({
+    required String reviewId,
+    required String userId,
+    required double rating,
+    required String comment,
+  }) async {
+    final docRef = _firestore.collection(AppConstants.reviewsCollection).doc(reviewId);
+    final snapshot = await docRef.get();
+
+    if (!snapshot.exists) {
+      throw 'Review no longer exists.';
+    }
+
+    final review = ReviewModel.fromJson(snapshot.data()!);
+    if (review.userId != userId) {
+      throw 'You do not have permission to edit this review.';
+    }
+
+    await docRef.set({
+      'rating': rating,
+      'comment': comment,
+      'updatedAt': Timestamp.now(),
+    }, SetOptions(merge: true));
+
+    await _updateItemRating(review.itemId, review.itemType);
+  }
+
+  Future<void> deleteReview({
+    required String reviewId,
+    required String userId,
+  }) async {
+    final docRef = _firestore.collection(AppConstants.reviewsCollection).doc(reviewId);
+    final snapshot = await docRef.get();
+
+    if (!snapshot.exists) {
+      throw 'Review no longer exists.';
+    }
+
+    final review = ReviewModel.fromJson(snapshot.data()!);
+    if (review.userId != userId) {
+      throw 'You do not have permission to delete this review.';
+    }
+
+    await docRef.delete();
+    await _updateItemRating(review.itemId, review.itemType);
+  }
+
   Future<void> _updateItemRating(String itemId, String itemType) async {
     final reviews = await getItemReviews(itemId);
     if (reviews.isEmpty) return;
