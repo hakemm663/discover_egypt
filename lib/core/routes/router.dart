@@ -212,24 +212,22 @@ GoRouter createAppRouter({
       // Booking
       GoRoute(
         path: '/booking-summary',
-        pageBuilder: (context, state) => _buildPage(
-          state,
-          const BookingSummaryPage(),
-        ),
+        pageBuilder: (context, state) =>
+            _buildPage(state, const BookingSummaryPage()),
       ),
       GoRoute(
         path: '/confirm-pay',
         pageBuilder: (context, state) => _buildPage(
           state,
-          ConfirmPayPage(checkoutData: _checkoutDataFromState(state)),
+          ConfirmPayPage(
+            checkoutData: _checkoutDataFromState(state),
+          ),
         ),
       ),
       GoRoute(
         path: '/payment-success',
-        pageBuilder: (context, state) => _buildPage(
-          state,
-          const PaymentSuccessPage(),
-        ),
+        pageBuilder: (context, state) =>
+            _buildPage(state, const PaymentSuccessPage()),
       ),
 
       // Profile
@@ -248,68 +246,68 @@ GoRouter createAppRouter({
         ),
       ),
 
-    GoRoute(
-      path: '/reviews',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const ReviewsPage(),
+      GoRoute(
+        path: '/reviews',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const ReviewsPage(),
+        ),
       ),
-    ),
-    GoRoute(
-      path: '/wallet/add-funds',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const AddFundsPage(),
+      GoRoute(
+        path: '/wallet/add-funds',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const AddFundsPage(),
+        ),
       ),
-    ),
 
-    // Support & Legal
-    GoRoute(
-      path: '/help-center',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const HelpCenterPage(),
+      // Support & Legal
+      GoRoute(
+        path: '/help-center',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const HelpCenterPage(),
+        ),
       ),
-    ),
-    GoRoute(
-      path: '/support',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const SupportPage(),
+      GoRoute(
+        path: '/support',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const SupportPage(),
+        ),
       ),
-    ),
-    GoRoute(
-      path: '/privacy-policy',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const PrivacyPolicyPage(),
+      GoRoute(
+        path: '/privacy-policy',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const PrivacyPolicyPage(),
+        ),
       ),
-    ),
-    GoRoute(
-      path: '/terms-of-service',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const TermsOfServicePage(),
+      GoRoute(
+        path: '/terms-of-service',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const TermsOfServicePage(),
+        ),
       ),
-    ),
 
-    // Settings
-    GoRoute(
-      path: '/settings',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const SettingsPage(),
+      // Settings
+      GoRoute(
+        path: '/settings',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const SettingsPage(),
+        ),
       ),
-    ),
 
-    // Trip Planner
-    GoRoute(
-      path: '/trip-planner',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        const TripPlannerPage(),
+      // Trip Planner
+      GoRoute(
+        path: '/trip-planner',
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const TripPlannerPage(),
+        ),
       ),
-    ),
     ],
   );
 }
