@@ -1,21 +1,22 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../app/providers.dart';
 import '../../core/constants/image_urls.dart';
 import '../../core/widgets/primary_button.dart';
 
-class CoverPage extends StatelessWidget {
+class CoverPage extends ConsumerWidget {
   const CoverPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background Image
           CachedNetworkImage(
             imageUrl: Img.pyramidsMain,
             fit: BoxFit.cover,
@@ -26,8 +27,6 @@ class CoverPage extends StatelessWidget {
               color: Colors.grey[900],
             ),
           ),
-
-          // Gradient Overlay
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -42,15 +41,12 @@ class CoverPage extends StatelessWidget {
               ),
             ),
           ),
-
-          // Content
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 60, 24, 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Logo / App Name Badge
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -80,10 +76,7 @@ class CoverPage extends StatelessWidget {
                       ],
                     ),
                   ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.3),
-
                   const Spacer(),
-
-                  // Main Title
                   Text(
                     'Explore the',
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
@@ -92,7 +85,6 @@ class CoverPage extends StatelessWidget {
                           fontSize: 32,
                         ),
                   ).animate().fadeIn(delay: 200.ms, duration: 600.ms),
-
                   Text(
                     'Land of\nPharaohs',
                     style: Theme.of(context).textTheme.displayLarge?.copyWith(
@@ -102,10 +94,7 @@ class CoverPage extends StatelessWidget {
                           height: 1.0,
                         ),
                   ).animate().fadeIn(delay: 400.ms, duration: 600.ms).slideY(begin: 0.2),
-
                   const SizedBox(height: 16),
-
-                  // Subtitle
                   Text(
                     'Book hotels, tours, cars & restaurants\nall in one app',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -114,37 +103,35 @@ class CoverPage extends StatelessWidget {
                           height: 1.5,
                         ),
                   ).animate().fadeIn(delay: 600.ms, duration: 600.ms),
-
                   const SizedBox(height: 32),
-
-                  // Features Row
                   Row(
-                    children: [
+                    children: const [
                       _FeatureChip(icon: Icons.hotel_outlined, label: 'Hotels'),
-                      const SizedBox(width: 10),
+                      SizedBox(width: 10),
                       _FeatureChip(icon: Icons.tour_outlined, label: 'Tours'),
-                      const SizedBox(width: 10),
+                      SizedBox(width: 10),
                       _FeatureChip(icon: Icons.directions_car_outlined, label: 'Cars'),
-                      const SizedBox(width: 10),
+                      SizedBox(width: 10),
                       _FeatureChip(icon: Icons.restaurant_outlined, label: 'Food'),
                     ],
                   ).animate().fadeIn(delay: 800.ms, duration: 600.ms),
-
                   const SizedBox(height: 32),
-
-                  // Get Started Button
                   PrimaryButton(
                     label: 'Get Started',
                     icon: Icons.arrow_forward_rounded,
                     onPressed: () => context.go('/language'),
                   ).animate().fadeIn(delay: 1000.ms, duration: 600.ms).slideY(begin: 0.3),
-
                   const SizedBox(height: 16),
-
-                  // Already have account
                   Center(
                     child: TextButton(
-                      onPressed: () => context.go('/sign-in'),
+                      onPressed: () async {
+                        await ref
+                            .read(onboardingCompletedProvider.notifier)
+                            .setCompleted(true);
+                        if (context.mounted) {
+                          context.go('/sign-in');
+                        }
+                      },
                       child: Text(
                         'Already have an account? Sign In',
                         style: TextStyle(
