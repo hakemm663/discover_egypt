@@ -325,18 +325,43 @@ class _HotelCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              Text(hotel.name,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                hotel.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               Text(hotel.location,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(color: Colors.grey[600], fontSize: 12)),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  RatingWidget(
-                      rating: hotel.rating,
-                      reviewCount: hotel.reviewCount,
-                      size: 14),
-                  PriceTag(price: hotel.price, unit: 'night'),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: RatingWidget(
+                          rating: hotel.rating,
+                          reviewCount: hotel.reviewCount,
+                          size: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: PriceTag(price: hotel.price, unit: 'night'),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ],

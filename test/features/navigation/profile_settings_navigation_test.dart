@@ -29,7 +29,7 @@ void main() {
     }
   });
 
-  Widget createTestApp() {
+  Widget createTestApp({String initialLocation = '/profile'}) {
     final user = UserModel(
       id: 'user-1',
       email: 'traveler@example.com',
@@ -41,7 +41,13 @@ void main() {
     return ProviderScope(
       overrides: [
         currentUserProvider.overrideWith((ref) => Stream.value(user)),
-        appRouterProvider.overrideWithValue(createAppRouter()),
+        appRouterProvider.overrideWithValue(
+          createAppRouter(
+            isAuthenticated: true,
+            onboardingCompleted: true,
+            initialLocation: initialLocation,
+          ),
+        ),
       ],
       child: Consumer(
         builder: (context, ref, _) => MaterialApp.router(
@@ -51,54 +57,69 @@ void main() {
     );
   }
 
+  void configureViewport(WidgetTester tester) {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+  }
+
+  Future<void> tapBackButton(WidgetTester tester) async {
+    final backButton = find.byIcon(Icons.arrow_back_ios_new_rounded).hitTestable();
+    expect(backButton, findsWidgets);
+    await tester.tap(backButton.first);
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> scrollAndTap(WidgetTester tester, String label) async {
+    final target = find.text(label);
+    if (target.hitTestable().evaluate().isEmpty) {
+      final scrollable = find.byType(Scrollable).first;
+      await tester.scrollUntilVisible(target, 200, scrollable: scrollable);
+      await tester.pumpAndSettle();
+    }
+
+    await tester.tap(target.hitTestable().first);
+    await tester.pumpAndSettle();
+  }
+
   testWidgets('Profile menu navigates to reviews, support, and settings pages', (tester) async {
+    configureViewport(tester);
     await tester.pumpWidget(createTestApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Profile'));
-    await tester.pumpAndSettle();
     expect(find.byType(ProfileWalletPage), findsOneWidget);
 
-    await tester.tap(find.text('Reviews'));
-    await tester.pumpAndSettle();
+    await scrollAndTap(tester, 'Reviews');
     expect(find.text('My Reviews'), findsOneWidget);
-    await tester.pageBack();
-    await tester.pumpAndSettle();
+    await tapBackButton(tester);
 
-    await tester.tap(find.text('Support'));
-    await tester.pumpAndSettle();
+    await scrollAndTap(tester, 'Support');
     expect(find.text('Submit a ticket'), findsOneWidget);
-    await tester.pageBack();
-    await tester.pumpAndSettle();
+    await tapBackButton(tester);
 
-    await tester.tap(find.text('Settings'));
-    await tester.pumpAndSettle();
+    await scrollAndTap(tester, 'Settings');
     expect(find.text('Notifications'), findsOneWidget);
   });
 
   testWidgets('Settings page navigates to help center and legal pages', (tester) async {
+    configureViewport(tester);
     await tester.pumpWidget(createTestApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Profile'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Settings'));
-    await tester.pumpAndSettle();
+    await scrollAndTap(tester, 'Settings');
 
-    await tester.tap(find.text('Help Center'));
-    await tester.pumpAndSettle();
+    await scrollAndTap(tester, 'Help Center');
     expect(find.text('Help Center'), findsOneWidget);
-    await tester.pageBack();
-    await tester.pumpAndSettle();
+    await tapBackButton(tester);
 
-    await tester.tap(find.text('Privacy Policy'));
-    await tester.pumpAndSettle();
+    await scrollAndTap(tester, 'Privacy Policy');
     expect(find.text('Privacy Policy'), findsOneWidget);
-    await tester.pageBack();
-    await tester.pumpAndSettle();
+    await tapBackButton(tester);
 
-    await tester.tap(find.text('Terms of Service'));
-    await tester.pumpAndSettle();
+    await scrollAndTap(tester, 'Terms of Service');
     expect(find.text('Terms of Service'), findsOneWidget);
   });
 }

@@ -112,7 +112,6 @@ final notificationPreferencesProvider = StateNotifierProvider<
     NotificationPreferencesNotifier, NotificationPreferences>((ref) {
   return NotificationPreferencesNotifier(
     authService: ref.read(authServiceProvider),
-    firestore: FirebaseFirestore.instance,
   );
 });
 
@@ -120,15 +119,18 @@ class NotificationPreferencesNotifier
     extends StateNotifier<NotificationPreferences> {
   NotificationPreferencesNotifier({
     required AuthService authService,
-    required FirebaseFirestore firestore,
+    FirebaseFirestore? firestore,
   })  : _authService = authService,
-        _firestore = firestore,
+        _firestoreOverride = firestore,
         super(const NotificationPreferences()) {
     _loadPreferences();
   }
 
   final AuthService _authService;
-  final FirebaseFirestore _firestore;
+  final FirebaseFirestore? _firestoreOverride;
+
+  FirebaseFirestore get _firestore =>
+      _firestoreOverride ?? FirebaseFirestore.instance;
 
   void _loadPreferences() {
     final box = Hive.box(AppConstants.settingsBox);

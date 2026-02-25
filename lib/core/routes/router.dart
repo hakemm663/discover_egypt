@@ -6,9 +6,9 @@ import '../../features/onboarding/language_page.dart';
 import '../../features/onboarding/nationality_page.dart';
 import '../../features/onboarding/interests_page.dart';
 
+import '../../features/auth/forgot_password_page.dart';
 import '../../features/auth/sign_in_page.dart';
 import '../../features/auth/sign_up_page.dart';
-import '../../features/auth/forgot_password_page.dart';
 
 import '../../features/home/home_page.dart';
 
@@ -88,13 +88,14 @@ String? resolveAppRedirect({
 GoRouter createAppRouter({
   required bool isAuthenticated,
   required bool onboardingCompleted,
+  String initialLocation = '/home',
   List<NavigatorObserver> observers = const <NavigatorObserver>[],
   Listenable? refreshListenable,
 }) {
   return GoRouter(
     observers: observers,
     refreshListenable: refreshListenable,
-    initialLocation: '/home',
+    initialLocation: initialLocation,
     redirect: (context, state) {
       return resolveAppRedirect(
         location: state.uri.path,
@@ -312,21 +313,12 @@ GoRouter createAppRouter({
           const AddFundsPage(),
         ),
       ),
-    ),
-
-    // Support & Legal
-    GoRoute(
-      path: '/help-center',
-      pageBuilder: (context, state) => _buildPage(
-        state,
-        HelpCenterPage(topic: state.uri.queryParameters['topic']),
-
       // Support & Legal
       GoRoute(
         path: '/help-center',
         pageBuilder: (context, state) => _buildPage(
           state,
-          const HelpCenterPage(),
+          HelpCenterPage(topic: state.uri.queryParameters['topic']),
         ),
       ),
       GoRoute(

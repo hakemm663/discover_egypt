@@ -17,6 +17,9 @@ import 'package:flutter_test/flutter_test.dart';
 class _FakeAuthService extends AuthService {
   @override
   User? get currentUser => null;
+
+  @override
+  Stream<User?> get authStateChanges => Stream<User?>.value(null);
 }
 
 class _CapturingDiscoveryRepository extends DiscoveryRepository {
@@ -85,6 +88,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
+      await container.read(currentUserProvider.future);
       await container.read(hotelsProvider.future);
       await container.read(toursProvider.future);
       await container.read(carsProvider.future);
@@ -108,6 +112,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
+      await container.read(currentUserProvider.future);
       await container.read(hotelsProvider.future);
 
       expect(fakeRepository.hotelsUserId, 'guest-user');

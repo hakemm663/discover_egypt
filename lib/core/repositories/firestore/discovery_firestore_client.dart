@@ -19,7 +19,7 @@ class UserSignals {
 
 class DiscoveryFirestoreClient {
   DiscoveryFirestoreClient({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+      : _firestoreOverride = firestore;
 
   static const String signalsCollection = 'signals';
   static const String bookmarksDocument = 'bookmarks';
@@ -31,12 +31,14 @@ class DiscoveryFirestoreClient {
   static const String bookmarkedRestaurantIdsField = 'bookmarkedRestaurantIds';
   static const String recentlyViewedTourIdsField = 'recentlyViewedTourIds';
 
-  final FirebaseFirestore _firestore;
+  final FirebaseFirestore? _firestoreOverride;
 
   String get endpoint => ApiEndpoints.firebaseBaseUrl;
 
   Future<UserSignals> fetchUserSignals({required String userId}) async {
-    final userSignalsCollection = _firestore
+    final firestore = _firestoreOverride ?? FirebaseFirestore.instance;
+
+    final userSignalsCollection = firestore
         .collection(AppConstants.usersCollection)
         .doc(userId)
         .collection(signalsCollection);
