@@ -21,13 +21,20 @@ final restaurantsQueryProvider = StateProvider<RestaurantsQuery>((ref) => const 
 final restaurantsProvider = FutureProvider<PaginatedResult<RestaurantListing>>((ref) async {
   final repository = ref.read(discoveryRepositoryProvider);
   final query = ref.watch(restaurantsQueryProvider);
+  final profileUserId = ref.watch(currentUserProvider).valueOrNull?.id;
+  final authUserId = ref.read(authServiceProvider).currentUser?.uid;
+  final userId = profileUserId ?? authUserId ?? 'guest-user';
 
-  return repository.getRestaurants(
-    userId: 'demo-user',
-    query: PaginationQuery(
-      page: query.page,
-      pageSize: query.pageSize,
-      filters: {'cuisine': query.cuisine},
-    ),
-  );
+  try {
+    return await repository.getRestaurants(
+      userId: userId,
+      query: PaginationQuery(
+        page: query.page,
+        pageSize: query.pageSize,
+        filters: {'cuisine': query.cuisine},
+      ),
+    );
+  } catch (error) {
+    throw Exception('Unable to load restaurants: $error');
+  }
 });

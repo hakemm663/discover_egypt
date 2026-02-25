@@ -21,13 +21,20 @@ final toursQueryProvider = StateProvider<ToursQuery>((ref) => const ToursQuery()
 final toursProvider = FutureProvider<PaginatedResult<TourListing>>((ref) async {
   final repository = ref.read(discoveryRepositoryProvider);
   final query = ref.watch(toursQueryProvider);
+  final profileUserId = ref.watch(currentUserProvider).valueOrNull?.id;
+  final authUserId = ref.read(authServiceProvider).currentUser?.uid;
+  final userId = profileUserId ?? authUserId ?? 'guest-user';
 
-  return repository.getTours(
-    userId: 'demo-user',
-    query: PaginationQuery(
-      page: query.page,
-      pageSize: query.pageSize,
-      filters: {'category': query.category},
-    ),
-  );
+  try {
+    return await repository.getTours(
+      userId: userId,
+      query: PaginationQuery(
+        page: query.page,
+        pageSize: query.pageSize,
+        filters: {'category': query.category},
+      ),
+    );
+  } catch (error) {
+    throw Exception('Unable to load tours: $error');
+  }
 });
