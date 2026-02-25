@@ -264,24 +264,22 @@ GoRouter createAppRouter({
       // Booking
       GoRoute(
         path: '/booking-summary',
-        pageBuilder: (context, state) => _buildPage(
-          state,
-          const BookingSummaryPage(),
-        ),
+        pageBuilder: (context, state) =>
+            _buildPage(state, const BookingSummaryPage()),
       ),
       GoRoute(
         path: '/confirm-pay',
         pageBuilder: (context, state) => _buildPage(
           state,
-          ConfirmPayPage(checkoutData: _checkoutDataFromState(state)),
+          ConfirmPayPage(
+            checkoutData: _checkoutDataFromState(state),
+          ),
         ),
       ),
       GoRoute(
         path: '/payment-success',
-        pageBuilder: (context, state) => _buildPage(
-          state,
-          const PaymentSuccessPage(),
-        ),
+        pageBuilder: (context, state) =>
+            _buildPage(state, const PaymentSuccessPage()),
       ),
 
       // Profile
@@ -299,6 +297,7 @@ GoRouter createAppRouter({
           const MyBookingsPage(),
         ),
       ),
+
       GoRoute(
         path: '/reviews',
         pageBuilder: (context, state) => _buildPage(
