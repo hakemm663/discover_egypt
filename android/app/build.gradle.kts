@@ -18,6 +18,13 @@ val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "
 val mapsApiKeyFromLocalProperties = localProperties.getProperty("MAPS_API_KEY")
 val mapsApiKeyFromCi = System.getenv("MAPS_API_KEY")
 
+val requiresReleaseSigning = gradle.startParameter.taskNames.any {
+    val name = it.lowercase()
+    name.contains("release") || name.contains("bundle") || name.contains("publish")
+}
+val allowDebugSigningForRelease =
+    providers.gradleProperty("allowDebugSigningForRelease").orNull == "true"
+
 // Keystore properties
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
@@ -67,15 +74,18 @@ android {
 
     buildTypes {
         getByName("release") {
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
+            signingConfig = when {
+                keystorePropertiesFile.exists() -> signingConfigs.getByName("release")
+                allowDebugSigningForRelease -> signingConfigs.getByName("debug")
+                requiresReleaseSigning -> throw GradleException(
+                    "Release signing key is required. Add android/key.properties or pass -PallowDebugSigningForRelease=true for local-only builds."
+                )
+                else -> signingConfigs.getByName("debug")
             }
-            
+
             isMinifyEnabled = true
             isShrinkResources = true
-            
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -88,6 +98,7 @@ android {
         }
         
         getByName("debug") {
+            applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
         }
     }

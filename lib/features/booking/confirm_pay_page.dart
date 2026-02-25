@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,7 +9,6 @@ import '../../core/widgets/primary_button.dart';
 import '../../core/utils/helpers.dart';
 import '../../app/providers.dart';
 import 'booking_checkout_data.dart';
-import 'checkout_payment_controller.dart';
 
 class ConfirmPayPage extends ConsumerStatefulWidget {
   const ConfirmPayPage({super.key, required this.checkoutData});
@@ -24,47 +22,15 @@ class ConfirmPayPage extends ConsumerStatefulWidget {
 class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
   String _paymentMethod = 'card';
   bool _isProcessing = false;
-  final _checkoutController = CheckoutPaymentController();
-
-  final _cardNumberController = TextEditingController();
-  final _expiryController = TextEditingController();
-  final _cvvController = TextEditingController();
-  final _nameController = TextEditingController();
+  String? _paymentError;
 
   double get _paymentAmount => widget.checkoutData.total;
 
-  @override
-  void dispose() {
-    _cardNumberController.dispose();
-    _expiryController.dispose();
-    _cvvController.dispose();
-    _nameController.dispose();
-    super.dispose();
-  }
-
   Future<void> _processPayment() async {
-    if (_paymentMethod == 'card') {
-      final validation = _checkoutController.validateCardInput(
-        CheckoutCardInput(
-          cardNumber: _cardNumberController.text,
-          expiry: _expiryController.text,
-          cvv: _cvvController.text,
-          cardholderName: _nameController.text,
-          saveCardRequested: false,
-        ),
-      );
-
-      if (!validation.isValid) {
-        Helpers.showSnackBar(
-          context,
-          validation.failure!.message,
-          isError: true,
-        );
-        return;
-      }
-    }
-
-    setState(() => _isProcessing = true);
+    setState(() {
+      _isProcessing = true;
+      _paymentError = null;
+    });
 
     try {
       final paymentService = ref.read(paymentServiceProvider);
@@ -95,6 +61,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
 
       String paymentStatus = 'failed';
       String paymentId = '';
+      String? errorMessage;
 
       if (_paymentMethod == 'card') {
         final result = await paymentService.processPayment(
@@ -106,6 +73,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
         );
         paymentStatus = result.status;
         paymentId = result.paymentId;
+        errorMessage = result.errorMessage;
       } else if (_paymentMethod == 'wallet') {
         final walletResult = await paymentService.processWalletPayment(
           bookingId: bookingId,
@@ -145,21 +113,35 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
 
       if (normalizedStatus == 'succeeded') {
         context.go('/payment-success');
-      } else if (normalizedStatus == 'requires_action') {
-        Helpers.showSnackBar(
-          context,
-          'Payment requires additional action. Please complete verification.',
-          isError: true,
-        );
-      } else {
-        Helpers.showSnackBar(
-          context,
-          'Payment failed ($normalizedStatus).',
-          isError: true,
-        );
+        return;
       }
+
+      if (normalizedStatus == 'canceled' || normalizedStatus == 'cancelled') {
+        setState(() {
+          _paymentError =
+              'You canceled the payment. You can retry whenever you are ready.';
+        });
+        return;
+      }
+
+      if (normalizedStatus == 'declined' ||
+          normalizedStatus == 'requires_payment_method' ||
+          normalizedStatus == 'failed') {
+        setState(() {
+          _paymentError = errorMessage ??
+              'Your card was declined. Please use another card or retry.';
+        });
+        return;
+      }
+
+      setState(() {
+        _paymentError = 'Payment could not be completed ($normalizedStatus).';
+      });
     } catch (e) {
       if (mounted) {
+        setState(() {
+          _paymentError = 'Payment failed: $e';
+        });
         Helpers.showSnackBar(context, 'Payment failed: $e', isError: true);
       }
     } finally {
@@ -196,7 +178,7 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
                   _PaymentMethodTile(
                     icon: Icons.credit_card_rounded,
                     title: 'Credit / Debit Card',
-                    subtitle: 'Visa, Mastercard, Amex',
+                    subtitle: 'Secure Stripe PaymentSheet checkout',
                     value: 'card',
                     groupValue: _paymentMethod,
                     onChanged: (value) =>
@@ -227,127 +209,37 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
               ),
             ),
             const SizedBox(height: 24),
-            if (_paymentMethod == 'card') ...[
-              Text(
-                'Card Details',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+            if (_paymentMethod == 'card')
+              const RoundedCard(
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.verified_user_rounded),
+                  title: Text('Card details are collected in Stripe PaymentSheet'),
+                  subtitle: Text(
+                    'We do not collect raw card number, expiry, or CVV in-app.',
+                  ),
+                ),
               ),
-              const SizedBox(height: 16),
+            if (_paymentMethod == 'card') const SizedBox(height: 24),
+            if (_paymentError != null) ...[
               RoundedCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Card Number',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
+                      'Payment issue',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: Colors.red.shade700,
                           ),
                     ),
                     const SizedBox(height: 8),
-                    TextField(
-                      controller: _cardNumberController,
-                      keyboardType: TextInputType.number,
-                      maxLength: 16,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[0-9 ]')),
-                      ],
-                      decoration: const InputDecoration(
-                        hintText: '1234 5678 9012 3456',
-                        counterText: '',
-                        prefixIcon: Icon(Icons.credit_card_rounded),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Expiry Date',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                              ),
-                              const SizedBox(height: 8),
-                              TextField(
-                                controller: _expiryController,
-                                keyboardType: TextInputType.datetime,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.allow(
-                                    RegExp(r'[0-9/]'),
-                                  ),
-                                ],
-                                decoration: const InputDecoration(
-                                  hintText: 'MM/YY',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'CVV',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                              ),
-                              const SizedBox(height: 8),
-                              TextField(
-                                controller: _cvvController,
-                                keyboardType: TextInputType.number,
-                                maxLength: 4,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
-                                obscureText: true,
-                                decoration: const InputDecoration(
-                                  hintText: '123',
-                                  counterText: '',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Cardholder Name',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _nameController,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        hintText: 'John Doe',
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ListTile(
-                      enabled: false,
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.save_outlined),
-                      title: const Text('Save card for future payments'),
-                      subtitle: const Text(
-                        'Unavailable until backend tokenization support is added.',
-                      ),
+                    Text(_paymentError!),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: _isProcessing ? null : _processPayment,
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Retry payment'),
                     ),
                   ],
                 ),
@@ -394,7 +286,9 @@ class _ConfirmPayPageState extends ConsumerState<ConfirmPayPage> {
             ),
             const SizedBox(height: 24),
             PrimaryButton(
-              label: 'Pay \$${_paymentAmount.toStringAsFixed(2)}',
+              label: _paymentError == null
+                  ? 'Pay \$${_paymentAmount.toStringAsFixed(2)}'
+                  : 'Retry \$${_paymentAmount.toStringAsFixed(2)}',
               icon: Icons.lock_rounded,
               isLoading: _isProcessing,
               onPressed: _processPayment,

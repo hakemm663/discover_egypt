@@ -45,7 +45,7 @@ class AuthService {
       await _firestore
           .collection(AppConstants.usersCollection)
           .doc(credential.user!.uid)
-          .set(userModel.toJson());
+          .set({...userModel.toJson(), 'onboardingCompleted': false});
 
       // Send email verification
       await credential.user!.sendEmailVerification();
@@ -114,12 +114,74 @@ class AuthService {
     return UserModel.fromJson(doc.data()!);
   }
 
+
+
+  Future<bool?> fetchOnboardingCompleted(String userId) async {
+    final doc = await _firestore
+        .collection(AppConstants.usersCollection)
+        .doc(userId)
+        .get();
+
+    if (!doc.exists) {
+      return null;
+    }
+
+    final data = doc.data();
+    if (data == null) {
+      return null;
+    }
+
+    return data['onboardingCompleted'] == true;
+  }
+
+  Future<void> updateOnboardingCompleted({
+    required String userId,
+    required bool completed,
+  }) async {
+    await _firestore
+        .collection(AppConstants.usersCollection)
+        .doc(userId)
+        .set({'onboardingCompleted': completed}, SetOptions(merge: true));
+  }
   // Update user profile
   Future<void> updateUserProfile(UserModel user) async {
     await _firestore
         .collection(AppConstants.usersCollection)
         .doc(user.id)
         .update(user.toJson());
+  }
+
+
+  Future<void> updateCountry({
+    required String userId,
+    required String country,
+  }) async {
+    await _firestore
+        .collection(AppConstants.usersCollection)
+        .doc(userId)
+        .set({'nationality': country, 'updatedAt': Timestamp.now()}, SetOptions(merge: true));
+  }
+
+  Future<void> updatePassword({
+    required String email,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw 'You need to sign in again before changing your password.';
+    }
+
+    try {
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+      await user.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthError(e);
+    }
   }
 
   // Handle auth errors

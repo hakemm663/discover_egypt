@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../core/constants/api_endpoints.dart';
 import '../core/constants/app_constants.dart';
 import '../core/models/user_model.dart';
 import '../core/navigation/navigation_tracking_observer.dart';
@@ -52,6 +54,108 @@ class NavigationTrackingConsentNotifier extends StateNotifier<bool> {
   }
 }
 
+class NotificationPreferences {
+  const NotificationPreferences({
+    this.pushEnabled = true,
+    this.emailEnabled = false,
+    this.promotionsEnabled = true,
+  });
+
+  final bool pushEnabled;
+  final bool emailEnabled;
+  final bool promotionsEnabled;
+
+  NotificationPreferences copyWith({
+    bool? pushEnabled,
+    bool? emailEnabled,
+    bool? promotionsEnabled,
+  }) {
+    return NotificationPreferences(
+      pushEnabled: pushEnabled ?? this.pushEnabled,
+      emailEnabled: emailEnabled ?? this.emailEnabled,
+      promotionsEnabled: promotionsEnabled ?? this.promotionsEnabled,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'push': pushEnabled,
+      'email': emailEnabled,
+      'promotions': promotionsEnabled,
+      'updatedAt': Timestamp.now(),
+    };
+  }
+
+  Map<String, dynamic> toLocalJson() {
+    return {
+      'push': pushEnabled,
+      'email': emailEnabled,
+      'promotions': promotionsEnabled,
+    };
+  }
+
+  static NotificationPreferences fromLocal(dynamic value) {
+    if (value is! Map) {
+      return const NotificationPreferences();
+    }
+
+    final map = Map<String, dynamic>.from(value.cast<dynamic, dynamic>());
+    return NotificationPreferences(
+      pushEnabled: map['push'] == true,
+      emailEnabled: map['email'] == true,
+      promotionsEnabled: map['promotions'] != false,
+    );
+  }
+}
+
+final notificationPreferencesProvider = StateNotifierProvider<
+    NotificationPreferencesNotifier, NotificationPreferences>((ref) {
+  return NotificationPreferencesNotifier(
+    authService: ref.read(authServiceProvider),
+    firestore: FirebaseFirestore.instance,
+  );
+});
+
+class NotificationPreferencesNotifier
+    extends StateNotifier<NotificationPreferences> {
+  NotificationPreferencesNotifier({
+    required AuthService authService,
+    required FirebaseFirestore firestore,
+  })  : _authService = authService,
+        _firestore = firestore,
+        super(const NotificationPreferences()) {
+    _loadPreferences();
+  }
+
+  final AuthService _authService;
+  final FirebaseFirestore _firestore;
+
+  void _loadPreferences() {
+    final box = Hive.box(AppConstants.settingsBox);
+    state = NotificationPreferences.fromLocal(
+      box.get(AppConstants.notificationPreferencesKey),
+    );
+  }
+
+  Future<void> setPreferences(NotificationPreferences preferences) async {
+    state = preferences;
+
+    final box = Hive.box(AppConstants.settingsBox);
+    await box.put(
+      AppConstants.notificationPreferencesKey,
+      preferences.toLocalJson(),
+    );
+
+    final user = _authService.currentUser;
+    if (user == null) return;
+
+    await _firestore
+        .collection(AppConstants.usersCollection)
+        .doc(user.uid)
+        .set({'notificationPreferences': preferences.toJson()}, SetOptions(merge: true));
+  }
+}
+
 final navigationTrackingServiceProvider = Provider<NavigationTrackingService>((ref) {
   final service = NavigationTrackingService(
     firebaseService: ref.watch(firebaseServiceProvider),
@@ -75,15 +179,30 @@ final navigationTrackingObserverProvider =
 });
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final authUser = ref.watch(authStateChangesProvider).valueOrNull;
+  final onboardingCompleted = ref.watch(onboardingCompletedProvider);
+
   return createAppRouter(
+    isAuthenticated: authUser != null,
+    onboardingCompleted: onboardingCompleted,
     observers: [ref.watch(navigationTrackingObserverProvider)],
   );
 });
 
-final hotelsApiClientProvider = Provider<HotelsApiClient>((ref) => HotelsApiClient());
-final toursApiClientProvider = Provider<ToursApiClient>((ref) => ToursApiClient());
-final carsApiClientProvider = Provider<CarsApiClient>((ref) => CarsApiClient());
-final restaurantsApiClientProvider = Provider<RestaurantsApiClient>((ref) => RestaurantsApiClient());
+final discoveryDioProvider = Provider<Dio>((ref) => Dio(BaseOptions(baseUrl: ApiEndpoints.baseUrl)));
+final discoveryHttpClientProvider = Provider<DiscoveryHttpClient>((ref) {
+  return DiscoveryHttpClient(dio: ref.read(discoveryDioProvider));
+});
+
+final hotelsApiClientProvider =
+    Provider<HotelsApiClient>((ref) => HotelsApiClient(httpClient: ref.read(discoveryHttpClientProvider)));
+final toursApiClientProvider =
+    Provider<ToursApiClient>((ref) => ToursApiClient(httpClient: ref.read(discoveryHttpClientProvider)));
+final carsApiClientProvider =
+    Provider<CarsApiClient>((ref) => CarsApiClient(httpClient: ref.read(discoveryHttpClientProvider)));
+final restaurantsApiClientProvider = Provider<RestaurantsApiClient>(
+  (ref) => RestaurantsApiClient(httpClient: ref.read(discoveryHttpClientProvider)),
+);
 final discoveryFirestoreClientProvider =
     Provider<DiscoveryFirestoreClient>((ref) => DiscoveryFirestoreClient());
 
@@ -215,7 +334,67 @@ class LanguageNotifier extends StateNotifier<Locale> {
 }
 
 // Onboarding Completed Provider
-final onboardingCompletedProvider = StateProvider<bool>((ref) {
-  final box = Hive.box(AppConstants.settingsBox);
-  return box.get(AppConstants.onboardingKey, defaultValue: false);
+final onboardingCompletedProvider =
+    StateNotifierProvider<OnboardingStatusNotifier, bool>((ref) {
+  return OnboardingStatusNotifier(ref);
 });
+
+class OnboardingStatusNotifier extends StateNotifier<bool> {
+  OnboardingStatusNotifier(this._ref) : super(false) {
+    _loadLocalOnboardingStatus();
+    _authSubscription = _ref.read(authServiceProvider).authStateChanges.listen(
+      _syncFromRemote,
+    );
+  }
+
+  final Ref _ref;
+  StreamSubscription<User?>? _authSubscription;
+
+  void _loadLocalOnboardingStatus() {
+    final box = Hive.box(AppConstants.settingsBox);
+    state = box.get(AppConstants.onboardingKey, defaultValue: false) as bool;
+  }
+
+  Future<void> _syncFromRemote(User? user) async {
+    if (user == null) {
+      return;
+    }
+
+    final authService = _ref.read(authServiceProvider);
+    final remoteStatus = await authService.fetchOnboardingCompleted(user.uid);
+
+    if (remoteStatus == null) {
+      await authService.updateOnboardingCompleted(
+        userId: user.uid,
+        completed: state,
+      );
+      return;
+    }
+
+    if (remoteStatus != state) {
+      state = remoteStatus;
+      final box = Hive.box(AppConstants.settingsBox);
+      box.put(AppConstants.onboardingKey, remoteStatus);
+    }
+  }
+
+  Future<void> setCompleted(bool completed) async {
+    state = completed;
+    final box = Hive.box(AppConstants.settingsBox);
+    await box.put(AppConstants.onboardingKey, completed);
+
+    final authUser = _ref.read(authServiceProvider).currentUser;
+    if (authUser != null) {
+      await _ref.read(authServiceProvider).updateOnboardingCompleted(
+            userId: authUser.uid,
+            completed: completed,
+          );
+    }
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
+  }
+}

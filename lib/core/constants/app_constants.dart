@@ -14,6 +14,8 @@ class AppConstants {
   static const String navigationTrackingConsentKey =
       'navigation_tracking_consent';
   static const String navigationEventsQueueKey = 'navigation_events_queue';
+  static const String notificationPreferencesKey = 'notification_preferences';
+  static const String supportTicketsQueueKey = 'support_tickets_queue';
 
   // Firebase Collections
   static const String usersCollection = 'users';

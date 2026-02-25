@@ -305,6 +305,37 @@ class DatabaseService {
     });
   }
 
+
+
+  Future<void> reconcileWalletTopUp({
+    required String userId,
+    required double amount,
+    required String paymentId,
+    required String paymentStatus,
+  }) async {
+    final userRef = _firestore.collection(AppConstants.usersCollection).doc(userId);
+    final txRef = userRef.collection('wallet_transactions').doc(paymentId);
+    final normalized = paymentStatus.toLowerCase();
+
+    await _firestore.runTransaction((transaction) async {
+      transaction.set(txRef, {
+        'id': paymentId,
+        'userId': userId,
+        'type': 'top_up',
+        'amount': amount,
+        'status': normalized,
+        'createdAt': Timestamp.now(),
+        'updatedAt': Timestamp.now(),
+      }, SetOptions(merge: true));
+
+      if (normalized == 'succeeded') {
+        transaction.set(userRef, {
+          'walletBalance': FieldValue.increment(amount),
+          'updatedAt': Timestamp.now(),
+        }, SetOptions(merge: true));
+      }
+    });
+  }
   Future<void> applyBackendPaymentStatus({
     required String bookingId,
     required String paymentStatus,
@@ -386,6 +417,64 @@ class DatabaseService {
     return snapshot.docs
         .map((doc) => ReviewModel.fromJson(doc.data()))
         .toList();
+  }
+
+
+  Stream<List<ReviewModel>> watchUserReviews(String userId) {
+    return _firestore
+        .collection(AppConstants.reviewsCollection)
+        .where('userId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => ReviewModel.fromJson(doc.data())).toList());
+  }
+
+  Future<void> updateReview({
+    required String reviewId,
+    required String userId,
+    required double rating,
+    required String comment,
+  }) async {
+    final docRef = _firestore.collection(AppConstants.reviewsCollection).doc(reviewId);
+    final snapshot = await docRef.get();
+
+    if (!snapshot.exists) {
+      throw 'Review no longer exists.';
+    }
+
+    final review = ReviewModel.fromJson(snapshot.data()!);
+    if (review.userId != userId) {
+      throw 'You do not have permission to edit this review.';
+    }
+
+    await docRef.set({
+      'rating': rating,
+      'comment': comment,
+      'updatedAt': Timestamp.now(),
+    }, SetOptions(merge: true));
+
+    await _updateItemRating(review.itemId, review.itemType);
+  }
+
+  Future<void> deleteReview({
+    required String reviewId,
+    required String userId,
+  }) async {
+    final docRef = _firestore.collection(AppConstants.reviewsCollection).doc(reviewId);
+    final snapshot = await docRef.get();
+
+    if (!snapshot.exists) {
+      throw 'Review no longer exists.';
+    }
+
+    final review = ReviewModel.fromJson(snapshot.data()!);
+    if (review.userId != userId) {
+      throw 'You do not have permission to delete this review.';
+    }
+
+    await docRef.delete();
+    await _updateItemRating(review.itemId, review.itemType);
   }
 
   Future<void> _updateItemRating(String itemId, String itemType) async {
