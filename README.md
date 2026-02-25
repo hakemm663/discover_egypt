@@ -172,6 +172,8 @@ flutter build appbundle --release \
 
 ## Pre-launch gate checklist
 
+For the full Android Play rollout process (permissions, Data Safety form, signing, and pre-launch report verification), use [`docs/play-release-checklist.md`](docs/play-release-checklist.md).
+
 - [ ] Firebase project mapping verified by environment
 - [ ] Backend health and payment endpoints reachable
 - [ ] Stripe publishable key + webhook config validated

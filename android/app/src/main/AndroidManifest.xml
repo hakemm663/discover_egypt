@@ -1,27 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.discoveregypt.app">
-    
-    <!-- Essential Permissions -->
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    
-    <!-- Location Permissions -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    
-    <!-- Camera & Storage -->
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
-    
-    <!-- Notification Permission -->
-    <uses-permission android:name="android.permission.VIBRATE"/>
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-    
-    <!-- Phone Permission for booking calls -->
-    <uses-permission android:name="android.permission.CALL_PHONE"/>
-    
+
+    <!-- Required for API calls, Firebase, Stripe and remote content. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Required for push notification vibration feedback. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <application
         android:label="Discover Egypt"
         android:name="${applicationName}"
@@ -33,7 +19,7 @@
         android:fullBackupContent="@xml/backup_descriptor"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:theme="@style/LaunchTheme">
-        
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -43,27 +29,27 @@
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize"
             android:screenOrientation="portrait">
-            
+
             <meta-data
-              android:name="io.flutter.embedding.android.NormalTheme"
-              android:resource="@style/NormalTheme"
-              />
-              
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme" />
+
             <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            
+
             <!-- Deep Link Support -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https"
-                      android:host="discoveregypt.app" />
+                <data
+                    android:scheme="https"
+                    android:host="discoveregypt.app" />
             </intent-filter>
         </activity>
-        
+
         <!-- Firebase Messaging Service -->
         <service
             android:name=".MyFirebaseMessagingService"
@@ -72,16 +58,16 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-        
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-            
+
         <!-- Google Maps API Key -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="${MAPS_API_KEY}"/>
-            
+            android:value="${MAPS_API_KEY}" />
+
         <!-- Firebase Cloud Messaging -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
@@ -92,9 +78,9 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="discover_egypt_notifications" />
-            
+
     </application>
-    
+
     <!-- Queries for external apps -->
     <queries>
         <intent>
