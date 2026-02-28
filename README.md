@@ -131,15 +131,7 @@ This command regenerates files and fails if `lib/core/api/generated/` changes, w
 
 ## App screens
 
-The following screens showcase the current UI and user journey (place the provided screenshots in `docs/screens/` using the same filenames):
 
-<p align="center">
-  <img src="docs/screens/booking-summary.jpg" alt="Booking summary screen" width="220" />
-  <img src="docs/screens/booking-summary.jpg" alt="Booking summary screen" width="220" />
-  <img src="docs/screens/car-rental.jpg" alt="Car rental screen" width="220" />
-  <img src="docs/screens/settings.jpg" alt="Settings screen" width="220" />
-  <img src="docs/screens/sign-in.jpg" alt="Sign in screen" width="220" />
-</p>
 
 ---
 
