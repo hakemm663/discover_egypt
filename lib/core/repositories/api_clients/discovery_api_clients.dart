@@ -4,7 +4,7 @@ import '../../constants/image_urls.dart';
 import '../models/pagination_models.dart';
 
 class HotelsApiClient {
-  HotelsApiClient({DiscoveryGeneratedApi? sdk}) : _sdk = sdk ?? const DiscoveryGeneratedApi();
+  HotelsApiClient({DiscoveryGeneratedApi? sdk}) : _sdk = sdk ?? DiscoveryGeneratedApi(baseUrl: AppConfig.baseUrl);
 
   final DiscoveryGeneratedApi _sdk;
 
@@ -39,6 +39,7 @@ class HotelsApiClient {
     return items;
 import 'package:dio/dio.dart';
 
+import '../../config/app_config.dart';
 import '../../constants/api_endpoints.dart';
 import '../models/pagination_models.dart';
 
@@ -55,7 +56,7 @@ class DiscoveryHttpClient {
   final Dio _dio;
 
   DiscoveryHttpClient({Dio? dio})
-      : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiEndpoints.baseUrl));
+      : _dio = dio ?? Dio(BaseOptions(baseUrl: AppConfig.baseUrl));
 
   Future<Map<String, dynamic>> get(
     String path, {
@@ -124,7 +125,7 @@ class HotelsApiClient {
 }
 
 class ToursApiClient {
-  ToursApiClient({DiscoveryGeneratedApi? sdk}) : _sdk = sdk ?? const DiscoveryGeneratedApi();
+  ToursApiClient({DiscoveryGeneratedApi? sdk}) : _sdk = sdk ?? DiscoveryGeneratedApi(baseUrl: AppConfig.baseUrl);
 
   final DiscoveryGeneratedApi _sdk;
 
@@ -155,7 +156,7 @@ class ToursApiClient {
 }
 
 class CarsApiClient {
-  CarsApiClient({DiscoveryGeneratedApi? sdk}) : _sdk = sdk ?? const DiscoveryGeneratedApi();
+  CarsApiClient({DiscoveryGeneratedApi? sdk}) : _sdk = sdk ?? DiscoveryGeneratedApi(baseUrl: AppConfig.baseUrl);
 
   final DiscoveryGeneratedApi _sdk;
 
@@ -189,7 +190,7 @@ class CarsApiClient {
 }
 
 class RestaurantsApiClient {
-  RestaurantsApiClient({DiscoveryGeneratedApi? sdk}) : _sdk = sdk ?? const DiscoveryGeneratedApi();
+  RestaurantsApiClient({DiscoveryGeneratedApi? sdk}) : _sdk = sdk ?? DiscoveryGeneratedApi(baseUrl: AppConfig.baseUrl);
 
   final DiscoveryGeneratedApi _sdk;
 

@@ -8,8 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-import '../core/constants/api_endpoints.dart';
 import '../core/constants/app_constants.dart';
+import '../core/config/app_config.dart';
 import '../core/models/user_model.dart';
 import '../core/navigation/navigation_tracking_observer.dart';
 import '../core/repositories/api_clients/discovery_api_clients.dart';
@@ -189,7 +189,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
-final discoveryDioProvider = Provider<Dio>((ref) => Dio(BaseOptions(baseUrl: ApiEndpoints.baseUrl)));
+final discoveryDioProvider = Provider<Dio>((ref) => Dio(BaseOptions(baseUrl: AppConfig.baseUrl)));
 final discoveryHttpClientProvider = Provider<DiscoveryHttpClient>((ref) {
   return DiscoveryHttpClient(dio: ref.read(discoveryDioProvider));
 });
