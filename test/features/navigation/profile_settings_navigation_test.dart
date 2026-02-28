@@ -4,6 +4,9 @@ import 'package:discover_egypt/app/providers.dart';
 import 'package:discover_egypt/core/constants/app_constants.dart';
 import 'package:discover_egypt/core/models/user_model.dart';
 import 'package:discover_egypt/core/routes/router.dart';
+import 'package:discover_egypt/features/auth/sign_in_page.dart';
+import 'package:discover_egypt/features/home/home_page.dart';
+import 'package:discover_egypt/features/onboarding/cover_page.dart';
 import 'package:discover_egypt/features/profile/profile_wallet_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,7 +32,10 @@ void main() {
     }
   });
 
-  Widget createTestApp() {
+  Widget createTestApp({
+    bool isAuthenticated = true,
+    bool onboardingCompleted = true,
+  }) {
     final user = UserModel(
       id: 'user-1',
       email: 'traveler@example.com',
@@ -41,7 +47,12 @@ void main() {
     return ProviderScope(
       overrides: [
         currentUserProvider.overrideWith((ref) => Stream.value(user)),
-        appRouterProvider.overrideWithValue(createAppRouter()),
+        appRouterProvider.overrideWithValue(
+          createAppRouter(
+            isAuthenticated: isAuthenticated,
+            onboardingCompleted: onboardingCompleted,
+          ),
+        ),
       ],
       child: Consumer(
         builder: (context, ref, _) => MaterialApp.router(
@@ -100,5 +111,73 @@ void main() {
     await tester.tap(find.text('Terms of Service'));
     await tester.pumpAndSettle();
     expect(find.text('Terms of Service'), findsOneWidget);
+  });
+
+  testWidgets('redirects to cover when onboarding is not completed', (tester) async {
+    await tester.pumpWidget(
+      createTestApp(isAuthenticated: true, onboardingCompleted: false),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CoverPage), findsOneWidget);
+  });
+
+  testWidgets('redirects unauthenticated users to sign-in after onboarding', (tester) async {
+    await tester.pumpWidget(
+      createTestApp(isAuthenticated: false, onboardingCompleted: true),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SignInPage), findsOneWidget);
+  });
+
+
+  testWidgets('allows unauthenticated users on auth routes after onboarding', (tester) async {
+    final router = createAppRouter(
+      isAuthenticated: false,
+      onboardingCompleted: true,
+    );
+    router.go('/sign-in');
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appRouterProvider.overrideWithValue(router),
+        ],
+        child: Consumer(
+          builder: (context, ref, _) => MaterialApp.router(
+            routerConfig: ref.watch(appRouterProvider),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SignInPage), findsOneWidget);
+    expect(find.byType(HomePage), findsNothing);
+  });
+  testWidgets('redirects authenticated users away from auth routes', (tester) async {
+    final router = createAppRouter(
+      isAuthenticated: true,
+      onboardingCompleted: true,
+    );
+    router.go('/sign-in');
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appRouterProvider.overrideWithValue(router),
+        ],
+        child: Consumer(
+          builder: (context, ref, _) => MaterialApp.router(
+            routerConfig: ref.watch(appRouterProvider),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(HomePage), findsOneWidget);
+    expect(find.byType(SignInPage), findsNothing);
   });
 }
