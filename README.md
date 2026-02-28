@@ -198,6 +198,29 @@ Useful command for fingerprints:
 
 ---
 
+## Firebase runtime/deployment setup (including web)
+
+`lib/firebase_options.dart` is expected to be generated from FlutterFire and now includes a `web` target so `DefaultFirebaseOptions.currentPlatform` resolves correctly on browser builds.
+
+### Required setup
+
+1. Install Flutter + Dart + FlutterFire CLI locally:
+   ```bash
+   dart pub global activate flutterfire_cli
+   ```
+2. Log in to Firebase and select the intended project for your environment (dev/staging/prod).
+3. Regenerate options with web explicitly included:
+   ```bash
+   flutterfire configure \
+     --project=discover-egypt-95efd \
+     --platforms=android,ios,web \
+     --android-package-name=com.discoveregypt.app \
+     --ios-bundle-id=com.discoveregypt.app
+   ```
+4. Commit the regenerated `lib/firebase_options.dart` and verify the generated `web` block points to the intended Firebase project before deployment.
+
+> For staging/prod, re-run the same command with the environment-specific Firebase project id to avoid cross-environment analytics/auth data leakage.
+
 ## Environment matrix
 
 | Environment | Firebase project ID | API base URL | Config source |
