@@ -259,6 +259,36 @@ Before every PR:
 ./scripts/check_no_secret_constants.sh
 ```
 
+---
+
+## Web deployment (Firebase Hosting)
+
+This project is configured to deploy Flutter web as **static assets** on Firebase Hosting.
+
+### Files committed for hosting
+
+- `firebase.json` with `hosting.public` set to `build/web`
+- `.firebaserc` with the default Firebase project
+
+### Build and deploy
+
+1. Build Flutter web release artifacts:
+
+   ```bash
+   flutter build web --release
+   ```
+
+2. Deploy static files to Firebase Hosting:
+
+   ```bash
+   firebase deploy --only hosting
+   ```
+
+### Notes
+
+- `firebase.json` includes a rewrite from `**` to `/index.html` so deep links work in the Flutter web SPA.
+- Ensure you are authenticated (`firebase login`) and have access to the configured Firebase project before deploying.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
 ---
