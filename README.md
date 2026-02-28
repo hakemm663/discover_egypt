@@ -134,7 +134,7 @@ This command regenerates files and fails if `lib/core/api/generated/` changes, w
 The following screens showcase the current UI and user journey (place the provided screenshots in `docs/screens/` using the same filenames):
 
 <p align="center">
-  <img src="C:\Users\hakem\OneDrive\Pictures\Screenshots\Screenshot 2026-02-22 192433.png" alt="Home screen" width="220" />
+  <img src="docs/screens/booking-summary.jpg" alt="Booking summary screen" width="220" />
   <img src="docs/screens/booking-summary.jpg" alt="Booking summary screen" width="220" />
   <img src="docs/screens/car-rental.jpg" alt="Car rental screen" width="220" />
   <img src="docs/screens/settings.jpg" alt="Settings screen" width="220" />
