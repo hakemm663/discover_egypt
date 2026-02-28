@@ -3,6 +3,24 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 import '../constants/app_constants.dart';
 
+enum SocialAuthStatus { success, cancelled, accountExistsWithDifferentCredential }
+
+class SocialAuthResult {
+  const SocialAuthResult({
+    required this.status,
+    this.credential,
+    this.pendingCredential,
+    this.email,
+  });
+
+  final SocialAuthStatus status;
+  final UserCredential? credential;
+  final AuthCredential? pendingCredential;
+  final String? email;
+
+  bool get isSuccess => status == SocialAuthStatus.success;
+}
+
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -184,6 +202,71 @@ class AuthService {
     }
   }
 
+  Future<SocialAuthResult> signInWithGoogleCredentialExchange({
+    required String idToken,
+    String? accessToken,
+  }) async {
+    final googleCredential = GoogleAuthProvider.credential(
+      idToken: idToken,
+      accessToken: accessToken,
+    );
+
+    return _exchangeSocialCredential(googleCredential);
+  }
+
+  Future<SocialAuthResult> signInWithFacebookCredentialExchange({
+    required String accessToken,
+  }) async {
+    final facebookCredential = FacebookAuthProvider.credential(accessToken);
+    return _exchangeSocialCredential(facebookCredential);
+  }
+
+  Future<SocialAuthResult> linkSocialCredential({
+    required AuthCredential credential,
+  }) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      throw 'You must be signed in before linking a social account.';
+    }
+
+    try {
+      final userCredential = await currentUser.linkWithCredential(credential);
+      return SocialAuthResult(
+        status: SocialAuthStatus.success,
+        credential: userCredential,
+      );
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'provider-already-linked') {
+        throw 'This social account is already linked to your profile.';
+      }
+      throw _handleAuthError(e);
+    }
+  }
+
+  Future<SocialAuthResult> _exchangeSocialCredential(
+    AuthCredential credential,
+  ) async {
+    try {
+      final userCredential = await _auth.signInWithCredential(credential);
+      return SocialAuthResult(
+        status: SocialAuthStatus.success,
+        credential: userCredential,
+      );
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'account-exists-with-different-credential') {
+        return SocialAuthResult(
+          status: SocialAuthStatus.accountExistsWithDifferentCredential,
+          pendingCredential: e.credential,
+          email: e.email,
+        );
+      }
+      if (e.code == 'web-context-cancelled' || e.code == 'popup-closed-by-user') {
+        return const SocialAuthResult(status: SocialAuthStatus.cancelled);
+      }
+      throw _handleAuthError(e);
+    }
+  }
+
   // Handle auth errors
   String _handleAuthError(FirebaseAuthException e) {
     switch (e.code) {
@@ -201,6 +284,12 @@ class AuthService {
         return 'This user account has been disabled.';
       case 'too-many-requests':
         return 'Too many requests. Try again later.';
+      case 'credential-already-in-use':
+        return 'This credential is already associated with another account.';
+      case 'provider-already-linked':
+        return 'This provider is already linked to your account.';
+      case 'account-exists-with-different-credential':
+        return 'An account already exists with the same email but a different sign-in method.';
       default:
         return 'Authentication error: ${e.message}';
     }

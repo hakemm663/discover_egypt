@@ -159,6 +159,45 @@ flutter build appbundle --release \
 
 ---
 
+
+## Social auth platform setup (Google + Facebook)
+
+To avoid partially wired UI, social buttons are hidden by default and only appear when runtime flags are enabled:
+
+```bash
+flutter run   --dart-define=ENABLE_GOOGLE_AUTH=true   --dart-define=ENABLE_FACEBOOK_AUTH=true
+```
+
+### Android requirements
+
+1. Add **both debug and release SHA-1/SHA-256 fingerprints** to your Firebase Android app.
+2. In Firebase Console -> Authentication -> Sign-in method, enable **Google** and **Facebook** providers.
+3. For Google auth, confirm the Android OAuth client entries exist for each signing fingerprint.
+4. For Facebook auth, set the Android package name and app key hash in the Facebook developer console.
+
+Useful command for fingerprints:
+
+```bash
+./gradlew signingReport
+```
+
+### iOS requirements
+
+1. In `ios/Runner/Info.plist`, add URL schemes required by Google/Facebook SDK integration.
+2. Ensure `CFBundleURLTypes` includes the reversed client id from `GoogleService-Info.plist`.
+3. Add Facebook plist keys (for example `FacebookAppID`, `FacebookClientToken`, `FacebookDisplayName`) and the required query schemes.
+4. Ensure Firebase Auth providers are enabled in the Firebase Console for the iOS app bundle id.
+
+### Config references in this repo
+
+- Runtime social flags and optional test token defines: `lib/core/config/app_config.dart`
+- Firebase credential exchange methods (Google/Facebook): `lib/core/services/auth_service.dart`
+- Sign-in UI conditional social rendering + loading/error/cancel/linking handling: `lib/features/auth/sign_in_page.dart`
+
+> Development-only token injection exists for controlled testing of Firebase credential exchange (`GOOGLE_ID_TOKEN_FOR_TESTING`, `GOOGLE_ACCESS_TOKEN_FOR_TESTING`, `FACEBOOK_ACCESS_TOKEN_FOR_TESTING`). Production builds should use native SDK token acquisition instead.
+
+---
+
 ## Environment matrix
 
 | Environment | Firebase project ID | API base URL | Config source |
