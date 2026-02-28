@@ -81,8 +81,9 @@ jobs:
           BASE_URL: ${{ vars.BASE_URL }}
           STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
-          ENABLE_SOCIAL_LOGIN: ${{ vars.ENABLE_SOCIAL_LOGIN || 'false' }}
-          ENABLE_FALLBACK_CONTENT: ${{ vars.ENABLE_FALLBACK_CONTENT || 'true' }}
+          ENABLE_GOOGLE_AUTH: ${{ vars.ENABLE_GOOGLE_AUTH || vars.ENABLE_SOCIAL_LOGIN || 'false' }}
+          ENABLE_FACEBOOK_AUTH: ${{ vars.ENABLE_FACEBOOK_AUTH || vars.ENABLE_SOCIAL_LOGIN || 'false' }}
+          DISCOVERY_FALLBACK_ENABLED: ${{ vars.DISCOVERY_FALLBACK_ENABLED || vars.ENABLE_FALLBACK_CONTENT || 'true' }}
         run: |
           echo "MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}" >> "$GITHUB_ENV"
           {
@@ -91,8 +92,9 @@ jobs:
             echo "--dart-define=BASE_URL=${BASE_URL}"
             echo "--dart-define=STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}"
             echo "--dart-define=GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}"
-            echo "--dart-define=ENABLE_SOCIAL_LOGIN=${ENABLE_SOCIAL_LOGIN}"
-            echo "--dart-define=ENABLE_FALLBACK_CONTENT=${ENABLE_FALLBACK_CONTENT}"
+            echo "--dart-define=ENABLE_GOOGLE_AUTH=${ENABLE_GOOGLE_AUTH}"
+            echo "--dart-define=ENABLE_FACEBOOK_AUTH=${ENABLE_FACEBOOK_AUTH}"
+            echo "--dart-define=DISCOVERY_FALLBACK_ENABLED=${DISCOVERY_FALLBACK_ENABLED}"
             echo "EOF"
           } >> "$GITHUB_ENV"
 
@@ -161,8 +163,9 @@ jobs:
           BASE_URL: ${{ vars.BASE_URL }}
           STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
-          ENABLE_SOCIAL_LOGIN: ${{ vars.ENABLE_SOCIAL_LOGIN || 'false' }}
-          ENABLE_FALLBACK_CONTENT: ${{ vars.ENABLE_FALLBACK_CONTENT || 'true' }}
+          ENABLE_GOOGLE_AUTH: ${{ vars.ENABLE_GOOGLE_AUTH || vars.ENABLE_SOCIAL_LOGIN || 'false' }}
+          ENABLE_FACEBOOK_AUTH: ${{ vars.ENABLE_FACEBOOK_AUTH || vars.ENABLE_SOCIAL_LOGIN || 'false' }}
+          DISCOVERY_FALLBACK_ENABLED: ${{ vars.DISCOVERY_FALLBACK_ENABLED || vars.ENABLE_FALLBACK_CONTENT || 'true' }}
         run: |
           {
             echo "DART_DEFINES<<EOF"
@@ -170,8 +173,9 @@ jobs:
             echo "--dart-define=BASE_URL=${BASE_URL}"
             echo "--dart-define=STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}"
             echo "--dart-define=GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}"
-            echo "--dart-define=ENABLE_SOCIAL_LOGIN=${ENABLE_SOCIAL_LOGIN}"
-            echo "--dart-define=ENABLE_FALLBACK_CONTENT=${ENABLE_FALLBACK_CONTENT}"
+            echo "--dart-define=ENABLE_GOOGLE_AUTH=${ENABLE_GOOGLE_AUTH}"
+            echo "--dart-define=ENABLE_FACEBOOK_AUTH=${ENABLE_FACEBOOK_AUTH}"
+            echo "--dart-define=DISCOVERY_FALLBACK_ENABLED=${DISCOVERY_FALLBACK_ENABLED}"
             echo "EOF"
           } >> "$GITHUB_ENV"
 
@@ -238,8 +242,9 @@ jobs:
           BASE_URL: ${{ vars.BASE_URL }}
           STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
-          ENABLE_SOCIAL_LOGIN: ${{ vars.ENABLE_SOCIAL_LOGIN || 'false' }}
-          ENABLE_FALLBACK_CONTENT: ${{ vars.ENABLE_FALLBACK_CONTENT || 'true' }}
+          ENABLE_GOOGLE_AUTH: ${{ vars.ENABLE_GOOGLE_AUTH || vars.ENABLE_SOCIAL_LOGIN || 'false' }}
+          ENABLE_FACEBOOK_AUTH: ${{ vars.ENABLE_FACEBOOK_AUTH || vars.ENABLE_SOCIAL_LOGIN || 'false' }}
+          DISCOVERY_FALLBACK_ENABLED: ${{ vars.DISCOVERY_FALLBACK_ENABLED || vars.ENABLE_FALLBACK_CONTENT || 'true' }}
         run: |
           {
             echo "DART_DEFINES<<EOF"
@@ -247,8 +252,9 @@ jobs:
             echo "--dart-define=BASE_URL=${BASE_URL}"
             echo "--dart-define=STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}"
             echo "--dart-define=GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}"
-            echo "--dart-define=ENABLE_SOCIAL_LOGIN=${ENABLE_SOCIAL_LOGIN}"
-            echo "--dart-define=ENABLE_FALLBACK_CONTENT=${ENABLE_FALLBACK_CONTENT}"
+            echo "--dart-define=ENABLE_GOOGLE_AUTH=${ENABLE_GOOGLE_AUTH}"
+            echo "--dart-define=ENABLE_FACEBOOK_AUTH=${ENABLE_FACEBOOK_AUTH}"
+            echo "--dart-define=DISCOVERY_FALLBACK_ENABLED=${DISCOVERY_FALLBACK_ENABLED}"
             echo "EOF"
           } >> "$GITHUB_ENV"
 
