@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
+import '../config/app_config.dart';
 import '../constants/api_endpoints.dart';
 
 class PaymentOperationResult {
@@ -33,7 +34,7 @@ class PaymentFlowResult {
 class PaymentService {
   final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: ApiEndpoints.baseUrl,
+      baseUrl: AppConfig.baseUrl,
       headers: {'Content-Type': 'application/json'},
     ),
   );

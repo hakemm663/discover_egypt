@@ -1,6 +1,4 @@
 class ApiEndpoints {
-  // Base URLs
-  static const String baseUrl = 'https://api.discoveregypt.com/v1';
   static const String firebaseBaseUrl = 'https://firestore.googleapis.com/v1';
 
   // Auth Endpoints
