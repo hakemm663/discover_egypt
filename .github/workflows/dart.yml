@@ -42,11 +42,12 @@ jobs:
         run: flutter test
 
   platform_builds:
-    name: ${{ matrix.name }}
+    name: ${{ matrix.name }} (${{ matrix.app_env }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        app_env: [dev, staging, prod]
         include:
           - name: Android build
             os: ubuntu-latest
@@ -94,5 +95,25 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Prepare runtime defines
+        env:
+          APP_ENV: ${{ matrix.app_env }}
+          BASE_URL: ${{ vars.BASE_URL || 'https://example.invalid' }}
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          ENABLE_SOCIAL_LOGIN: ${{ vars.ENABLE_SOCIAL_LOGIN || 'false' }}
+          ENABLE_FALLBACK_CONTENT: ${{ vars.ENABLE_FALLBACK_CONTENT || 'true' }}
+        run: |
+          {
+            echo "DART_DEFINES<<EOF"
+            echo "--dart-define=APP_ENV=${APP_ENV}"
+            echo "--dart-define=BASE_URL=${BASE_URL}"
+            echo "--dart-define=STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}"
+            echo "--dart-define=GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}"
+            echo "--dart-define=ENABLE_SOCIAL_LOGIN=${ENABLE_SOCIAL_LOGIN}"
+            echo "--dart-define=ENABLE_FALLBACK_CONTENT=${ENABLE_FALLBACK_CONTENT}"
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+
       - name: Run ${{ matrix.name }}
-        run: ${{ matrix.command }}
+        run: ${{ matrix.command }} $DART_DEFINES
