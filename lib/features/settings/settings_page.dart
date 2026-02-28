@@ -263,6 +263,7 @@ class SettingsPage extends ConsumerWidget {
                     groupValue: selected,
                     onChanged: (value) => setState(() => selected = value ?? selected),
                     title: Text(country),
+                    toggleable: true,
                   ),
               ],
             ),

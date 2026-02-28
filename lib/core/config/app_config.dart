@@ -47,7 +47,7 @@ class AppConfig {
   // Inject with: --dart-define=DISCOVERY_FALLBACK_ENABLED=true|false
   static const String discoveryFallbackEnabledRaw = String.fromEnvironment(
     'DISCOVERY_FALLBACK_ENABLED',
-    defaultValue: _autoBool,
+    defaultValue: 'auto',
   );
 
   // Inject with: --dart-define=GOOGLE_SIGN_IN_ENABLED=true|false
@@ -60,6 +60,12 @@ class AppConfig {
   static const String facebookSignInEnabledRaw = String.fromEnvironment(
     'FACEBOOK_SIGN_IN_ENABLED',
     defaultValue: 'false',
+  );
+
+  // Inject with: --dart-define=APP_ENV=dev|staging|prod
+  static const String appEnvRaw = String.fromEnvironment(
+    'APP_ENV',
+    defaultValue: 'prod',
   );
 
   static AppEnvironment get environment {

@@ -28,7 +28,10 @@ void main() {
   testWidgets(
     '/confirm-pay resolves when state.extra is BookingCheckoutData',
     (tester) async {
-      final router = createAppRouter();
+      final router = createAppRouter(
+        isAuthenticated: true,
+        onboardingCompleted: true,
+      );
       router.go('/confirm-pay', extra: buildCheckoutData());
 
       await tester.pumpWidget(
@@ -44,7 +47,10 @@ void main() {
   );
 
   testWidgets('/confirm-pay throws when state.extra is missing', (tester) async {
-    final router = createAppRouter();
+    final router = createAppRouter(
+      isAuthenticated: true,
+      onboardingCompleted: true,
+    );
 
     await tester.pumpWidget(
       ProviderScope(

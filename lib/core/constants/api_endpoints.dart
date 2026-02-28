@@ -1,5 +1,3 @@
-import '../config/app_config.dart';
-
 class ApiEndpoints {
   // Base URLs
   static const String baseUrl = 'https://api.discoveregypt.com/v1';
