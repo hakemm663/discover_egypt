@@ -10,6 +10,8 @@ class DiscoverEgyptApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(pushTokenLifecycleProvider);
+
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(languageProvider);
     final router = ref.watch(appRouterProvider);

@@ -20,6 +20,9 @@ import '../core/services/auth_service.dart';
 import '../core/services/database_service.dart';
 import '../core/services/firebase_service.dart';
 import '../core/services/payment_service.dart';
+import '../core/services/push/device_token_registry.dart';
+import '../core/services/push/push_notification_service.dart';
+import '../core/services/push/push_token_lifecycle_manager.dart';
 
 // Services
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
@@ -27,6 +30,25 @@ final databaseServiceProvider =
     Provider<DatabaseService>((ref) => DatabaseService());
 final paymentServiceProvider = Provider<PaymentService>((ref) => PaymentService());
 final firebaseServiceProvider = Provider<FirebaseService>((ref) => FirebaseService());
+final pushNotificationServiceProvider = Provider<PushNotificationService>(
+  (ref) => PushNotificationService(),
+);
+final deviceTokenRegistryProvider = Provider<DeviceTokenRegistry>(
+  (ref) => DeviceTokenRegistry(firestore: FirebaseFirestore.instance),
+);
+final pushTokenLifecycleProvider = Provider<PushTokenLifecycleManager>((ref) {
+  final manager = PushTokenLifecycleManager(
+    authStateChanges: ref.read(authServiceProvider).authStateChanges,
+    currentUser: ref.read(authServiceProvider).currentUser,
+    pushService: ref.read(pushNotificationServiceProvider),
+    tokenRegistry: ref.read(deviceTokenRegistryProvider),
+    settingsBox: Hive.box(AppConstants.settingsBox),
+  );
+
+  manager.initialize();
+  ref.onDispose(manager.dispose);
+  return manager;
+});
 
 // Navigation Tracking Consent Provider
 final navigationTrackingConsentProvider =
