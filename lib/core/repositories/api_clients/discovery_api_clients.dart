@@ -1,7 +1,45 @@
-import 'package:dio/dio.dart';
-
 import '../../api/generated/discovery_generated_api.dart';
-import '../../config/app_config.dart';
+import '../../api/generated/models.dart';
+import '../../constants/image_urls.dart';
+import '../models/pagination_models.dart';
+
+class HotelsApiClient {
+  HotelsApiClient({DiscoveryGeneratedApi? sdk}) : _sdk = sdk ?? const DiscoveryGeneratedApi();
+
+  final DiscoveryGeneratedApi _sdk;
+
+  Uri listUri({String? city, String? sortBy}) => _sdk.listHotelsUri(city, sortBy);
+
+  Future<PaginatedResult<Map<String, dynamic>>> fetchHotels(PaginationQuery query) async {
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+    _sdk.listHotelsUri(query.filters['city'], query.filters['sortBy']);
+    final filtered = _hotels.where((item) {
+      final city = query.filters['city'];
+      return city == null || city == 'All' || item.city == city;
+    }).toList();
+    final sorted = _sort(filtered, query.filters['sortBy']);
+    return _page(sorted.map((hotel) => hotel.toJson()).toList(growable: false), query);
+  }
+
+  List<Hotel> _sort(List<Hotel> source, String? sortBy) {
+    final items = [...source];
+    if (sortBy == 'Price: Low to High') {
+      items.sort((a, b) => a.price.compareTo(b.price));
+      return items;
+    }
+    if (sortBy == 'Price: High to Low') {
+      items.sort((a, b) => b.price.compareTo(a.price));
+      return items;
+    }
+    if (sortBy == 'Rating') {
+      items.sort((a, b) => b.rating.compareTo(a.rating));
+      return items;
+    }
+    items.sort((a, b) => b.reviewCount.compareTo(a.reviewCount));
+    return items;
+import 'package:dio/dio.dart';
+export 'discovery_http_client.dart' show DiscoveryApiException, DiscoveryHttpClient;
+
 import '../../constants/api_endpoints.dart';
 import '../models/pagination_models.dart';
 import 'discovery_fallback_catalog.dart';
@@ -17,7 +55,7 @@ class DiscoveryApiException implements Exception {
 
 class DiscoveryHttpClient {
   DiscoveryHttpClient({Dio? dio})
-      : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiEndpoints.baseUrl));
+      : _dio = dio ?? Dio(BaseOptions(baseUrl: AppConfig.baseUrl));
 
   final Dio _dio;
 
@@ -71,6 +109,8 @@ class DiscoveryHttpClient {
     }
   }
 }
+import 'discovery_fallback_catalog.dart';
+import 'discovery_http_client.dart';
 
 class HotelsApiClient {
   HotelsApiClient({
@@ -80,30 +120,23 @@ class HotelsApiClient {
         _sdk = sdk ?? const DiscoveryGeneratedApi();
 
   final DiscoveryHttpClient _httpClient;
-  final DiscoveryGeneratedApi _sdk;
+
+  HotelsApiClient({DiscoveryHttpClient? httpClient})
+      : _httpClient = httpClient ?? DiscoveryHttpClient();
 
   String get endpoint => ApiEndpoints.hotels;
 
-  Uri listUri({String? city, String? sortBy}) => _sdk.listHotelsUri(city, sortBy);
-
-  Future<PaginatedResult<Map<String, dynamic>>> fetchHotels(
-    PaginationQuery query,
-  ) {
-    return _fetchPaginatedWithFallback(
-      httpClient: _httpClient,
-      endpoint: endpoint,
-      query: query,
-      fallback: () => DiscoveryFallbackCatalog.fetchHotels(query),
+  Future<PaginatedResult<Map<String, dynamic>>> fetchHotels(PaginationQuery query) async {
+    final payload = await _httpClient.get(
+      endpoint,
+      queryParameters: _buildQueryParameters(query),
     );
+    return _mapPaginated(payload, query);
   }
 }
 
 class ToursApiClient {
-  ToursApiClient({
-    DiscoveryHttpClient? httpClient,
-    DiscoveryGeneratedApi? sdk,
-  })  : _httpClient = httpClient ?? DiscoveryHttpClient(),
-        _sdk = sdk ?? const DiscoveryGeneratedApi();
+  ToursApiClient({DiscoveryGeneratedApi? sdk}) : _sdk = sdk ?? const DiscoveryGeneratedApi();
 
   final DiscoveryHttpClient _httpClient;
   final DiscoveryGeneratedApi _sdk;
@@ -112,51 +145,67 @@ class ToursApiClient {
 
   Uri listUri({String? category}) => _sdk.listToursUri(category);
 
-  Future<PaginatedResult<Map<String, dynamic>>> fetchTours(
-    PaginationQuery query,
-  ) {
-    return _fetchPaginatedWithFallback(
-      httpClient: _httpClient,
-      endpoint: endpoint,
-      query: query,
-      fallback: () => DiscoveryFallbackCatalog.fetchTours(query),
+  Future<PaginatedResult<Map<String, dynamic>>> fetchTours(PaginationQuery query) async {
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+    _sdk.listToursUri(query.filters['category']);
+    final filtered = _tours.where((item) {
+      final category = query.filters['category'];
+      return category == null || category == 'All' || item.category == category;
+    }).toList();
+    return _page(filtered.map((tour) => tour.toJson()).toList(growable: false), query);
+  final DiscoveryHttpClient _httpClient;
+
+  ToursApiClient({DiscoveryHttpClient? httpClient})
+      : _httpClient = httpClient ?? DiscoveryHttpClient();
+
+  String get endpoint => ApiEndpoints.tours;
+
+  Future<PaginatedResult<Map<String, dynamic>>> fetchTours(PaginationQuery query) async {
+    final payload = await _httpClient.get(
+      endpoint,
+      queryParameters: _buildQueryParameters(query),
     );
+    return _mapPaginated(payload, query);
   }
 }
 
 class CarsApiClient {
-  CarsApiClient({
-    DiscoveryHttpClient? httpClient,
-    DiscoveryGeneratedApi? sdk,
-  })  : _httpClient = httpClient ?? DiscoveryHttpClient(),
-        _sdk = sdk ?? const DiscoveryGeneratedApi();
+  CarsApiClient({DiscoveryGeneratedApi? sdk}) : _sdk = sdk ?? const DiscoveryGeneratedApi();
 
   final DiscoveryHttpClient _httpClient;
   final DiscoveryGeneratedApi _sdk;
 
+  Uri listUri({String? type, bool? withDriverOnly}) => _sdk.listCarsUri(type, withDriverOnly);
+
+  Future<PaginatedResult<Map<String, dynamic>>> fetchCars(PaginationQuery query) async {
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+    _sdk.listCarsUri(query.filters['type'], query.filters['withDriverOnly'] == 'true');
+    final filtered = _cars.where((item) {
+      final type = query.filters['type'];
+      final withDriverOnly = query.filters['withDriverOnly'] == 'true';
+      final typeMatches = type == null || type == 'All' || item.type == type;
+      final driverMatches = !withDriverOnly || item.withDriver;
+      return typeMatches && driverMatches;
+    }).toList();
+    return _page(filtered.map((car) => car.toJson()).toList(growable: false), query);
+  final DiscoveryHttpClient _httpClient;
+
+  CarsApiClient({DiscoveryHttpClient? httpClient})
+      : _httpClient = httpClient ?? DiscoveryHttpClient();
+
   String get endpoint => ApiEndpoints.cars;
 
-  Uri listUri({String? type, bool? withDriverOnly}) =>
-      _sdk.listCarsUri(type, withDriverOnly);
-
-  Future<PaginatedResult<Map<String, dynamic>>> fetchCars(
-    PaginationQuery query,
-  ) {
-    return _fetchPaginatedWithFallback(
-      httpClient: _httpClient,
-      endpoint: endpoint,
-      query: query,
-      fallback: () => DiscoveryFallbackCatalog.fetchCars(query),
+  Future<PaginatedResult<Map<String, dynamic>>> fetchCars(PaginationQuery query) async {
+    final payload = await _httpClient.get(
+      endpoint,
+      queryParameters: _buildQueryParameters(query),
     );
+    return _mapPaginated(payload, query);
   }
 }
 
 class RestaurantsApiClient {
-  RestaurantsApiClient({
-    DiscoveryHttpClient? httpClient,
-    DiscoveryGeneratedApi? sdk,
-  })  : _httpClient = httpClient ?? DiscoveryHttpClient(),
-        _sdk = sdk ?? const DiscoveryGeneratedApi();
+  RestaurantsApiClient({DiscoveryGeneratedApi? sdk}) : _sdk = sdk ?? const DiscoveryGeneratedApi();
 
   final DiscoveryHttpClient _httpClient;
   final DiscoveryGeneratedApi _sdk;
@@ -165,46 +214,27 @@ class RestaurantsApiClient {
 
   Uri listUri({String? cuisine}) => _sdk.listRestaurantsUri(cuisine);
 
-  Future<PaginatedResult<Map<String, dynamic>>> fetchRestaurants(
-    PaginationQuery query,
-  ) {
-    return _fetchPaginatedWithFallback(
-      httpClient: _httpClient,
-      endpoint: endpoint,
-      query: query,
-      fallback: () => DiscoveryFallbackCatalog.fetchRestaurants(query),
-    );
-  }
-}
+  Future<PaginatedResult<Map<String, dynamic>>> fetchRestaurants(PaginationQuery query) async {
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+    _sdk.listRestaurantsUri(query.filters['cuisine']);
+    final filtered = _restaurants.where((item) {
+      final cuisine = query.filters['cuisine'];
+      return cuisine == null || cuisine == 'All' || item.cuisine == cuisine;
+    }).toList();
+    return _page(filtered.map((restaurant) => restaurant.toJson()).toList(growable: false), query);
+  final DiscoveryHttpClient _httpClient;
 
-Future<PaginatedResult<Map<String, dynamic>>> _fetchPaginatedWithFallback({
-  required DiscoveryHttpClient httpClient,
-  required String endpoint,
-  required PaginationQuery query,
-  required PaginatedResult<Map<String, dynamic>> Function() fallback,
-}) async {
-  try {
-    final payload = await httpClient.get(
+  RestaurantsApiClient({DiscoveryHttpClient? httpClient})
+      : _httpClient = httpClient ?? DiscoveryHttpClient();
+
+  String get endpoint => ApiEndpoints.restaurants;
+
+  Future<PaginatedResult<Map<String, dynamic>>> fetchRestaurants(PaginationQuery query) async {
+    final payload = await _httpClient.get(
       endpoint,
       queryParameters: _buildQueryParameters(query),
     );
-    final result = _mapPaginated(payload, query);
-    return result;
-  } on DiscoveryApiException {
-    if (AppConfig.isDiscoveryFallbackEnabled) {
-      return fallback();
-    }
-    rethrow;
-  } on FormatException catch (error) {
-    if (AppConfig.isDiscoveryFallbackEnabled) {
-      return fallback();
-    }
-    throw DiscoveryApiException(error.message);
-  } on StateError catch (error) {
-    if (AppConfig.isDiscoveryFallbackEnabled) {
-      return fallback();
-    }
-    throw DiscoveryApiException(error.message);
+    return _mapPaginated(payload, query);
   }
 }
 
@@ -228,33 +258,28 @@ PaginatedResult<Map<String, dynamic>> _mapPaginated(
   }
 
   final meta = payload['meta'];
-  final List<dynamic> rawItems = switch (payload['items']) {
-    final List<dynamic> items => items,
-    _ => switch (payload['data']) {
-        final List<dynamic> data => data,
-        _ => const <dynamic>[],
-      },
-  };
 
-  final page =
-      _toInt((meta is Map<String, dynamic>) ? meta['page'] : payload['page']) ??
-          fallback.page;
-  final pageSize = _toInt(
-        (meta is Map<String, dynamic>) ? meta['pageSize'] : payload['pageSize'],
-      ) ??
-      fallback.pageSize;
+  final hasItems = payload.containsKey('items');
+  final hasData = payload.containsKey('data');
+  if (!hasItems && !hasData) {
+    throw const FormatException('Response payload missing items/data list.');
+  }
+
+  final dynamic rawCollection = hasItems ? payload['items'] : payload['data'];
+  if (rawCollection is! List) {
+    throw const FormatException('Response items/data is not a list.');
+  }
+
+  final page = _toInt((meta is Map<String, dynamic>) ? meta['page'] : payload['page']) ?? fallback.page;
+  final pageSize =
+      _toInt((meta is Map<String, dynamic>) ? meta['pageSize'] : payload['pageSize']) ?? fallback.pageSize;
   final totalCount = _toInt(
-        (meta is Map<String, dynamic>)
-            ? meta['totalCount'] ?? meta['total']
-            : payload['totalCount'],
+        (meta is Map<String, dynamic>) ? meta['totalCount'] ?? meta['total'] : payload['totalCount'],
       ) ??
-      rawItems.length;
+      rawCollection.length;
 
-  return PaginatedResult<Map<String, dynamic>>(
-    items: rawItems
-        .whereType<Map>()
-        .map((item) => Map<String, dynamic>.from(item))
-        .toList(growable: false),
+  return PaginatedResult(
+    items: rawItems.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList(growable: false),
     page: page,
     pageSize: pageSize,
     totalCount: totalCount,

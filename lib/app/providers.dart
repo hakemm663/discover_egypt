@@ -8,8 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-import '../core/constants/api_endpoints.dart';
 import '../core/constants/app_constants.dart';
+import '../core/config/app_config.dart';
 import '../core/models/user_model.dart';
 import '../core/navigation/navigation_tracking_observer.dart';
 import '../core/repositories/api_clients/discovery_api_clients.dart';
@@ -20,6 +20,9 @@ import '../core/services/auth_service.dart';
 import '../core/services/database_service.dart';
 import '../core/services/firebase_service.dart';
 import '../core/services/payment_service.dart';
+import '../core/services/push/device_token_registry.dart';
+import '../core/services/push/push_notification_service.dart';
+import '../core/services/push/push_token_lifecycle_manager.dart';
 
 // Services
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
@@ -27,6 +30,25 @@ final databaseServiceProvider =
     Provider<DatabaseService>((ref) => DatabaseService());
 final paymentServiceProvider = Provider<PaymentService>((ref) => PaymentService());
 final firebaseServiceProvider = Provider<FirebaseService>((ref) => FirebaseService());
+final pushNotificationServiceProvider = Provider<PushNotificationService>(
+  (ref) => PushNotificationService(),
+);
+final deviceTokenRegistryProvider = Provider<DeviceTokenRegistry>(
+  (ref) => DeviceTokenRegistry(firestore: FirebaseFirestore.instance),
+);
+final pushTokenLifecycleProvider = Provider<PushTokenLifecycleManager>((ref) {
+  final manager = PushTokenLifecycleManager(
+    authStateChanges: ref.read(authServiceProvider).authStateChanges,
+    currentUser: ref.read(authServiceProvider).currentUser,
+    pushService: ref.read(pushNotificationServiceProvider),
+    tokenRegistry: ref.read(deviceTokenRegistryProvider),
+    settingsBox: Hive.box(AppConstants.settingsBox),
+  );
+
+  manager.initialize();
+  ref.onDispose(manager.dispose);
+  return manager;
+});
 
 // Navigation Tracking Consent Provider
 final navigationTrackingConsentProvider =
@@ -191,7 +213,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
-final discoveryDioProvider = Provider<Dio>((ref) => Dio(BaseOptions(baseUrl: ApiEndpoints.baseUrl)));
+final discoveryDioProvider = Provider<Dio>((ref) => Dio(BaseOptions(baseUrl: AppConfig.baseUrl)));
 final discoveryHttpClientProvider = Provider<DiscoveryHttpClient>((ref) {
   return DiscoveryHttpClient(dio: ref.read(discoveryDioProvider));
 });

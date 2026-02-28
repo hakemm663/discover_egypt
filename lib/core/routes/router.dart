@@ -313,6 +313,15 @@ GoRouter createAppRouter({
           const AddFundsPage(),
         ),
       ),
+    ),
+
+    // Support & Legal
+    GoRoute(
+      path: '/help-center',
+      pageBuilder: (context, state) => _buildPage(
+        state,
+        HelpCenterPage(topic: state.uri.queryParameters['topic']),
+
       // Support & Legal
       GoRoute(
         path: '/help-center',
