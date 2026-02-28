@@ -13,6 +13,7 @@ import '../core/config/app_config.dart';
 import '../core/models/user_model.dart';
 import '../core/navigation/navigation_tracking_observer.dart';
 import '../core/repositories/api_clients/discovery_api_clients.dart';
+import '../core/repositories/api_clients/discovery_fallback_catalog.dart';
 import '../core/repositories/discovery_repositories.dart';
 import '../core/repositories/firestore/discovery_firestore_client.dart';
 import '../core/routes/router.dart';
@@ -218,15 +219,38 @@ final discoveryHttpClientProvider = Provider<DiscoveryHttpClient>((ref) {
   return DiscoveryHttpClient(dio: ref.read(discoveryDioProvider));
 });
 
-final hotelsApiClientProvider =
-    Provider<HotelsApiClient>((ref) => HotelsApiClient(httpClient: ref.read(discoveryHttpClientProvider)));
-final toursApiClientProvider =
-    Provider<ToursApiClient>((ref) => ToursApiClient(httpClient: ref.read(discoveryHttpClientProvider)));
-final carsApiClientProvider =
-    Provider<CarsApiClient>((ref) => CarsApiClient(httpClient: ref.read(discoveryHttpClientProvider)));
-final restaurantsApiClientProvider = Provider<RestaurantsApiClient>(
-  (ref) => RestaurantsApiClient(httpClient: ref.read(discoveryHttpClientProvider)),
-);
+final hotelsApiClientProvider = Provider<HotelsApiClient>((ref) {
+  return HotelsApiClient(
+    httpClient: ref.read(discoveryHttpClientProvider),
+    fallbackPayloadBuilder: hotelsFallbackPayload,
+    forceFallback: AppConfig.isDiscoveryFallbackEnabled,
+    fallbackOnConnectionFailure: true,
+  );
+});
+final toursApiClientProvider = Provider<ToursApiClient>((ref) {
+  return ToursApiClient(
+    httpClient: ref.read(discoveryHttpClientProvider),
+    fallbackPayloadBuilder: toursFallbackPayload,
+    forceFallback: AppConfig.isDiscoveryFallbackEnabled,
+    fallbackOnConnectionFailure: true,
+  );
+});
+final carsApiClientProvider = Provider<CarsApiClient>((ref) {
+  return CarsApiClient(
+    httpClient: ref.read(discoveryHttpClientProvider),
+    fallbackPayloadBuilder: carsFallbackPayload,
+    forceFallback: AppConfig.isDiscoveryFallbackEnabled,
+    fallbackOnConnectionFailure: true,
+  );
+});
+final restaurantsApiClientProvider = Provider<RestaurantsApiClient>((ref) {
+  return RestaurantsApiClient(
+    httpClient: ref.read(discoveryHttpClientProvider),
+    fallbackPayloadBuilder: restaurantsFallbackPayload,
+    forceFallback: AppConfig.isDiscoveryFallbackEnabled,
+    fallbackOnConnectionFailure: true,
+  );
+});
 final discoveryFirestoreClientProvider =
     Provider<DiscoveryFirestoreClient>((ref) => DiscoveryFirestoreClient());
 

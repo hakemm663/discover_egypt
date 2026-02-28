@@ -198,6 +198,29 @@ Useful command for fingerprints:
 
 ---
 
+## Firebase runtime/deployment setup (including web)
+
+`lib/firebase_options.dart` is expected to be generated from FlutterFire and now includes a `web` target so `DefaultFirebaseOptions.currentPlatform` resolves correctly on browser builds.
+
+### Required setup
+
+1. Install Flutter + Dart + FlutterFire CLI locally:
+   ```bash
+   dart pub global activate flutterfire_cli
+   ```
+2. Log in to Firebase and select the intended project for your environment (dev/staging/prod).
+3. Regenerate options with web explicitly included:
+   ```bash
+   flutterfire configure \
+     --project=discover-egypt-95efd \
+     --platforms=android,ios,web \
+     --android-package-name=com.discoveregypt.app \
+     --ios-bundle-id=com.discoveregypt.app
+   ```
+4. Commit the regenerated `lib/firebase_options.dart` and verify the generated `web` block points to the intended Firebase project before deployment.
+
+> For staging/prod, re-run the same command with the environment-specific Firebase project id to avoid cross-environment analytics/auth data leakage.
+
 ## Environment matrix
 
 | Environment | Firebase project ID | API base URL | Config source |
@@ -258,6 +281,36 @@ Before every PR:
 ```bash
 ./scripts/check_no_secret_constants.sh
 ```
+
+---
+
+## Web deployment (Firebase Hosting)
+
+This project is configured to deploy Flutter web as **static assets** on Firebase Hosting.
+
+### Files committed for hosting
+
+- `firebase.json` with `hosting.public` set to `build/web`
+- `.firebaserc` with the default Firebase project
+
+### Build and deploy
+
+1. Build Flutter web release artifacts:
+
+   ```bash
+   flutter build web --release
+   ```
+
+2. Deploy static files to Firebase Hosting:
+
+   ```bash
+   firebase deploy --only hosting
+   ```
+
+### Notes
+
+- `firebase.json` includes a rewrite from `**` to `/index.html` so deep links work in the Flutter web SPA.
+- Ensure you are authenticated (`firebase login`) and have access to the configured Firebase project before deploying.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 

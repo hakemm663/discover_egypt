@@ -19,8 +19,14 @@ val mapsApiKeyFromLocalProperties = localProperties.getProperty("MAPS_API_KEY")
 val mapsApiKeyFromCi = System.getenv("MAPS_API_KEY")
 
 val requiresReleaseSigning = gradle.startParameter.taskNames.any {
-    val name = it.lowercase()
-    name.contains("release") || name.contains("bundle") || name.contains("publish")
+    val taskName = it.substringAfterLast(':').lowercase()
+    val isReleasePackagingTask = listOf("assemble", "bundle", "package").any { prefix ->
+        taskName.startsWith(prefix) && taskName.endsWith("release")
+    }
+    val isReleasePublishTask = taskName.startsWith("publish") && taskName.contains("release")
+
+    // Keep signing strict for real release outputs, but allow release-flavored utility tasks (for example app-link/settings generation).
+    isReleasePackagingTask || isReleasePublishTask
 }
 val allowDebugSigningForRelease =
     providers.gradleProperty("allowDebugSigningForRelease").orNull == "true"

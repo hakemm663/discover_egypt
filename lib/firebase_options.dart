@@ -5,10 +5,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -52,5 +49,14 @@ class DefaultFirebaseOptions {
     projectId: 'discover-egypt-95efd',
     storageBucket: 'discover-egypt-95efd.firebasestorage.app',
     iosBundleId: 'com.discoveregypt.app',
+  );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyB-reiQfpkY8a38JdRSMzA-qIwmy3bzMWE',
+    appId: '1:52754735379:web:65cae8f766b5b7bb53fae6',
+    messagingSenderId: '52754735379',
+    projectId: 'discover-egypt-95efd',
+    authDomain: 'discover-egypt-95efd.firebaseapp.com',
+    storageBucket: 'discover-egypt-95efd.firebasestorage.app',
   );
 }
