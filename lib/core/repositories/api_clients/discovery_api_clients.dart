@@ -38,6 +38,7 @@ class HotelsApiClient {
     items.sort((a, b) => b.reviewCount.compareTo(a.reviewCount));
     return items;
 import 'package:dio/dio.dart';
+export 'discovery_http_client.dart' show DiscoveryApiException, DiscoveryHttpClient;
 
 import '../../config/app_config.dart';
 import '../../constants/api_endpoints.dart';
@@ -106,21 +107,35 @@ class DiscoveryHttpClient {
     }
   }
 }
+import 'discovery_fallback_catalog.dart';
+import 'discovery_http_client.dart';
 
 class HotelsApiClient {
   final DiscoveryHttpClient _httpClient;
+  final DiscoveryFallbackCatalog _fallbackCatalog;
 
-  HotelsApiClient({DiscoveryHttpClient? httpClient})
-      : _httpClient = httpClient ?? DiscoveryHttpClient();
+  HotelsApiClient({
+    DiscoveryHttpClient? httpClient,
+    DiscoveryFallbackCatalog? fallbackCatalog,
+  }) : _httpClient = httpClient ?? DiscoveryHttpClient(),
+       _fallbackCatalog = fallbackCatalog ?? const DiscoveryFallbackCatalog();
 
   String get endpoint => ApiEndpoints.hotels;
 
-  Future<PaginatedResult<Map<String, dynamic>>> fetchHotels(PaginationQuery query) async {
-    final payload = await _httpClient.get(
-      endpoint,
-      queryParameters: _buildQueryParameters(query),
-    );
-    return _mapPaginated(payload, query);
+  Future<PaginatedResult<Map<String, dynamic>>> fetchHotels(
+    PaginationQuery query,
+  ) async {
+    try {
+      final payload = await _httpClient.get(
+        endpoint,
+        queryParameters: _buildQueryParameters(query),
+      );
+      return _mapPaginated(payload, query);
+    } on DiscoveryApiException {
+      return _fallbackCatalog.hotels(query);
+    } on FormatException {
+      return _fallbackCatalog.hotels(query);
+    }
   }
 }
 
@@ -140,18 +155,30 @@ class ToursApiClient {
     }).toList();
     return _page(filtered.map((tour) => tour.toJson()).toList(growable: false), query);
   final DiscoveryHttpClient _httpClient;
+  final DiscoveryFallbackCatalog _fallbackCatalog;
 
-  ToursApiClient({DiscoveryHttpClient? httpClient})
-      : _httpClient = httpClient ?? DiscoveryHttpClient();
+  ToursApiClient({
+    DiscoveryHttpClient? httpClient,
+    DiscoveryFallbackCatalog? fallbackCatalog,
+  }) : _httpClient = httpClient ?? DiscoveryHttpClient(),
+       _fallbackCatalog = fallbackCatalog ?? const DiscoveryFallbackCatalog();
 
   String get endpoint => ApiEndpoints.tours;
 
-  Future<PaginatedResult<Map<String, dynamic>>> fetchTours(PaginationQuery query) async {
-    final payload = await _httpClient.get(
-      endpoint,
-      queryParameters: _buildQueryParameters(query),
-    );
-    return _mapPaginated(payload, query);
+  Future<PaginatedResult<Map<String, dynamic>>> fetchTours(
+    PaginationQuery query,
+  ) async {
+    try {
+      final payload = await _httpClient.get(
+        endpoint,
+        queryParameters: _buildQueryParameters(query),
+      );
+      return _mapPaginated(payload, query);
+    } on DiscoveryApiException {
+      return _fallbackCatalog.tours(query);
+    } on FormatException {
+      return _fallbackCatalog.tours(query);
+    }
   }
 }
 
@@ -174,18 +201,28 @@ class CarsApiClient {
     }).toList();
     return _page(filtered.map((car) => car.toJson()).toList(growable: false), query);
   final DiscoveryHttpClient _httpClient;
+  final DiscoveryFallbackCatalog _fallbackCatalog;
 
-  CarsApiClient({DiscoveryHttpClient? httpClient})
-      : _httpClient = httpClient ?? DiscoveryHttpClient();
+  CarsApiClient({
+    DiscoveryHttpClient? httpClient,
+    DiscoveryFallbackCatalog? fallbackCatalog,
+  }) : _httpClient = httpClient ?? DiscoveryHttpClient(),
+       _fallbackCatalog = fallbackCatalog ?? const DiscoveryFallbackCatalog();
 
   String get endpoint => ApiEndpoints.cars;
 
   Future<PaginatedResult<Map<String, dynamic>>> fetchCars(PaginationQuery query) async {
-    final payload = await _httpClient.get(
-      endpoint,
-      queryParameters: _buildQueryParameters(query),
-    );
-    return _mapPaginated(payload, query);
+    try {
+      final payload = await _httpClient.get(
+        endpoint,
+        queryParameters: _buildQueryParameters(query),
+      );
+      return _mapPaginated(payload, query);
+    } on DiscoveryApiException {
+      return _fallbackCatalog.cars(query);
+    } on FormatException {
+      return _fallbackCatalog.cars(query);
+    }
   }
 }
 
@@ -205,18 +242,30 @@ class RestaurantsApiClient {
     }).toList();
     return _page(filtered.map((restaurant) => restaurant.toJson()).toList(growable: false), query);
   final DiscoveryHttpClient _httpClient;
+  final DiscoveryFallbackCatalog _fallbackCatalog;
 
-  RestaurantsApiClient({DiscoveryHttpClient? httpClient})
-      : _httpClient = httpClient ?? DiscoveryHttpClient();
+  RestaurantsApiClient({
+    DiscoveryHttpClient? httpClient,
+    DiscoveryFallbackCatalog? fallbackCatalog,
+  }) : _httpClient = httpClient ?? DiscoveryHttpClient(),
+       _fallbackCatalog = fallbackCatalog ?? const DiscoveryFallbackCatalog();
 
   String get endpoint => ApiEndpoints.restaurants;
 
-  Future<PaginatedResult<Map<String, dynamic>>> fetchRestaurants(PaginationQuery query) async {
-    final payload = await _httpClient.get(
-      endpoint,
-      queryParameters: _buildQueryParameters(query),
-    );
-    return _mapPaginated(payload, query);
+  Future<PaginatedResult<Map<String, dynamic>>> fetchRestaurants(
+    PaginationQuery query,
+  ) async {
+    try {
+      final payload = await _httpClient.get(
+        endpoint,
+        queryParameters: _buildQueryParameters(query),
+      );
+      return _mapPaginated(payload, query);
+    } on DiscoveryApiException {
+      return _fallbackCatalog.restaurants(query);
+    } on FormatException {
+      return _fallbackCatalog.restaurants(query);
+    }
   }
 }
 
@@ -233,59 +282,42 @@ PaginatedResult<Map<String, dynamic>> _mapPaginated(
   PaginationQuery fallback,
 ) {
   final meta = payload['meta'];
-  final List<dynamic> rawItems = switch (payload['items']) {
-    final List<dynamic> items => items,
-    _ => switch (payload['data']) {
-        final List<dynamic> data => data,
-        _ => const <dynamic>[],
-      },
-  };
 
-  final page = _toInt((meta is Map<String, dynamic>) ? meta['page'] : payload['page']) ?? fallback.page;
+  final hasItems = payload.containsKey('items');
+  final hasData = payload.containsKey('data');
+  if (!hasItems && !hasData) {
+    throw const FormatException('Response payload missing items/data list.');
+  }
+
+  final dynamic rawCollection = hasItems ? payload['items'] : payload['data'];
+  if (rawCollection is! List) {
+    throw const FormatException('Response items/data is not a list.');
+  }
+
+  final page =
+      _toInt((meta is Map<String, dynamic>) ? meta['page'] : payload['page']) ?? fallback.page;
   final pageSize =
-      _toInt((meta is Map<String, dynamic>) ? meta['pageSize'] : payload['pageSize']) ?? fallback.pageSize;
-  final totalCount = _toInt(
-        (meta is Map<String, dynamic>) ? meta['totalCount'] ?? meta['total'] : payload['totalCount'],
+      _toInt((meta is Map<String, dynamic>) ? meta['pageSize'] : payload['pageSize']) ??
+      fallback.pageSize;
+  final totalCount =
+      _toInt(
+        (meta is Map<String, dynamic>)
+            ? meta['totalCount'] ?? meta['total']
+            : payload['totalCount'],
       ) ??
-      rawItems.length;
+      rawCollection.length;
 
   return PaginatedResult(
-    items: rawItems.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList(growable: false),
+    items: rawCollection
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList(growable: false),
     page: page,
     pageSize: pageSize,
     totalCount: totalCount,
   );
 }
 
-const _hotels = [
-  Hotel(id: '1', name: 'Pyramids View Hotel', city: 'Cairo', location: 'Giza, Cairo', image: Img.hotelLuxury, rating: 4.8, reviewCount: 520, price: 120.0, amenities: ['WiFi', 'Pool', 'Restaurant', 'Spa'], stars: 5),
-  Hotel(id: '2', name: 'Nile Ritz Carlton', city: 'Cairo', location: 'Downtown Cairo', image: Img.hotelPool, rating: 4.9, reviewCount: 890, price: 250.0, amenities: ['WiFi', 'Pool', 'Gym', 'Restaurant'], stars: 5),
-  Hotel(id: '3', name: 'Steigenberger Resort', city: 'Hurghada', location: 'Hurghada', image: Img.hotelResort, rating: 4.7, reviewCount: 430, price: 180.0, amenities: ['WiFi', 'Beach', 'Pool', 'Spa'], stars: 5),
-  Hotel(id: '4', name: 'Hilton Luxor Resort', city: 'Luxor', location: 'Luxor City', image: Img.hotelRoom, rating: 4.6, reviewCount: 350, price: 140.0, amenities: ['WiFi', 'Pool', 'Restaurant'], stars: 4),
-  Hotel(id: '5', name: 'Four Seasons Alexandria', city: 'Alexandria', location: 'Alexandria Corniche', image: Img.hotelLobby, rating: 4.9, reviewCount: 670, price: 300.0, amenities: ['WiFi', 'Beach', 'Spa', 'Pool'], stars: 5),
-];
-
-const _tours = [
-  Tour(id: '1', name: 'Pyramids & Sphinx Day Tour', category: 'Historical', duration: 'Full Day • 8 hours', image: Img.pyramidsMain, rating: 4.9, reviewCount: 1250, price: 65.0, pickupIncluded: true),
-  Tour(id: '2', name: 'Nile River Cruise', category: 'Cruise', duration: '3 Days • Luxor to Aswan', image: Img.nileCruise, rating: 4.8, reviewCount: 890, price: 320.0, pickupIncluded: true),
-  Tour(id: '3', name: 'Luxor Temple & Valley of Kings', category: 'Historical', duration: 'Full Day • 10 hours', image: Img.luxorTemple, rating: 4.7, reviewCount: 720, price: 85.0, pickupIncluded: true),
-  Tour(id: '4', name: 'Red Sea Diving Adventure', category: 'Adventure', duration: 'Half Day • 4 hours', image: Img.coralReef, rating: 4.9, reviewCount: 540, price: 95.0, pickupIncluded: false),
-  Tour(id: '5', name: 'Desert Safari & BBQ', category: 'Adventure', duration: 'Evening • 5 hours', image: Img.pyramidsCamels, rating: 4.6, reviewCount: 380, price: 75.0, pickupIncluded: true),
-];
-
-const _cars = [
-  Car(id: '1', name: 'Toyota Camry 2023', type: 'Sedan', image: Img.carSedan, seats: 5, transmission: 'Automatic', rating: 4.8, reviewCount: 245, price: 45.0, withDriver: true, driverPrice: 25),
-  Car(id: '2', name: 'BMW X5', type: 'SUV', image: Img.carSuv, seats: 7, transmission: 'Automatic', rating: 4.9, reviewCount: 189, price: 85.0, withDriver: true, driverPrice: 35),
-  Car(id: '3', name: 'Mercedes C-Class', type: 'Luxury', image: Img.carLuxury, seats: 5, transmission: 'Automatic', rating: 4.9, reviewCount: 156, price: 120.0, withDriver: true, driverPrice: 45),
-  Car(id: '4', name: 'Hyundai Staria', type: 'Van', image: Img.carVan, seats: 8, transmission: 'Automatic', rating: 4.7, reviewCount: 320, price: 70.0, withDriver: false, driverPrice: 0),
-];
-
-const _restaurants = [
-  Restaurant(id: '1', name: 'Koshary Abou Tarek', cuisine: 'Egyptian', location: 'Downtown Cairo', image: Img.koshari, rating: 4.7, reviewCount: 2100, priceRange: r'$4-$10', deliveryTime: 30, delivery: true),
-  Restaurant(id: '2', name: 'Sequoia', cuisine: 'Mediterranean', location: 'Zamalek, Cairo', image: Img.restaurant, rating: 4.8, reviewCount: 1400, priceRange: r'$30-$60', deliveryTime: 45, delivery: true),
-  Restaurant(id: '3', name: 'Felfela Restaurant', cuisine: 'Egyptian', location: 'Downtown Cairo', image: Img.egyptianFood, rating: 4.5, reviewCount: 980, priceRange: r'$8-$20', deliveryTime: 25, delivery: false),
-  Restaurant(id: '4', name: 'Kazoku', cuisine: 'Asian', location: 'New Cairo', image: Img.restaurantInterior, rating: 4.9, reviewCount: 760, priceRange: r'$40-$80', deliveryTime: 40, delivery: true),
-];
 int? _toInt(dynamic value) {
   if (value is int) return value;
   if (value is num) return value.toInt();
