@@ -1,0 +1,13 @@
+{
+  "name": "discover-egypt-cloud-run-service",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Node runtime entrypoint for Cloud Build/Cloud Run detection",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
