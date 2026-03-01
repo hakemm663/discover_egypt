@@ -284,6 +284,38 @@ Before every PR:
 
 ---
 
+
+## Deployment target decision and pipeline alignment
+
+### Selected target platform
+
+- **Primary web runtime:** Firebase Hosting serving prebuilt Flutter web static assets from `build/web`.
+- **Not in scope for this repository right now:** Firebase Functions and Cloud Run service deployment (no `functions/` source and no service runtime/Dockerfile are currently present).
+
+### CI/CD alignment
+
+- Build web assets in CI using `flutter build web --release`.
+- Deploy the generated `build/web` directory to Firebase Hosting.
+- Do **not** rely on Node buildpack auto-detection for web deploys because this app is served as static Flutter output, not a Node server.
+
+### Firebase Functions checklist (when needed)
+
+If backend functions are added later, keep them isolated and deploy explicitly:
+
+1. Place function source in `functions/`.
+2. Add and maintain a valid `functions/package.json`.
+3. Deploy functions with an explicit target (for example: `firebase deploy --only functions`).
+
+### Cloud Run checklist (when needed)
+
+If a Cloud Run backend is introduced, include all runtime signals required by Cloud Run:
+
+1. Provide either a `Dockerfile` or source with a detectable runtime plus a clear entrypoint.
+2. Ensure the process listens on `$PORT`.
+3. Redeploy and verify startup/health logs before promoting.
+
+---
+
 ## Web deployment (Firebase Hosting)
 
 This project is configured to deploy Flutter web as **static assets** on Firebase Hosting.
