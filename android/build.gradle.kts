@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 buildscript {
     repositories {
         google()
@@ -28,6 +30,18 @@ subprojects {
 
 subprojects {
     project.evaluationDependsOn(":app")
+}
+
+// The Stripe Android plugin currently emits many Kotlin warnings in third-party code.
+// Keep local builds readable and avoid warning-to-error policies failing on dependency code.
+subprojects {
+    if (name == "stripe_android") {
+        tasks.withType<KotlinCompile>().configureEach {
+            compilerOptions {
+                suppressWarnings.set(true)
+            }
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {
