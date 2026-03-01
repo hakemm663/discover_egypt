@@ -97,10 +97,14 @@ class NavigationTrackingService {
     }
 
     final user = _firebaseService.currentUser;
+    if (user == null) {
+      return;
+    }
+
     final routeName = _routeName(route);
 
     final event = <String, dynamic>{
-      'userId': user?.uid ?? 'anonymous',
+      'userId': user.uid,
       'routeName': routeName,
       'timestamp': Timestamp.now(),
       'eventType': eventType.name,
