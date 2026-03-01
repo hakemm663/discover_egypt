@@ -43,19 +43,32 @@ class DiscoveryFirestoreClient {
         .doc(userId)
         .collection(signalsCollection);
 
-    final bookmarksDocumentSnapshot =
-        await userSignalsCollection.doc(bookmarksDocument).get();
-    final recentTourSnapshots = await userSignalsCollection
-        .doc(recentlyViewedToursDocument)
-        .collection(recentlyViewedToursItemsCollection)
-        .orderBy('lastViewedAt', descending: true)
-        .limit(40)
-        .get();
+    try {
+      final bookmarksDocumentSnapshot =
+          await userSignalsCollection.doc(bookmarksDocument).get();
+      final recentTourSnapshots = await userSignalsCollection
+          .doc(recentlyViewedToursDocument)
+          .collection(recentlyViewedToursItemsCollection)
+          .orderBy('lastViewedAt', descending: true)
+          .limit(40)
+          .get();
 
-    return fromFirestoreData(
-      bookmarksData: bookmarksDocumentSnapshot.data(),
-      recentlyViewedTours: recentTourSnapshots.docs.map((doc) => doc.data()),
-    );
+      return fromFirestoreData(
+        bookmarksData: bookmarksDocumentSnapshot.data(),
+        recentlyViewedTours: recentTourSnapshots.docs.map((doc) => doc.data()),
+      );
+    } on FirebaseException catch (error) {
+      if (error.code == 'permission-denied') {
+        return const UserSignals(
+          bookmarkedHotelIds: <String>{},
+          bookmarkedCarIds: <String>{},
+          bookmarkedRestaurantIds: <String>{},
+          recentlyViewedTourIds: <String>{},
+        );
+      }
+
+      rethrow;
+    }
   }
 
   static UserSignals fromFirestoreData({
