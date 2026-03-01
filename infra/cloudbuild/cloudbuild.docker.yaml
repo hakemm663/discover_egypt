@@ -1,0 +1,41 @@
+# Dockerfile deployment.
+# IMPORTANT: Set trigger source to the app folder (default: cloud-run-service).
+substitutions:
+  _APP_DIR: cloud-run-service
+  _REGION: us-central1
+  _SERVICE: discover-egypt-service
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    id: Build Docker image
+    args:
+      - build
+      - -f
+      - ${_APP_DIR}/Dockerfile
+      - -t
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE}:${SHORT_SHA}
+      - ${_APP_DIR}
+
+  - name: gcr.io/cloud-builders/docker
+    id: Push Docker image
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE}:${SHORT_SHA}
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    id: Deploy to Cloud Run
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE}:${SHORT_SHA}
+      - --region
+      - ${_REGION}
+      - --platform
+      - managed
+      - --allow-unauthenticated
+
+images:
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE}:${SHORT_SHA}
