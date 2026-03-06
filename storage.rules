@@ -1,0 +1,59 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isImage() {
+      return request.resource != null
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    function isUnderSizeLimit(maxBytes) {
+      return request.resource != null
+        && request.resource.size < maxBytes;
+    }
+
+    // Profile pictures: each signed-in user can manage only their own avatar
+    match /users/{uid}/avatar/{fileName} {
+      allow read: if true;
+      allow write: if isSignedIn()
+        && request.auth.uid == uid
+        && isImage()
+        && isUnderSizeLimit(5 * 1024 * 1024);
+    }
+
+    // App catalog images (hotels/tours/cars/restaurants): read public, write admin only
+    match /catalog/{category}/{itemId}/{fileName} {
+      allow read: if true;
+      allow write: if isSignedIn()
+        && request.auth.token.admin == true
+        && isImage()
+        && isUnderSizeLimit(10 * 1024 * 1024);
+    }
+
+    // Booking and payment attachments: private to owner and admins
+    match /bookings/{uid}/{bookingId}/{fileName} {
+      allow read: if isSignedIn()
+        && (request.auth.uid == uid || request.auth.token.admin == true);
+      allow write: if isSignedIn()
+        && request.auth.uid == uid
+        && isUnderSizeLimit(15 * 1024 * 1024);
+    }
+
+    // Support uploads: owner can upload/read, admins can read
+    match /support/{uid}/{ticketId}/{fileName} {
+      allow read: if isSignedIn()
+        && (request.auth.uid == uid || request.auth.token.admin == true);
+      allow write: if isSignedIn()
+        && request.auth.uid == uid
+        && isUnderSizeLimit(15 * 1024 * 1024);
+    }
+
+    // Safety fallback: deny everything else
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
