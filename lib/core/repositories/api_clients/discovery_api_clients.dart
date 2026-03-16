@@ -26,7 +26,7 @@ class HotelsApiClient {
 
   Future<PaginatedResult<Map<String, dynamic>>> fetchHotels(PaginationQuery query) async {
     if (_forceFallback && _fallbackPayloadBuilder != null) {
-      return _mapPaginated(_fallbackPayloadBuilder!(query), query);
+      return _mapPaginated(_fallbackPayloadBuilder(query), query);
     }
 
     try {
@@ -37,7 +37,7 @@ class HotelsApiClient {
       return _mapPaginated(payload, query);
     } on DiscoveryApiException catch (error) {
       if (_fallbackOnConnectionFailure && _fallbackPayloadBuilder != null && _isConnectionFailure(error)) {
-        return _mapPaginated(_fallbackPayloadBuilder!(query), query);
+        return _mapPaginated(_fallbackPayloadBuilder(query), query);
       }
       rethrow;
     }
@@ -64,7 +64,7 @@ class ToursApiClient {
 
   Future<PaginatedResult<Map<String, dynamic>>> fetchTours(PaginationQuery query) async {
     if (_forceFallback && _fallbackPayloadBuilder != null) {
-      return _mapPaginated(_fallbackPayloadBuilder!(query), query);
+      return _mapPaginated(_fallbackPayloadBuilder(query), query);
     }
 
     try {
@@ -75,7 +75,7 @@ class ToursApiClient {
       return _mapPaginated(payload, query);
     } on DiscoveryApiException catch (error) {
       if (_fallbackOnConnectionFailure && _fallbackPayloadBuilder != null && _isConnectionFailure(error)) {
-        return _mapPaginated(_fallbackPayloadBuilder!(query), query);
+        return _mapPaginated(_fallbackPayloadBuilder(query), query);
       }
       rethrow;
     }
@@ -102,7 +102,7 @@ class CarsApiClient {
 
   Future<PaginatedResult<Map<String, dynamic>>> fetchCars(PaginationQuery query) async {
     if (_forceFallback && _fallbackPayloadBuilder != null) {
-      return _mapPaginated(_fallbackPayloadBuilder!(query), query);
+      return _mapPaginated(_fallbackPayloadBuilder(query), query);
     }
 
     try {
@@ -113,7 +113,7 @@ class CarsApiClient {
       return _mapPaginated(payload, query);
     } on DiscoveryApiException catch (error) {
       if (_fallbackOnConnectionFailure && _fallbackPayloadBuilder != null && _isConnectionFailure(error)) {
-        return _mapPaginated(_fallbackPayloadBuilder!(query), query);
+        return _mapPaginated(_fallbackPayloadBuilder(query), query);
       }
       rethrow;
     }
@@ -140,7 +140,7 @@ class RestaurantsApiClient {
 
   Future<PaginatedResult<Map<String, dynamic>>> fetchRestaurants(PaginationQuery query) async {
     if (_forceFallback && _fallbackPayloadBuilder != null) {
-      return _mapPaginated(_fallbackPayloadBuilder!(query), query);
+      return _mapPaginated(_fallbackPayloadBuilder(query), query);
     }
 
     try {
@@ -151,7 +151,7 @@ class RestaurantsApiClient {
       return _mapPaginated(payload, query);
     } on DiscoveryApiException catch (error) {
       if (_fallbackOnConnectionFailure && _fallbackPayloadBuilder != null && _isConnectionFailure(error)) {
-        return _mapPaginated(_fallbackPayloadBuilder!(query), query);
+        return _mapPaginated(_fallbackPayloadBuilder(query), query);
       }
       rethrow;
     }
