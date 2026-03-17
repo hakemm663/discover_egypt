@@ -114,6 +114,8 @@ class _SearchBar extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.all(16.0),
         child: TextField(
+          readOnly: true,
+          onTap: () => context.push('/search'),
           decoration: InputDecoration(
             hintText: 'Search for destinations, hotels, or tours',
             prefixIcon: const Icon(Icons.search),

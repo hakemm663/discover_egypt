@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../localization/l10n.dart';
 import '../themes/app_colors.dart';
 
 class AppBottomNavShell extends StatelessWidget {
@@ -20,8 +21,7 @@ class AppBottomNavShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final locale = Localizations.localeOf(context);
-    final labels = _BottomNavLabels.fromLocale(locale);
+    final l10n = context.l10n;
 
     return Scaffold(
       body: navigationShell,
@@ -40,31 +40,31 @@ class AppBottomNavShell extends StatelessWidget {
               context,
               icon: Icons.home_outlined,
               selectedIcon: Icons.home,
-              label: labels.home,
+              label: l10n.navHome,
             ),
             _destination(
               context,
-              icon: Icons.hotel_outlined,
-              selectedIcon: Icons.hotel,
-              label: labels.hotels,
+              icon: Icons.search_outlined,
+              selectedIcon: Icons.search,
+              label: l10n.navSearch,
             ),
             _destination(
               context,
-              icon: Icons.tour_outlined,
-              selectedIcon: Icons.tour,
-              label: labels.tours,
+              icon: Icons.travel_explore_outlined,
+              selectedIcon: Icons.travel_explore,
+              label: l10n.navExplore,
             ),
             _destination(
               context,
-              icon: Icons.directions_car_outlined,
-              selectedIcon: Icons.directions_car,
-              label: labels.cars,
+              icon: Icons.route_outlined,
+              selectedIcon: Icons.route,
+              label: l10n.navTrips,
             ),
             _destination(
               context,
               icon: Icons.person_outline,
               selectedIcon: Icons.person,
-              label: labels.profile,
+              label: l10n.navProfile,
             ),
           ],
         ),
@@ -94,42 +94,5 @@ class AppBottomNavShell extends StatelessWidget {
       ),
       label: label,
     );
-  }
-}
-
-class _BottomNavLabels {
-  const _BottomNavLabels({
-    required this.home,
-    required this.hotels,
-    required this.tours,
-    required this.cars,
-    required this.profile,
-  });
-
-  final String home;
-  final String hotels;
-  final String tours;
-  final String cars;
-  final String profile;
-
-  factory _BottomNavLabels.fromLocale(Locale locale) {
-    switch (locale.languageCode) {
-      case 'ar':
-        return const _BottomNavLabels(
-          home: 'الرئيسية',
-          hotels: 'الفنادق',
-          tours: 'الجولات',
-          cars: 'السيارات',
-          profile: 'الملف الشخصي',
-        );
-      default:
-        return const _BottomNavLabels(
-          home: 'Home',
-          hotels: 'Hotels',
-          tours: 'Tours',
-          cars: 'Cars',
-          profile: 'Profile',
-        );
-    }
   }
 }

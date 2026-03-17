@@ -72,7 +72,12 @@ class AuthService {
       await _firestore
           .collection(AppConstants.usersCollection)
           .doc(credential.user!.uid)
-          .set({...userModel.toJson(), 'onboardingCompleted': false});
+          .set({
+        ...userModel.toJson(),
+        'primaryRole': AppUserRole.tourist.name,
+        'roles': [AppUserRole.tourist.name],
+        'onboardingCompleted': false,
+      });
 
       // Send email verification
       await credential.user!.sendEmailVerification();

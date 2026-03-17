@@ -16,15 +16,22 @@ class AppConstants {
   static const String navigationEventsQueueKey = 'navigation_events_queue';
   static const String notificationPreferencesKey = 'notification_preferences';
   static const String supportTicketsQueueKey = 'support_tickets_queue';
+  static const String vendorListingsDraftsKey = 'vendor_listings_drafts';
+  static const String favoriteListingIdsKey = 'favorite_listing_ids';
+  static const String itineraryDraftEntriesKey = 'itinerary_draft_entries';
+  static const String workspaceRoleKey = 'workspace_role';
 
   // Firebase Collections
   static const String usersCollection = 'users';
+  static const String vendorsCollection = 'vendors';
+  static const String listingsCollection = 'listings';
   static const String hotelsCollection = 'hotels';
   static const String toursCollection = 'tours';
   static const String carsCollection = 'cars';
   static const String restaurantsCollection = 'restaurants';
   static const String bookingsCollection = 'bookings';
   static const String reviewsCollection = 'reviews';
+  static const String supportTicketsCollection = 'support_tickets';
   static const String navigationEventsCollection = 'user_navigation_events';
 
   // Booking Types

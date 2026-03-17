@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
+import '../../core/localization/l10n.dart';
+import '../../core/models/user_model.dart';
+import '../../core/routes/router.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/rounded_card.dart';
 
@@ -24,6 +27,42 @@ class SettingsPage extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          Text(
+            context.l10n.workspaceMode,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 12),
+          RoundedCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(context.l10n.workspaceModeHelp),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final role in AppUserRole.values)
+                      ChoiceChip(
+                        label: Text(_roleLabel(context, role)),
+                        selected: ref.watch(workspaceRoleProvider) == role,
+                        onSelected: (selected) {
+                          ref.read(workspaceRoleProvider.notifier).setRole(
+                                selected ? role : null,
+                              );
+                          context.go(
+                            defaultHomeForRole(
+                              selected ? role : AppUserRole.tourist,
+                            ),
+                          );
+                        },
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
           Text(
             'Appearance',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
@@ -254,16 +293,15 @@ class SettingsPage extends ConsumerWidget {
         content: StatefulBuilder(
           builder: (context, setState) => SizedBox(
             width: 320,
-            child: ListView(
-              shrinkWrap: true,
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 for (final country in countries)
-                  RadioListTile<String>(
-                    value: country,
-                    groupValue: selected,
-                    onChanged: (value) => setState(() => selected = value ?? selected),
-                    title: Text(country),
-                    toggleable: true,
+                  ChoiceChip(
+                    label: Text(country),
+                    selected: selected == country,
+                    onSelected: (_) => setState(() => selected = country),
                   ),
               ],
             ),
@@ -390,6 +428,19 @@ class SettingsPage extends ConsumerWidget {
       currentController.dispose();
       newController.dispose();
       confirmController.dispose();
+    }
+  }
+
+  String _roleLabel(BuildContext context, AppUserRole role) {
+    switch (role) {
+      case AppUserRole.tourist:
+        return context.l10n.touristRole;
+      case AppUserRole.vendor:
+        return context.l10n.vendorRole;
+      case AppUserRole.admin:
+        return context.l10n.adminRole;
+      case AppUserRole.staff:
+        return context.l10n.staffRole;
     }
   }
 }

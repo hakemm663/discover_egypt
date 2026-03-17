@@ -17,6 +17,8 @@ import '../core/repositories/api_clients/discovery_fallback_catalog.dart';
 import '../core/repositories/discovery_repositories.dart';
 import '../core/repositories/firestore/discovery_firestore_client.dart';
 import '../core/routes/router.dart';
+import '../core/security/auth_session_sync.dart';
+import '../core/security/secure_token_store.dart';
 import '../core/services/auth_service.dart';
 import '../core/services/database_service.dart';
 import '../core/services/firebase_service.dart';
@@ -31,6 +33,8 @@ final databaseServiceProvider =
     Provider<DatabaseService>((ref) => DatabaseService());
 final paymentServiceProvider = Provider<PaymentService>((ref) => PaymentService());
 final firebaseServiceProvider = Provider<FirebaseService>((ref) => FirebaseService());
+final secureTokenStoreProvider =
+    Provider<SecureTokenStore>((ref) => const SecureTokenStore());
 final pushNotificationServiceProvider = Provider<PushNotificationService>(
   (ref) => PushNotificationService(),
 );
@@ -48,6 +52,55 @@ final pushTokenLifecycleProvider = Provider<PushTokenLifecycleManager>((ref) {
 
   manager.initialize();
   ref.onDispose(manager.dispose);
+  return manager;
+});
+final workspaceRoleProvider =
+    StateNotifierProvider<WorkspaceRoleNotifier, AppUserRole?>((ref) {
+  return WorkspaceRoleNotifier();
+});
+
+class WorkspaceRoleNotifier extends StateNotifier<AppUserRole?> {
+  WorkspaceRoleNotifier() : super(null) {
+    _loadRole();
+  }
+
+  void _loadRole() {
+    final box = Hive.box(AppConstants.settingsBox);
+    final raw = box.get(AppConstants.workspaceRoleKey);
+    if (raw is String && raw.isNotEmpty) {
+      state = AppUserRoleX.fromName(raw);
+    }
+  }
+
+  Future<void> setRole(AppUserRole? role) async {
+    state = role;
+    final box = Hive.box(AppConstants.settingsBox);
+    if (role == null) {
+      await box.delete(AppConstants.workspaceRoleKey);
+      return;
+    }
+    await box.put(AppConstants.workspaceRoleKey, role.name);
+  }
+}
+
+final activeAppRoleProvider = Provider<AppUserRole>((ref) {
+  final override = ref.watch(workspaceRoleProvider);
+  if (override != null) {
+    return override;
+  }
+
+  return ref.watch(currentUserProvider).valueOrNull?.primaryRole ??
+      AppUserRole.tourist;
+});
+
+final authSessionSyncProvider = Provider<AuthSessionSync>((ref) {
+  final manager = AuthSessionSync(
+    auth: FirebaseAuth.instance,
+    tokenStore: ref.read(secureTokenStoreProvider),
+    roleResolver: () => ref.read(activeAppRoleProvider),
+  );
+  manager.initialize();
+  ref.onDispose(() => manager.dispose());
   return manager;
 });
 
@@ -206,10 +259,12 @@ final navigationTrackingObserverProvider =
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authUser = ref.watch(authStateChangesProvider).valueOrNull;
   final onboardingCompleted = ref.watch(onboardingCompletedProvider);
+  final currentRole = ref.watch(activeAppRoleProvider);
 
   return createAppRouter(
     isAuthenticated: authUser != null,
     onboardingCompleted: onboardingCompleted,
+    currentRole: currentRole,
     observers: [ref.watch(navigationTrackingObserverProvider)],
   );
 });
@@ -346,7 +401,7 @@ final languageProvider = StateNotifierProvider<LanguageNotifier, Locale>((ref) {
 });
 
 class LanguageNotifier extends StateNotifier<Locale> {
-  static const Set<String> _supportedLanguageCodes = {'en', 'ar', 'fr', 'de'};
+  static const Set<String> _supportedLanguageCodes = {'en', 'ar'};
 
   LanguageNotifier() : super(const Locale('en')) {
     _loadLanguage();

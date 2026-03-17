@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SPEC_DIR="$ROOT_DIR/docs/openapi"
+SPEC_DIR="$ROOT_DIR/contracts/openapi"
 SPEC_PATH="$SPEC_DIR/discovery_api.openapi.json"
 FETCHED_PATH="$SPEC_DIR/discovery_api.openapi.fetched.json"
 OUT_DIR="$ROOT_DIR/lib/core/api/generated"

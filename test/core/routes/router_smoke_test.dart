@@ -51,6 +51,7 @@ void main() {
       isAuthenticated: true,
       onboardingCompleted: true,
     );
+    router.go('/confirm-pay');
 
     await tester.pumpWidget(
       ProviderScope(

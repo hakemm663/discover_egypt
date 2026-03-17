@@ -1,3 +1,4 @@
+import 'package:discover_egypt/core/models/user_model.dart';
 import 'package:discover_egypt/core/routes/router.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -51,6 +52,28 @@ void main() {
       );
 
       expect(redirect, isNull);
+    });
+
+    test('redirects vendor users from tourist home to vendor dashboard', () {
+      final redirect = resolveAppRedirect(
+        location: '/home',
+        isAuthenticated: true,
+        onboardingCompleted: true,
+        currentRole: AppUserRole.vendor,
+      );
+
+      expect(redirect, '/vendor/dashboard');
+    });
+
+    test('blocks tourists from admin routes', () {
+      final redirect = resolveAppRedirect(
+        location: '/admin/dashboard',
+        isAuthenticated: true,
+        onboardingCompleted: true,
+        currentRole: AppUserRole.tourist,
+      );
+
+      expect(redirect, '/home');
     });
   });
 }

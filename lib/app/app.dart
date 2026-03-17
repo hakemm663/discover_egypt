@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import '../core/localization/generated/app_localizations.dart';
 import '../core/themes/theme.dart';
 import 'providers.dart';
 
@@ -11,13 +12,15 @@ class DiscoverEgyptApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(pushTokenLifecycleProvider);
+    ref.watch(authSessionSyncProvider);
 
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(languageProvider);
     final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(
-      title: 'Discover Egypt',
+      onGenerateTitle: (context) =>
+          AppLocalizations.of(context)?.appTitle ?? 'Discover Egypt',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
@@ -25,16 +28,12 @@ class DiscoverEgyptApp extends ConsumerWidget {
       locale: locale,
       routerConfig: router,
       localizationsDelegates: const [
+        ...AppLocalizations.localizationsDelegates,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('en'),
-        Locale('ar'),
-        Locale('fr'),
-        Locale('de'),
-      ],
+      supportedLocales: AppLocalizations.supportedLocales,
     );
   }
 }

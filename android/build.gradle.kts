@@ -6,12 +6,15 @@ buildscript {
         mavenCentral()
     }
 
+    
+
     dependencies {
         classpath("com.android.tools.build:gradle:8.9.1")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.0")
         classpath("com.google.gms:google-services:4.4.4")
     }
 }
+
 
 allprojects {
     repositories {
@@ -46,4 +49,9 @@ subprojects {
 
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
+}
+
+plugins {
+  // Add the dependency for the Performance Monitoring Gradle plugin
+    id("com.google.firebase.firebase-perf") version "2.0.2" apply false
 }

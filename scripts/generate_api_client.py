@@ -155,7 +155,7 @@ def generate(spec_path: Path, out_dir: Path) -> str:
     schemas = spec.get("components", {}).get("schemas", {})
     model_chunks = [
         "// GENERATED CODE - DO NOT MODIFY BY HAND.",
-        "// Source: docs/openapi/discovery_api.openapi.json",
+        "// Source: contracts/openapi/discovery_api.openapi.json",
         "",
     ]
 
@@ -172,7 +172,7 @@ def generate(spec_path: Path, out_dir: Path) -> str:
 
     service_chunks = [
         "// GENERATED CODE - DO NOT MODIFY BY HAND.",
-        "// Source: docs/openapi/discovery_api.openapi.json",
+        "// Source: contracts/openapi/discovery_api.openapi.json",
         "",
         render_service(spec),
         "",
