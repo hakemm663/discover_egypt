@@ -324,6 +324,7 @@ This project is configured to deploy Flutter web as **static assets** on Firebas
 
 - `firebase.json` with `hosting.public` set to `build/web`
 - `.firebaserc` with the default Firebase project
+- `storage.rules` for Firebase Storage access control
 
 ### Build and deploy
 
@@ -337,6 +338,12 @@ This project is configured to deploy Flutter web as **static assets** on Firebas
 
    ```bash
    firebase deploy --only hosting
+   ```
+
+3. Deploy Firebase Storage rules:
+
+   ```bash
+   firebase deploy --only storage
    ```
 
 ### Notes
